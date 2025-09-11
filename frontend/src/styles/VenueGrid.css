@@ -1,0 +1,332 @@
+.venue-section {
+  padding: var(--spacing-3xl) 185px;
+  max-width: 1920px;
+  margin: 0 auto;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-2xl);
+}
+
+.section-header h2 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--gray-800);
+  margin: 0;
+}
+
+.view-all {
+  color: var(--gray-600);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  transition: color var(--transition-normal);
+}
+
+.view-all:hover {
+  color: var(--gray-800);
+}
+
+.venue-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.venue-card {
+  cursor: pointer;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.venue-image {
+  width: 100%;
+  height: 240px;
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  transition: box-shadow var(--transition-normal);
+}
+
+.venue-card.popular .venue-image {
+  height: 240px;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+/* Category venue images */
+.category-venue-1 {
+  background: linear-gradient(135deg, #87ceeb 0%, #4682b4 100%),
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%23f0f8ff" width="200" height="200"/><rect fill="%23e6f3ff" x="0" y="150" width="200" height="50"/><rect fill="%23ddd" x="20" y="160" width="160" height="8"/><rect fill="%23ccc" x="20" y="170" width="160" height="8"/></svg>');
+}
+
+.category-venue-2 {
+  background: linear-gradient(135deg, #98fb98 0%, #228b22 100%),
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%23f0fff0" width="200" height="200"/><polygon fill="%23228B22" points="100,20 180,180 20,180"/><rect fill="%2332CD32" x="80" y="160" width="40" height="20"/></svg>');
+}
+
+.category-venue-3 {
+  background: linear-gradient(135deg, #dda0dd 0%, #8b008b 100%),
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%23f8f0ff" width="200" height="200"/><circle fill="%238B008B" cx="100" cy="100" r="60"/><rect fill="%23DDA0DD" x="70" y="140" width="60" height="40"/></svg>');
+}
+
+.category-venue-4 {
+  background: linear-gradient(135deg, #ffb6c1 0%, #dc143c 100%),
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%23fff0f5" width="200" height="200"/><rect fill="%23DC143C" x="50" y="80" width="100" height="80"/><rect fill="%23FFB6C1" x="60" y="90" width="80" height="60"/></svg>');
+}
+
+/* Popular venue images */
+.popular-venue-1 {
+  background: linear-gradient(135deg, #87ceeb 0%, #4682b4 100%),
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%23f0f8ff" width="200" height="200"/><rect fill="%234682B4" x="0" y="150" width="200" height="50"/><rect fill="%23fff" x="20" y="160" width="160" height="8"/><rect fill="%23fff" x="20" y="170" width="160" height="8"/></svg>');
+}
+
+.popular-venue-2 {
+  background: linear-gradient(135deg, #f4a460 0%, #d2691e 100%),
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%23fff8dc" width="200" height="200"/><rect fill="%23D2691E" x="50" y="100" width="100" height="80"/><polygon fill="%23F4A460" points="100,60 150,100 50,100"/></svg>');
+}
+
+.popular-venue-3 {
+  background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%),
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%23f0e6ff" width="200" height="200"/><circle fill="%234B0082" cx="100" cy="100" r="80"/><rect fill="%238A2BE2" x="60" y="140" width="80" height="40"/></svg>');
+}
+
+.popular-venue-4 {
+  background: linear-gradient(135deg, #f0e68c 0%, #daa520 100%),
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%23fffacd" width="200" height="200"/><circle fill="%23DAA520" cx="100" cy="100" r="70"/><rect fill="%23F0E68C" x="70" y="130" width="60" height="40"/></svg>');
+}
+
+.venue-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 15px;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+.venue-card:hover .venue-overlay {
+  transform: translateY(0);
+}
+
+.venue-label {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.venue-label-below {
+  margin-top: var(--spacing-sm);
+  text-align: left;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--gray-900);
+  padding-left: var(--spacing-xs);
+}
+
+.venue-explore-overlay {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  padding: 4px 14px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-style: italic;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.venue-card:hover .venue-explore-overlay {
+  opacity: 1;
+  margin-top: var(--spacing-md);
+  transition: all var(--transition-normal);
+}
+
+.view-details-button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  gap: var(--spacing-sm);
+}
+.page-dot {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border-radius: var(--radius-lg);
+  background: var(--secondary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--gray-900);
+  border: 2px solid var(--gray-300);
+  box-sizing: border-box;
+}
+
+.page-dot.active {
+  background: #f5f5f5;
+  background: var(--gray-100);
+  color: var(--gray-900);
+  border: 2px solid var(--primary-color);
+  font-weight: var(--font-weight-semibold);
+}
+.pagination-arrow {
+  background-color: var(--primary-color);
+  background: var(--primary-color);
+  color: var(--accent-color);
+  border-radius: 8px;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-3xl);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-family-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pagination-arrow:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: scale(1.05);
+
+  
+}
+
+.pagination-arrow:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  
+}
+
+@media (max-width: 1024px) {
+  .venue-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .venue-image {
+    height: 180px;
+  }
+
+  .venue-section {
+    padding: 40px 2rem;
+  }
+
+  .section-header h2 {
+    font-size: 20px;
+  }
+
+  .view-all {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .venue-section {
+    padding: 40px 20px;
+  }
+
+  .venue-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .venue-image {
+    height: 140px;
+  }
+
+  .section-header h2 {
+    font-size: 18px;
+  }
+
+  .venue-label-below {
+    font-size: 14px;
+  }
+
+  .pagination {
+    gap: 6px;
+  }
+
+  .page-dot {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .pagination-arrow {
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .venue-section {
+    padding: 30px 1rem;
+  }
+
+  .section-header h2 {
+    font-size: 16px;
+  }
+
+  .view-all {
+    font-size: 12px;
+  }
+
+  .venue-grid {
+    gap: 12px;
+  }
+
+  .venue-image {
+    height: 120px;
+  }
+
+  .venue-label-below {
+    font-size: 13px;
+    margin-top: 6px;
+  }
+
+  .page-dot {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .pagination-arrow {
+    width: 28px;
+    height: 28px;
+    font-size: 20px;
+  }
+
+  .pagination {
+    gap: 4px;
+  }
+}

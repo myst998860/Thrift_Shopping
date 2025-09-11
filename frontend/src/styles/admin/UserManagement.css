@@ -1,0 +1,266 @@
+/* General Container Styles */
+.user-management-container {
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 2px 8px #eee;
+  font-family: sans-serif;
+  min-height: 100vh;
+}
+
+/* Header Styles */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.header h2 {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.breadcrumb {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.breadcrumb ol {
+  list-style: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.breadcrumb li {
+  display: flex;
+  align-items: center;
+}
+
+.breadcrumb a {
+  color: #6b7280;
+  text-decoration: none;
+}
+
+.breadcrumb svg {
+  fill: currentColor;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin: 0 0.75rem;
+}
+
+.breadcrumb span {
+  color: #374151;
+  font-weight: 500;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #111827;
+}
+
+.subtitle {
+  color: #888;
+  margin-bottom: 24px;
+}
+
+.add-user-btn {
+  background-color: #111;
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.add-user-btn svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-right: 0.5rem;
+}
+
+/* Main Content Styles */
+.content-card {
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.content-card h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.content-card p {
+  color: #4b5563;
+  margin-top: 0.25rem;
+}
+
+/* Search Bar Styles */
+.search-container {
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.search-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #9ca3af;
+}
+
+.search-input {
+  width: 320px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  line-height: 1.25;
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+}
+
+/* Table Styles */
+.table-container {
+  margin-top: 8px;
+  overflow-x: auto;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-table th,
+.user-table td {
+  padding: 10px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.user-table thead {
+  background-color: #f7f7f7;
+}
+
+.user-table tbody tr {
+  border-bottom: 1px solid #eee;
+}
+
+.user-table th {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Status Badge Styles */
+.status-badge {
+  padding: 4px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 12px;
+  display: inline-flex;
+}
+
+.status-active {
+  background-color: #e6ffe6;
+  color: #22bb33;
+}
+
+.status-inactive {
+  background-color: #ffe6e6;
+  color: #d9534f;
+}
+
+/* Actions Menu Styles */
+.actions-cell {
+  position: relative;
+}
+
+.actions-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.actions-btn:hover {
+  color: #374151;
+}
+
+.actions-btn svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.actions-menu {
+  position: absolute;
+  top: 30px;
+  right: 0;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #eee;
+  z-index: 10;
+  min-width: 180px;
+  width: auto;
+}
+
+.actions-menu-header {
+  padding: 10px 16px;
+  font-weight: 600;
+  color: #888;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.actions-menu-items {
+  padding: 0;
+}
+
+.actions-menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 15px;
+  cursor: pointer;
+  color: #222;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.actions-menu-item:last-child {
+  border-bottom: none;
+}
+
+.actions-menu-item:hover {
+  background-color: #f3f4f6;
+}
+
+.actions-menu-item-delete {
+  color: #d9534f;
+}
+
+.actions-menu-item-activate {
+  color: #22bb33;
+}

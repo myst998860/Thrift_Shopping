@@ -1,0 +1,642 @@
+/* User View Venue Page Styles */
+.uvv-page {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Loading State */
+.uvv-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 1rem;
+}
+
+.uvv-loading__spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e5e7eb;
+    border-top: 4px solid #ffc107;
+    border-radius: 50%;
+    animation: uvv-spin 1s linear infinite;
+}
+
+@keyframes uvv-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Error State */
+.uvv-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    padding: 2rem;
+}
+
+.uvv-error__icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.uvv-error__title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 1rem;
+}
+
+.uvv-error__message {
+    font-size: 1.1rem;
+    color: #6b7280;
+    margin-bottom: 2rem;
+    max-width: 500px;
+}
+
+.uvv-error__actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Breadcrumb */
+.uvv-breadcrumb-container {
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1rem 0;
+    margin-top: 80px;
+}
+
+.uvv-breadcrumb {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.uvv-breadcrumb__link {
+    color: #6b7280;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.uvv-breadcrumb__link:hover {
+    color: #374151;
+}
+
+.uvv-breadcrumb__separator {
+    color: #9ca3af;
+}
+
+.uvv-breadcrumb__current {
+    color: #374151;
+    font-weight: 500;
+}
+
+/* Main Container */
+.uvv-container {
+    flex: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Hero Section */
+.uvv-hero {
+    position: relative;
+    height: 400px;
+    overflow: hidden;
+    border-radius: 0 0 1rem 1rem;
+}
+
+.uvv-hero__image-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.uvv-hero__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.uvv-hero__overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+    padding: 3rem 2rem 2rem;
+}
+
+.uvv-hero__content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.uvv-hero__title {
+    font-size: 3rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.uvv-hero__location {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.2rem;
+    color: white;
+    font-weight: 500;
+}
+
+.uvv-hero__location-icon {
+    font-size: 1.1rem;
+
+}
+
+/* Main Content */
+.uvv-content {
+
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 3rem;
+    padding: 3rem 2rem;
+    background: white;
+    margin: 0 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    margin-top: -2rem;
+    position: relative;
+    z-index: 1;
+}
+
+/* Stats Section */
+.uvv-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.uvv-stats__item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.uvv-stats__item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.uvv-stats__icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.uvv-stats__content {
+    flex: 1;
+}
+
+.uvv-stats__label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.uvv-stats__value {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+/* Description Section */
+.uvv-description {
+    margin-bottom: 3rem;
+}
+
+.uvv-description__title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #ffc107;
+    padding-bottom: 0.5rem;
+    display: inline-block;
+}
+
+.uvv-description__text {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #6b7280;
+}
+
+/* Features Section */
+.uvv-features {
+    margin-bottom: 3rem;
+}
+
+.uvv-features__title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #ffc107;
+    padding-bottom: 0.5rem;
+    display: inline-block;
+}
+
+.uvv-features__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.uvv-features__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+    transition: background-color 0.2s;
+}
+
+.uvv-features__item:hover {
+    background: #e5e7eb;
+}
+
+.uvv-features__icon {
+    font-size: 1.25rem;
+}
+
+/* Contact Section */
+.uvv-contact {
+    margin-bottom: 2rem;
+}
+
+.uvv-contact__title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #ffc107;
+    padding-bottom: 0.5rem;
+    display: inline-block;
+}
+
+.uvv-contact__details {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.uvv-contact__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1rem;
+    color: #6b7280;
+}
+
+.uvv-contact__icon {
+    font-size: 1.1rem;
+}
+
+/* Sidebar */
+.uvv-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Booking Card */
+.uvv-booking {
+    background: white;
+    border: 2px solid #ffc107;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 2rem;
+}
+
+.uvv-booking__header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.uvv-booking__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 1rem;
+}
+
+.uvv-booking__price {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.uvv-booking__price-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffc107;
+}
+
+.uvv-booking__price-unit {
+    font-size: 1rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.uvv-booking__content {
+    text-align: center;
+}
+
+.uvv-booking__description {
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.uvv-booking__button {
+    width: 100%;
+    background: #ffc107;
+    color: #000;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 0.75rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 1rem;
+}
+
+.uvv-booking__button:hover {
+    background: #e6ac00;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.uvv-booking__note {
+    color: #9ca3af;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+/* Quick Actions */
+.uvv-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.uvv-actions__button {
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    font-size: 0.95rem;
+}
+
+.uvv-actions__button--secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.uvv-actions__button--secondary:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+/* Button Styles */
+.uvv-button--back,
+.uvv-button--retry {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    border: none;
+    font-size: 1rem;
+}
+
+.uvv-button--back {
+    background: #6b7280;
+    color: white;
+}
+
+.uvv-button--back:hover {
+    background: #4b5563;
+    transform: translateY(-1px);
+}
+
+.uvv-button--retry {
+    background: #ffc107;
+    color: #000;
+}
+
+.uvv-button--retry:hover {
+    background: #e6ac00;
+    transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .uvv-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        margin: 0 1rem;
+        padding: 2rem 1.5rem;
+    }
+
+    .uvv-stats {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+
+    .uvv-stats__item {
+        padding: 1rem;
+    }
+
+    .uvv-hero__title {
+        font-size: 2.5rem;
+    }
+
+    .uvv-booking {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .uvv-breadcrumb {
+        padding: 0 1rem;
+        font-size: 0.8rem;
+    }
+
+    .uvv-hero {
+        height: 300px;
+    }
+
+    .uvv-hero__overlay {
+        padding: 2rem 1rem 1.5rem;
+    }
+
+    .uvv-hero__title {
+        font-size: 2rem;
+    }
+
+    .uvv-hero__location {
+        font-size: 1rem;
+    }
+
+    .uvv-content {
+        margin: 0 0.5rem;
+        padding: 1.5rem 1rem;
+        margin-top: -1rem;
+    }
+
+    .uvv-stats {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+    }
+
+    .uvv-stats__item {
+        padding: 0.75rem;
+    }
+
+    .uvv-features__grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .uvv-features__item {
+        padding: 0.75rem;
+    }
+
+    .uvv-description__title,
+    .uvv-features__title,
+    .uvv-contact__title {
+        font-size: 1.5rem;
+    }
+
+    .uvv-error__actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .uvv-button--back,
+    .uvv-button--retry {
+        width: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    .uvv-hero__overlay {
+        padding: 1.5rem 0.75rem 1rem;
+    }
+
+    .uvv-hero__title {
+        font-size: 1.75rem;
+    }
+
+    .uvv-content {
+        margin: 0 0.25rem;
+        padding: 1rem 0.75rem;
+    }
+
+    .uvv-booking {
+        padding: 1.5rem;
+    }
+
+    .uvv-booking__price-value {
+        font-size: 1.75rem;
+    }
+
+    .uvv-booking__button {
+        padding: 0.875rem 1.5rem;
+        font-size: 1rem;
+    }
+
+    .uvv-stats__item {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+
+    .uvv-stats__icon {
+        font-size: 1.75rem;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .uvv-page {
+        background: white;
+    }
+    
+    .uvv-booking,
+    .uvv-actions {
+        display: none;
+    }
+    
+    .uvv-content {
+        grid-template-columns: 1fr;
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .uvv-stats__item,
+    .uvv-features__item,
+    .uvv-booking {
+        border-width: 2px;
+    }
+    
+    .uvv-booking__button {
+        border: 2px solid #000;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

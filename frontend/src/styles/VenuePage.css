@@ -1,0 +1,262 @@
+.container {
+  font-family: var(--font-family-primary);
+  background-color: var(--secondary-color);
+  min-height: 100vh;
+  padding: var(--spacing-md) 185px;
+}
+
+.filter-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr auto;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-2xl);
+  align-items: center;
+  width: 100%;
+}
+
+.dropdown {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  background-color: var(--secondary-color);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-primary);
+  color: var(--gray-400);
+  width: 100%;
+  appearance: none;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23666" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+}
+
+.search-button {
+  background-color: var(--primary-color);
+  color: var(--accent-color);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-xl);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-family-primary);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.search-button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-2xl);
+}
+
+.section-title {
+  font-size: 28px;
+  font-weight: 300;
+  color: #999;
+  margin: 0;
+}
+
+.view-all-link {
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.venue-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
+}
+
+.venue-card {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: none;
+  border: none;
+}
+
+.image-container {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.venue-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.explore-overlay {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.venue-content {
+  padding: 0;
+}
+
+.venue-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.venue-location {
+  color: #666;
+  font-size: 14px;
+  margin: 0 0 12px 0;
+}
+
+.venue-details {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.capacity-icon {
+  font-size: 16px;
+}
+
+.price-row {
+  margin: 12px 0;
+}
+
+.price {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.price-unit {
+  font-size: 14px;
+  font-weight: normal;
+}
+
+.stars {
+  color: #333;
+  font-size: 16px;
+  margin: 8px 0;
+}
+
+.view-details-button {
+  width: 100%;
+  background-color: #ffc107;
+  color: black;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 15px;
+}
+
+@media (max-width: 1024px) {
+  .venue-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .container {
+    padding: 20px 2rem;
+  }
+
+  .filter-section {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .search-button {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 15px 1rem;
+  }
+
+  .venue-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-section {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .search-button {
+    grid-column: span 1;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .section-title {
+    font-size: 24px;
+  }
+
+  .venue-title {
+    font-size: 18px;
+  }
+
+  .venue-content {
+    padding: 0;
+  }
+
+  .image-container {
+    margin-bottom: 15px;
+  }
+
+  .venue-image {
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 10px 0.75rem;
+  }
+
+  .section-title {
+    font-size: 20px;
+  }
+
+  .venue-title {
+    font-size: 16px;
+  }
+
+  .venue-image {
+    height: 180px;
+  }
+
+  .dropdown,
+  .search-button {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}

@@ -1,0 +1,193 @@
+@import './styles/variables.css';
+
+.app-container {
+  display: flex;
+  font-family: var(--font-family-primary);
+}
+
+.sidebar {
+  width: 220px;
+  background: var(--gray-100);
+  padding: var(--spacing-lg) var(--spacing-md);
+  min-height: 100vh;
+}
+
+.sidebar h2 {
+  margin-bottom: var(--spacing-lg);
+  color: var(--gray-900);
+  font-weight: var(--font-weight-semibold);
+}
+
+.sidebar-section {
+  font-size: var(--font-size-sm);
+  color: var(--gray-500);
+  margin-bottom: var(--spacing-sm);
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
+  padding: var(--spacing-sm) 0;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.sidebar li.active {
+  font-weight: var(--font-weight-bold);
+  color: var(--gray-800);
+}
+
+.dashboard {
+  flex: 1;
+  padding: var(--spacing-xl);
+}
+
+.breadcrumb {
+  color: var(--gray-500);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.stats-row {
+  display: flex;
+  gap: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
+}
+
+.stat-card {
+  background: var(--secondary-color);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  min-width: 120px;
+  text-align: center;
+  transition: all var(--transition-normal);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-label {
+  color: var(--gray-500);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.stat-value {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  margin-top: var(--spacing-sm);
+  color: var(--gray-900);
+}
+
+.tabs {
+  margin-bottom: var(--spacing-md);
+}
+
+.tabs button {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  margin-right: var(--spacing-sm);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-family-primary);
+  color: var(--gray-800);
+  transition: all var(--transition-normal);
+}
+
+.tabs button:hover,
+.tabs button.active {
+  background-color: var(--primary-color);
+  color: var(--accent-color);
+}
+
+.tabs button.active {
+  background-color: var(--primary-color);
+  color: var(--accent-color);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.partner-requests {
+  background: var(--secondary-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  margin-top: var(--spacing-md);
+  border: 1px solid var(--gray-200);
+}
+
+.request-card {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+}
+
+.request-actions {
+  margin-top: var(--spacing-sm);
+}
+
+.request-actions button {
+  padding: var(--spacing-xs) var(--spacing-md);
+  margin-right: var(--spacing-sm);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.request-actions .reject {
+  background: var(--gray-200);
+  color: var(--gray-800);
+}
+
+.request-actions .reject:hover {
+  background: var(--gray-300);
+  transform: translateY(-1px);
+}
+
+.request-actions .approve {
+  background: var(--accent-color);
+  color: var(--secondary-color);
+}
+
+.request-actions .approve:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Add this to your App.css or create a separate file */
+
+
+.notifications-page-wrapper {
+  padding-top: 100px !important; /* Account for fixed header */
+  background-color: var(--gray-50);
+  min-height: calc(100vh - 100px);
+}
+
+/* Ensure the notifications component fits well */
+.notifications-page-wrapper .notifications-container {
+  background-color: var(--gray-50);
+  padding: var(--spacing-2xl) var(--spacing-lg);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .notifications-page-wrapper {
+    padding-top: 100px !important;
+  }
+
+  .notifications-page-wrapper .notifications-container {
+    padding: var(--spacing-md) var(--spacing-md);
+  }
+}

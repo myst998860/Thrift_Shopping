@@ -1,0 +1,80 @@
+.recent-bookings-container {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    padding: 1.5rem;
+}
+
+.recent-bookings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.recent-bookings-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.recent-bookings-subtitle {
+    color: #718096;
+    margin: 0;
+}
+
+.booking-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.booking-card:last-child {
+    border-bottom: none;
+}
+
+.booking-info .booking-venue {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    font-size: 1.1rem;
+}
+
+.booking-info p {
+    font-size: 0.875rem;
+    color: #4a5568;
+    margin: 0.25rem 0;
+}
+
+.booking-price-details {
+    text-align: right;
+}
+
+.booking-price-details .booking-price {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.booking-price-details .view-details-button {
+    border: 1px solid #cbd5e0;
+    background-color: transparent;
+    border-radius: 0.375rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    margin-top: 0.5rem;
+}
+
+.view-all-bookings-container {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.view-all-bookings-button {
+    width: auto;
+    border: 1px solid #cbd5e0;
+    background-color: transparent;
+    border-radius: 0.375rem;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+}
