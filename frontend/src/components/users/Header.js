@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
+import { useCart } from "../../context/CartContext"
 import "../../styles/Header.css"
 import { useUserSession } from "../../context/UserSessionContext"
 import { notificationService } from "../../services/api"
@@ -142,7 +143,7 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false)
   const [searchDropdownOpen, setSearchDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [cartCount] = useState(2)
+  const { count: cartCount } = useCart()
 
   // Notification states
   const [notifications, setNotifications] = useState([])

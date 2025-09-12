@@ -33,6 +33,8 @@
   import EditPartner from "./components/admin/EditPartner";
   import EditVenue from "./components/admin/EditVenue";
   import VenuePopular from "./components/users/VenuePopular";
+  import AddCart from "./components/users/AddCart";
+  import Donation from "./components/users/Donation";
 
 
 import UserViewBookings from "./components/users/UserViewBooking";
@@ -239,6 +241,32 @@ import UserViewBookings from "./components/users/UserViewBooking";
                   <Header isLoggedIn={isUserLoggedIn} user={user} onLogout={logout} hasNotifications={true} />
                   <div className="page-content notifications-page-wrapper">
                     <NotificationsPage />
+                  </div>
+                  <Footer />
+                </>
+              }
+            />
+
+            <Route
+              path="/donate"
+              element={
+                <>
+                  <Header isLoggedIn={isUserLoggedIn} user={user} onLogout={logout} hasNotifications={true} />
+                  <div className="page-content">
+                    <Donation />
+                  </div>
+                  <Footer />
+                </>
+              }
+            />
+
+            <Route
+              path="/cart"
+              element={
+                <>
+                  <Header isLoggedIn={isUserLoggedIn} user={user} onLogout={logout} hasNotifications={true} />
+                  <div className="page-content">
+                    <AddCart />
                   </div>
                   <Footer />
                 </>

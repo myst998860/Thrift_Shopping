@@ -2,15 +2,28 @@
 
 import { useState, useEffect } from "react";
 import Navbar from "./Header";
+import { useCart } from "../../context/CartContext";
+import { useUserSession } from "../../context/UserSessionContext";
 import Footer from "./Footer";
 import { venueService, imageService } from "../../services/api";
 import "../../styles/HomePage.css";
 
 const HomePage = () => {
+  const { addItem } = useCart();
+  const { isUserLoggedIn } = useUserSession();
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 const [images, setImages] = useState({});
+  const [toastMessage, setToastMessage] = useState("");
+  const [showToast, setShowToast] = useState(false);
+
+  const triggerToast = (message) => {
+    setToastMessage(message);
+    setShowToast(true);
+    window.clearTimeout(window.__thriftgood_toast_timer);
+    window.__thriftgood_toast_timer = window.setTimeout(() => setShowToast(false), 2000);
+  };
 
   useEffect(() => {
    const fetchTopVenues = async () => {
@@ -61,7 +74,7 @@ const [images, setImages] = useState({});
           fontSize: '18px',
           color: '#666'
         }}>
-          Loading amazing venues...
+          Loading..
         </div>
       </div>
     );
@@ -244,8 +257,16 @@ const [images, setImages] = useState({});
                     <div style={{ fontWeight: 700, color: "#0f172a" }}>{venue.name || venue.title || "Item"}</div>
                     <div style={{ color: "#64748b", fontSize: 13 }}>{venue.subtitle || venue.location || "Good condition"}</div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
-                      <div style={{ fontWeight: 700, color: "#0f172a" }}>{venue.price ? `$${venue.price}` : "$--"}</div>
-                      <button style={{
+                      <div style={{ fontWeight: 700, color: "#0f172a" }}>{venue.price ? `NPR${venue.price}` : "NPR--"}</div>
+                      <button onClick={() => {
+                        if (!isUserLoggedIn) {
+                          triggerToast("Please sign in to add items to your cart");
+                          setTimeout(() => (window.location.href = "/login"), 500);
+                          return;
+                        }
+                        addItem({ id: venue.venue_id, title: venue.name || venue.title || "Item", price: Number(venue.price || 0), imageUrl: images[venue.venue_id], meta: venue.location || venue.subtitle });
+                        triggerToast(`${venue.name || venue.title || "Item"} added to cart`);
+                      }} style={{
                         background: "#16a34a",
                         color: "white",
                         border: "none",
@@ -309,6 +330,12 @@ const [images, setImages] = useState({});
       </section>
 
       <Footer />
+
+      {showToast && (
+        <div style={{ position: "fixed", right: 16, bottom: 16, background: "#16a34a", color: "white", padding: "10px 14px", borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.18)", zIndex: 1000 }}>
+          {toastMessage || "Added to cart"}
+        </div>
+      )}
     </div>
   );
 };
