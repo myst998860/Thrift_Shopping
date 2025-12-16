@@ -51,6 +51,9 @@ public class SecurityConfig {
                     
                     .requestMatchers(HttpMethod.POST, "/auth/forgot-password").permitAll()
                     
+                    .requestMatchers(HttpMethod.POST, "/auth/donations/new\", \"/donations\", \"/donations/filter/").permitAll()
+                    .requestMatchers("/donations/add", "/donations/edit/**", "/donations/delete/**").hasRole("ADMIN")
+                    
                     // Allow OPTIONS for all (preflight)
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     

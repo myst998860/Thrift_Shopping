@@ -753,6 +753,41 @@ const imageService = {
   },
 };
 
+// Donation APIs
+const donationAPI = {
+  // Add new donation
+  addDonation: async (donationData) => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await api.post("/donations/new", donationData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get donation details by ID
+  getDonation: async (id) => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await api.get(`/donations/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+};
+
+export { donationAPI };
+
 
 
 

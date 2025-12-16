@@ -320,7 +320,7 @@ const [images, setImages] = useState({});
       {/* Stats Bar */}
       <section style={{ background: "#0b5e2b", color: "white", padding: "28px 16px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, textAlign: "center" }}>
-          {[{ label: "Items Donated", value: "12,450" }, { label: "People Helped", value: "8,230" }, { label: "NGO Partners", value: "45" }, { label: "Programs Completed", value: "156" }].map((s, i) => (
+          {[{ label: "Items Donated", value: "0" }, { label: "People Helped", value: "0" }, { label: "NGO Partners", value: "0" }, { label: "Programs Completed", value: "0" }].map((s, i) => (
             <div key={i}>
               <div style={{ fontSize: 28, fontWeight: 800 }}>{s.value}</div>
               <div style={{ opacity: 0.9 }}>{s.label}</div>
