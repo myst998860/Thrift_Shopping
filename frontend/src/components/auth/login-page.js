@@ -215,7 +215,7 @@ export default function LoginPage() {
         transition={{ duration: 0.6, delay: 0.2 }}
       >
         <img
-          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/loginimage-6La9YSxiZw3oVG0Y6bpndXqT9zUHGM.png"
+          src="https://i.pinimg.com/1200x/5c/ab/e3/5cabe3b35e1087efc6dba1874c00eaa7.jpg"
           alt="Mountain landscape with lake reflection"
           className="background-image"
         />

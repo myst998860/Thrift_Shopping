@@ -36,6 +36,29 @@ const LogoutMenuIcon = () => (
   </svg>
 )
 
+const SettingsIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="3"></circle>
+    <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+  </svg>
+)
+
+const OrdersIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+    <line x1="3" y1="6" x2="21" y2="6"></line>
+    <path d="M16 10a4 4 0 0 1-8 0"></path>
+  </svg>
+)
+
+const CancellationsIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="15" y1="9" x2="9" y2="15"></line>
+    <line x1="9" y1="9" x2="15" y2="15"></line>
+  </svg>
+)
+
 const UserIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -143,7 +166,8 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false)
   const [searchDropdownOpen, setSearchDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const { count: cartCount } = useCart()
+const { items } = useCart()
+const cartCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0)
 
   // Notification states
   const [notifications, setNotifications] = useState([])
@@ -522,6 +546,9 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
         <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleNavigation("/donate")}>
           Donate
         </span>
+        <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleNavigation("/contact")}>
+          Contact
+        </span>
       </div>
 
       {/* Right: Icons */}
@@ -530,7 +557,7 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
         <div className="notification-container" style={{ position: "relative" }}>
           <button
             className="notification-icon"
-            style={{ background: "transparent", border: 0, cursor: "pointer", position: "relative" }}
+            type="button"
             onClick={() => setNotificationDropdownOpen(!notificationDropdownOpen)}
           >
             <BellIcon />
@@ -596,36 +623,98 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
           </div>
         </div>
 
-        {/* Cart */}
-        <button
-          aria-label="Cart"
-          onClick={() => handleNavigation("/cart")}
-          style={{ background: "transparent", border: 0, cursor: "pointer", position: "relative" }}
-        >
-          {/* Reuse BellIcon as simple cart placeholder with small tweak: use existing MenuIcon as cart icon substitute would look odd; keep BellIcon for now if no cart icon present. */}
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24">
-            <circle cx="9" cy="21" r="1"></circle>
-            <circle cx="17" cy="21" r="1"></circle>
-            <path d="M5 6h16l-1.5 9h-13z"></path>
-            <path d="M5 6l-1-3H2"></path>
-          </svg>
-          {cartCount > 0 && (
-            <span style={{ position: "absolute", top: -6, right: -6, background: "#74c044", color: "#fff", fontSize: 10, width: 18, height: 18, borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {cartCount}
-            </span>
-          )}
-        </button>
+      {/* Cart */}
+<div className="cart-container" style={{ position: "relative" }}>
+  <button
+    aria-label="Cart"
+    onClick={() => handleNavigation("/cart")}
+    style={{
+      background: "transparent",
+      border: 0,
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      position: "relative",
+      padding: 0
+    }}
+  >
+    {/* Cart Icon */}
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      width="24"
+      height="24"
+    >
+      <circle cx="9" cy="21" r="1"></circle>
+      <circle cx="17" cy="21" r="1"></circle>
+      <path d="M5 6h16l-1.5 9h-13z"></path>
+      <path d="M5 6l-1-3H2"></path>
+    </svg>
+
+    {/* Cart Count Badge */}
+    {cartCount > 0 && (
+      <span
+        style={{
+          position: "absolute",
+          top: "-4px",
+          right: "-4px",
+          background: "#74c044",
+          color: "#fff",
+          fontSize: "10px",
+          width: "16px",
+          height: "16px",
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: 600
+        }}
+      >
+        {cartCount}
+      </span>
+    )}
+  </button>
+</div>
+
 
         {/* User icon */}
         {isUserLoggedIn ? (
           <div className="profile-container" style={{ position: "relative" }}>
-            <button className="profile-icon" style={{ background: "transparent", border: 0, cursor: "pointer" }} onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}>
+            <button className="profile-icon" type="button" onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}>
               <UserIcon />
             </button>
             <div className={`profile-dropdown ${profileDropdownOpen ? "active" : ""}`}>
-              <button className="dropdown-item" onClick={() => handleNavigation("/profile/user")}>
+              <button className="dropdown-item" onClick={() => {
+                setProfileDropdownOpen(false)
+                handleNavigation("/profile/user")
+              }}>
                 <ProfileMenuIcon />
                 Profile
+              </button>
+              <div className="dropdown-divider"></div>
+              <button className="dropdown-item" onClick={() => {
+                setProfileDropdownOpen(false)
+                handleNavigation("/account/manage")
+              }}>
+                <SettingsIcon />
+                Manage Account
+              </button>
+              <button className="dropdown-item" onClick={() => {
+                setProfileDropdownOpen(false)
+                handleNavigation("/orders")
+              }}>
+                <OrdersIcon />
+                My Orders
+              </button>
+              <button className="dropdown-item" onClick={() => {
+                setProfileDropdownOpen(false)
+                handleNavigation("/orders/cancellations")
+              }}>
+                <CancellationsIcon />
+                My Cancellations
               </button>
               <div className="dropdown-divider"></div>
               <button className="dropdown-item" onClick={handleLogout}>
@@ -666,6 +755,9 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
             </span>
             <span className="mobile-nav-link" onClick={() => handleNavigation("/donate")}>
               Donate
+            </span>
+            <span className="mobile-nav-link" onClick={() => handleNavigation("/contact")}>
+              Contact
             </span>
           </div>
           <div className="mobile-nav-divider"></div>

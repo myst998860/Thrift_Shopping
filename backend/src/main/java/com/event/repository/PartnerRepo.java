@@ -24,5 +24,11 @@ public interface PartnerRepo extends JpaRepository<Partner, Long> {
 
 	 @Query("SELECT p FROM Partner p JOIN p.venues v WHERE p.role = :role AND v.id = :venueId")
 	    List<Partner> findByRoleAndVenueId(@Param("role") String role, @Param("venueId") Long venueId);
+	 
+	 @Query("SELECT FUNCTION('MONTH', p.joinDate) as month, COUNT(p) FROM Partner p GROUP BY FUNCTION('MONTH', p.joinDate)")
+	 List<Object[]> countPartnersPerMonth();
+	 
+	// PartnerRepo
+	 long count();
 }
 

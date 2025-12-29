@@ -28,11 +28,18 @@ const Booking = () => {
 
   useEffect(() => {
     const fetchBookings = async () => {
-      console.log(filteredBookings);
       setLoading(true);
       try {
         const response = await bookingService.listBooking();
-        setBookings(response);
+        // Normalize status - default to "pending pickup" if status is missing or invalid
+        const validStatuses = ["pending pickup", "Processed pickup", "pickuped successfully"];
+        const normalizedBookings = response.map(booking => ({
+          ...booking,
+          status: validStatuses.includes(booking.status) 
+            ? booking.status 
+            : "pending pickup"
+        }));
+        setBookings(normalizedBookings);
       } catch (err) {
         console.error(err);
         setError("Failed to fetch bookings.");
@@ -83,6 +90,23 @@ const Booking = () => {
   const handleAdd = () => {
     navigate("/partner/bookings/new");
     setActionMenu({ open: false, index: null });
+  };
+
+  const handleStatusChange = async (bookingId, newStatus) => {
+    try {
+      await bookingService.updateBookingStatus(bookingId, newStatus);
+      // Update the booking status in the local state
+      setBookings(prevBookings =>
+        prevBookings.map(booking =>
+          booking.bookingId === bookingId
+            ? { ...booking, status: newStatus }
+            : booking
+        )
+      );
+    } catch (err) {
+      console.error('Failed to update booking status:', err);
+      setError("Failed to update booking status.");
+    }
   };
 
   return (
@@ -147,22 +171,24 @@ const Booking = () => {
                 <td>{b.duration}</td>
                 <td>{b.guests}</td>
                 <td>
-  <span
-    className="status-badge"
-    style={{
-      background:
-        statusColors[
-          b.status.charAt(0).toUpperCase() + b.status.slice(1).toLowerCase()
-        ] || "#eee",
-      color:
-        statusTextColors[
-          b.status.charAt(0).toUpperCase() + b.status.slice(1).toLowerCase()
-        ] || "#333",
-    }}
-  >
-    {b.status}
-  </span>
-</td>
+                  <select
+                    value={b.status || "pending pickup"}
+                    onChange={(e) => handleStatusChange(b.bookingId, e.target.value)}
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: "4px",
+                      border: "1px solid #ddd",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      backgroundColor: "#fff",
+                      minWidth: "150px"
+                    }}
+                  >
+                    <option value="pending pickup">pending pickup</option>
+                    <option value="Processed pickup">Processed pickup</option>
+                    <option value="pickuped successfully">pickuped successfully</option>
+                  </select>
+                </td>
                 <td style={{ position: "relative" }}>
                   <button
                     className="action-btn"

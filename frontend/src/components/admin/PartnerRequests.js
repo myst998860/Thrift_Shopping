@@ -36,9 +36,9 @@ const PartnerRequests = () => {
     const fetchPartners = async () => {
       try {
         const response = await partnerService.listPartners();
-        const pendingPartners = response.filter(
-          (partner) => partner.status.toLowerCase() === 'pending'
-        );
+      const pendingPartners = partners.filter(
+  (partner) => (partner.status || "").toLowerCase() === "pending"
+)
         setPartners(pendingPartners);
       } catch (err) {
         console.error('Error loading partners:', err);

@@ -1,25 +1,29 @@
 package com.event.model;
 
 public enum NotificationType {
-
-	 BOOKING_REQUEST("booking_request"),
-	    BOOKING_APPROVED("booking_approved"),
-	    BOOKING_REJECTED("booking_rejected"),
-	    BOOKING_CANCELLED("booking_cancelled"),
-	    PAYMENT_RECEIVED("payment_received"),
-	    PAYMENT_FAILED("payment_failed"),
-	    EVENT_REMINDER("event_reminder"),
-	    VENUE_UPDATE("venue_update"),
-	    SYSTEM_ANNOUNCEMENT("system_announcement"),
-	    PROFILE_UPDATE_REQUIRED("profile_update_required");
-	    
-	    private final String value;
-	    
-	    NotificationType(String value) {
-	        this.value = value;
-	    }
-	    
-	    public String getValue() {
-	        return value;
-	    }
-	}
+    // Shorten the values
+    BOOKING_REQUEST("BOOKING_REQ"),
+    BOOKING_APPROVED("BOOKING_APPROVED"),
+    BOOKING_REJECTED("BOOKING_REJECTED"),
+    BOOKING_CANCELLED("BOOKING_CANCELLED"),
+    PAYMENT_RECEIVED("PAYMENT_RECEIVED"),
+    PAYMENT_FAILED("PAYMENT_FAILED"),
+    EVENT_REMINDER("EVENT_REMINDER"),
+    VENUE_UPDATE("VENUE_UPDATE"),
+    SYSTEM_ANNOUNCEMENT("SYSTEM"),
+    PROFILE_UPDATE_REQUIRED("PROFILE_UPDATE"),
+    ORDER("ORDER"),
+    ORDER_COMPLETED("ORDER_DONE"),
+    ORDER_CANCELLED("ORDER_CANCEL"),
+    DONATION_COMPLETED("DONATION_DONE");
+    
+    private final String value;
+    
+    NotificationType(String value) {
+        this.value = value;
+    }
+    
+    public String getValue() {
+        return value;
+    }
+}

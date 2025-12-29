@@ -1,0 +1,312 @@
+.program-view-page {
+    background: #f8f9fa;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: "Arial", sans-serif;
+  }
+  
+  /* Breadcrumb */
+  .program-breadcrumb {
+    margin-top: 90px;
+    padding: 1rem 2rem;
+    font-size: 0.9rem;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .program-breadcrumb a {
+    color: #6b7280;
+    text-decoration: none;
+  }
+  .program-breadcrumb a:hover {
+    color: #111827;
+  }
+  .program-breadcrumb span {
+    color: #111827;
+    font-weight: 500;
+  }
+  
+  /* Content Wrapper */
+  .program-content-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem 3rem;
+    width: 100%;
+  }
+  
+  /* Content */
+  .program-detail-container {
+    max-width: 1160px;
+    margin: 2rem auto 0;
+    background: white;
+    padding: 2.5rem 3rem;
+    border-radius: 1.2rem;
+    box-shadow: 0 12px 30px rgba(15, 60, 103, 0.12);
+  }
+  
+  .program-media {
+    position: relative;
+    border-radius: 1rem;
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+  
+  .program-media-image {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  .program-status-badge {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(21, 60, 103, 0.92);
+    color: white;
+    padding: 0.55rem 1.3rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .program-category-pill {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #153c67;
+    padding: 0.45rem 1.1rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 6px 16px rgba(21, 60, 103, 0.2);
+  }
+  
+  .program-title {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+  }
+  .program-ngo {
+    color: #6b7280;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    font-size: 1.05rem;
+  }
+  .program-description {
+    color: #4b5563;
+    font-size: 1.1rem;
+    line-height: 1.75;
+    margin-bottom: 2rem;
+  }
+  
+  .section-heading {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 0.75rem;
+  }
+  
+  .program-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+  }
+  
+  .program-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  
+  .meta-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1rem;
+  }
+  .meta-label {
+    color: #6b7280;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+  }
+  .meta-value {
+    color: #111827;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  
+  /* Progress */
+  .program-progress {
+    margin-bottom: 1.25rem;
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    color: #6b7280;
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+    font-size: 0.95rem;
+  }
+  .progress-bar {
+    width: 100%;
+    height: 12px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: #153c67;
+    transition: width 0.4s ease;
+  }
+  .progress-subtext {
+    color: #6b7280;
+    margin-top: 0.75rem;
+    font-size: 0.95rem;
+  }
+  
+  .progress-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+    padding-top: 0.5rem;
+  }
+  .progress-stat {
+    text-align: center;
+  }
+  .progress-stat-value {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: #111827;
+  }
+  .progress-stat-value.target {
+    color: #f59e0b;
+  }
+  .progress-stat-label {
+    color: #6b7280;
+    font-size: 0.95rem;
+    margin-top: 0.25rem;
+  }
+  
+  /* Buttons */
+  .program-actions-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 1rem;
+  }
+  .donate-button {
+    padding: 0.95rem 1.4rem;
+    border-radius: 0.75rem;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+  }
+  .donate-button.primary {
+    background: #153c67;
+    color: white;
+    box-shadow: 0 10px 20px rgba(21, 60, 103, 0.25);
+  }
+  .donate-button.primary:hover {
+    background: #0f2b4a;
+  }
+  .donate-button.secondary {
+    background: #fff7ed;
+    color: #7c2d12;
+    border: 1px solid #fed7aa;
+  }
+  .donate-button.secondary:hover {
+    background: #ffedd5;
+  }
+  .back-button {
+    background: #f3f4f6;
+    color: #374151;
+    padding: 0.95rem 1.4rem;
+    border-radius: 0.75rem;
+    border: 1px solid #d1d5db;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+  .back-button:hover {
+    background: #e5e7eb;
+  }
+  
+  /* Loading and Error */
+  .loading,
+  .error-message {
+    text-align: center;
+    margin-top: 5rem;
+    font-size: 1.2rem;
+    color: #6b7280;
+  }
+  
+  .program-extra-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .extra-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(15, 60, 103, 0.05);
+  }
+
+  .extra-title {
+    color: #0f172a;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .extra-body {
+    color: #475569;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+  
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .program-info-grid {
+      grid-template-columns: 1fr;
+    }
+    .program-actions-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .program-content-wrapper {
+      padding: 0 1rem 2rem;
+    }
+    .program-detail-container {
+      margin: 1.5rem auto 0;
+      padding: 1.8rem;
+    }
+    .program-title {
+      font-size: 1.8rem;
+    }
+    .program-description {
+      font-size: 1rem;
+    }
+    .progress-stats {
+      grid-template-columns: 1fr;
+    }
+    .program-extra-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  

@@ -41,8 +41,10 @@ public class UserController {
             dto.setUser_id(user.getUser_id());
             dto.setFullname(user.getFullname());
             dto.setEmail(user.getEmail());
+            dto.setLocation(user.getLocation());
             dto.setPhoneNumber(user.getPhoneNumber());
             dto.setRole(user.getRole());
+            
             if (user instanceof Partner) {
                 Partner p = (Partner) user;
                 dto.setCompany(p.getCompany());
@@ -92,6 +94,8 @@ public class UserController {
         dto.setUser_id(user.getUser_id());
         dto.setFullname(user.getFullname());
         dto.setEmail(user.getEmail());
+        dto.setLocation(user.getLocation());
+        
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setRole(user.getRole());
         if (user instanceof Partner) {

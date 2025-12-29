@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.event.model.Partner;
@@ -22,13 +23,18 @@ public interface VenueRepo extends JpaRepository<Venue, Long> {
 	
 	long countByPartner(Partner partner);
 	
+//	 List<Venue> findByPartnerId(Long partnerId); 
 	
 	List<Venue> findByCategoryIgnoreCase(String category);
 	
-	List<Venue> findByLocationIgnoreCase(String location);
+//	List<Venue> findByLocationIgnoreCase(String location);
 	
-	List<Venue> findByCategoryIgnoreCaseAndLocationIgnoreCase(String category, String location);
+//	List<Venue> findByCategoryIgnoreCaseAndLocationIgnoreCase(String category);
+	@Query("SELECT FUNCTION('MONTH', v.joinDate) as month, COUNT(v) FROM Venue v GROUP BY FUNCTION('MONTH', v.joinDate)")
+	List<Object[]> countVenuesPerMonth();
 	
+	// VenueRepo
+	long count();
 	
 	
 	

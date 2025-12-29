@@ -1,96 +1,209 @@
-import { createContext, useContext, useEffect, useMemo, useReducer } from "react";
+// "use client"
 
-// Cart item shape: { id, title, price, imageUrl, meta, quantity }
+// import { createContext, useContext, useState, useEffect } from "react"
+// import { api, cartService } from "../services/api"
 
-const CartContext = createContext(null);
+// const CartContext = createContext(null)
 
-const STORAGE_KEY = "thriftgood_cart_v1";
+// export function CartProvider({ children }) {
+//   const [items, setItems] = useState([])
+//   const [loading, setLoading] = useState(true)
 
-function cartReducer(state, action) {
-  switch (action.type) {
-    case "INIT": {
-      return action.payload || [];
-    }
-    case "ADD": {
-      const incoming = action.payload;
-      const index = state.findIndex((i) => i.id === incoming.id);
-      if (index >= 0) {
-        const updated = [...state];
-        updated[index] = { ...updated[index], quantity: updated[index].quantity + (incoming.quantity || 1) };
-        return updated;
+//   useEffect(() => {
+//    const fetchCart = async () => {
+//   const userId = localStorage.getItem("userId");
+//   if (!userId) return;
+
+//   const res = await api.get(`/cart/${userId}`);
+//   setItems(res.data.items || []);  // <-- important
+// };
+
+   
+//   }, [])
+
+// const addItem = async ({ venueId, quantity = 1 }) => {
+//   try {
+//     const userId = localStorage.getItem("userId");
+//     if (!userId) throw new Error("User not logged in");
+
+//     // Call your backend API
+//     const res = await cartService.addItem(userId, venueId, quantity);
+
+//     if (!res || res.error) throw new Error(res?.error || "Failed to add item");
+
+//     // Fetch updated cart from backend
+//     const updatedCart = await cartService.getUserCart(userId);
+//     setItems(updatedCart.items || []);
+
+//     return true;
+//   } catch (err) {
+//     console.error("Failed to add item:", err);
+//     return false;
+//   }
+// };
+
+//   const updateItem = async (cartItemId, quantity) => {
+//     try {
+//       await cartService.updateItem(cartItemId, quantity)
+//       const userId = localStorage.getItem("userId")
+//       const cart = await cartService.getUserCart(userId)
+//       setItems(cart.items || [])
+//     } catch (err) {
+//       console.error("Failed to update item:", err)
+//     }
+//   }
+
+//   const removeItem = async (cartItemId) => {
+//     try {
+//       await cartService.removeItem(cartItemId)
+//       const userId = localStorage.getItem("userId")
+//       const cart = await cartService.getUserCart(userId)
+//       setItems(cart.items || [])
+//     } catch (err) {
+//       console.error("Failed to remove item:", err)
+//     }
+//   }
+
+//   const clearCart = async () => {
+//     try {
+//       const userId = localStorage.getItem("userId")
+//       await cartService.clearCart(userId)
+//       setItems([]) // clearing items in UI
+//     } catch (err) {
+//       console.error("Failed to clear cart:", err)
+//     }
+//   }
+
+//   return (
+//     <CartContext.Provider
+//       value={{ items, loading, addItem, updateItem, removeItem, clearCart }}
+//     >
+//       {children}
+//     </CartContext.Provider>
+//   )
+// }
+
+// export function useCart() {
+//   return useContext(CartContext)
+// }
+
+"use client"
+
+import { createContext, useContext, useState, useEffect } from "react"
+import { cartService } from "../services/api"
+
+const CartContext = createContext(null)
+
+export function CartProvider({ children }) {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch cart on mount
+  useEffect(() => {
+    const fetchCart = async () => {
+      const userId = localStorage.getItem("userId")
+      if (!userId) {
+        setLoading(false)
+        return
       }
-      return [...state, { ...incoming, quantity: incoming.quantity || 1 }];
+
+      try {
+        const cartData = await cartService.getUserCart(userId)
+        setItems(cartData?.items || [])
+      } catch (err) {
+        console.error("Failed to fetch cart:", err)
+      } finally {
+        setLoading(false)
+      }
     }
-    case "REMOVE": {
-      return state.filter((i) => i.id !== action.payload);
-    }
-    case "SET_QTY": {
-      const { id, quantity } = action.payload;
-      if (quantity <= 0) return state.filter((i) => i.id !== id);
-      return state.map((i) => (i.id === id ? { ...i, quantity } : i));
-    }
-    case "CLEAR": {
-      return [];
-    }
-    default:
-      return state;
+
+    fetchCart()
+  }, [])
+
+  // Add item to cart
+  // const addItem = async ({ venueId, quantity = 1 }) => {
+  //   try {
+  //     const userId = localStorage.getItem("userId")
+  //     if (!userId) throw new Error("User not logged in")
+
+  //     await cartService.addItem(userId, venueId, quantity)
+
+  //     // Refresh cart after adding
+  //     const updatedCart = await cartService.getUserCart(userId)
+  //     setItems(updatedCart?.items || [])
+  //   } catch (err) {
+  //     console.error("Failed to add item:", err)
+  //   return false 
+  //   }
+  // }
+  const addItem = async ({ venueId, quantity = 1 }) => {
+  const userId = localStorage.getItem("userId")  // get fresh userId every time
+  if (!userId) {
+    console.warn("User not logged in")
+    return false
+  }
+
+  try {
+    await cartService.addItem(userId, venueId, quantity)
+    const updatedCart = await cartService.getUserCart(userId)
+    setItems(updatedCart?.items || [])
+    return true
+  } catch (err) {
+    console.error("Failed to add item:", err)
+    return false
   }
 }
 
-export function CartProvider({ children }) {
-  const [items, dispatch] = useReducer(cartReducer, []);
-
-  // Load from localStorage once
-  useEffect(() => {
+  // Update quantity of an item
+  const updateItem = async (cartItemId, quantity) => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) dispatch({ type: "INIT", payload: parsed });
-      }
-    } catch (e) {
-      console.warn("Failed to parse cart from storage", e);
+      await cartService.updateItem(cartItemId, quantity)
+      const userId = localStorage.getItem("userId")
+      const updatedCart = await cartService.getUserCart(userId)
+      setItems(updatedCart?.items || [])
+    } catch (err) {
+      console.error("Failed to update item:", err)
     }
-  }, []);
+  }
 
-  // Persist to localStorage
-  useEffect(() => {
+  // Remove an item
+  const removeItem = async (cartItemId) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch (e) {
-      console.warn("Failed to save cart", e);
+      await cartService.removeItem(cartItemId)
+      const userId = localStorage.getItem("userId")
+      const updatedCart = await cartService.getUserCart(userId)
+      setItems(updatedCart?.items || [])
+    } catch (err) {
+      console.error("Failed to remove item:", err)
     }
-  }, [items]);
+  }
 
-  const totals = useMemo(() => {
-    const subtotal = items.reduce((sum, i) => sum + Number(i.price || 0) * Number(i.quantity || 1), 0);
-    const shipping = items.length > 0 ? 5.99 : 0;
-    const tax = +(subtotal * 0.08).toFixed(2);
-    const total = +(subtotal + shipping + tax).toFixed(2);
-    return { subtotal, shipping, tax, total };
-  }, [items]);
+  // Clear entire cart
+  const clearCart = async () => {
+    try {
+      const userId = localStorage.getItem("userId")
+      await cartService.clearCart(userId)
+      setItems([])
+    } catch (err) {
+      console.error("Failed to clear cart:", err)
+    }
+  }
 
-  const value = useMemo(
-    () => ({
-      items,
-      count: items.reduce((n, i) => n + (i.quantity || 1), 0),
-      totals,
-      addItem: (item) => dispatch({ type: "ADD", payload: item }),
-      removeItem: (id) => dispatch({ type: "REMOVE", payload: id }),
-      setQuantity: (id, quantity) => dispatch({ type: "SET_QTY", payload: { id, quantity } }),
-      clear: () => dispatch({ type: "CLEAR" }),
-    }),
-    [items, totals]
-  );
-
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  return (
+    <CartContext.Provider
+      value={{ items, loading, addItem, updateItem, removeItem, clearCart }}
+    >
+      {children}
+    </CartContext.Provider>
+  )
 }
 
 export function useCart() {
-  const ctx = useContext(CartContext);
-  if (!ctx) throw new Error("useCart must be used within CartProvider");
-  return ctx;
+  return useContext(CartContext)
 }
+<<<<<<< Updated upstream
 
 
 
+=======
+>>>>>>> Stashed changes

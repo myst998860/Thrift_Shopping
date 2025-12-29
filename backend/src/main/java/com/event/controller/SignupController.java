@@ -18,13 +18,20 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.event.repository.PartnerRepo;
 import com.event.repository.RefreshTokenRepo;
 import com.event.repository.UserRepo;
+import com.event.service.CloudinaryService;
+import com.event.service.EmailService;
+import com.event.service.OtpService;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -36,6 +43,7 @@ import com.event.model.Attendee;
 import com.event.model.Partner;
 import com.event.model.RefreshToken;
 import com.event.model.User;
+import com.event.payload.VerifyOtpRequest;
 
 
 @RestController
@@ -48,6 +56,12 @@ public class SignupController {
 	@Autowired
 	private JwtUtil jwtUtil;
 	
+	   @Autowired
+	    private CloudinaryService cloudinaryService;
+	   
+		@Autowired
+		private PartnerRepo partnerRepo;
+	
 	 @Autowired
 	 private BCryptPasswordEncoder passwordEncoder;
 	 
@@ -55,50 +69,171 @@ public class SignupController {
 	 private JavaMailSender mailSender;
 	 
 	 @Autowired
+	    private EmailService emailService;
+	 
+	 @Autowired
+	    private OtpService otpService;
+	 
+	 @Autowired
 	 private RefreshTokenRepo refreshTokenRepo;
 
 	  private final int OTP_VALID_DURATION_MINUTES = 10;
+	  
+	  
 	
 
-	@PostMapping("signup")
-	public ResponseEntity<?> register(@RequestBody @Validated SignupRequest signupRequest) {
-	    try {
-	        User user;
-	        switch (signupRequest.getRole().toUpperCase()) {
-	            case "ADMIN": 
-	                user = new Admin();
-	                break;
-	            case "PARTNER":
-	                user = new Partner();
-	                break;
-	            case "ATTENDEE":
-	                user = new Attendee();
-	                break;
-	            default:
-	                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid role");
-	        }
 
-	        user.setEmail(signupRequest.getEmail());
-	        user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
-	        user.setRole(signupRequest.getRole());
-	        user.setPhoneNumber(signupRequest.getPhoneNumber());
-	        user.setFullname(signupRequest.getFullname());
-	        user.setBusinessTranscripts(signupRequest.getBusinessTranscripts());
-	        user.setPanCard(signupRequest.getPanCard());
-	        user.setCompany(signupRequest.getCompany());
-	        user.setJoinDate(LocalDateTime.now()); 
-	        user.setStatus(signupRequest.getStatus());
-	      
-	        if (uRepo.findByEmail(user.getEmail()).isPresent()) {
-	            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already registered");
+
+	  
+//	  @PostMapping("/signup")
+//	  public ResponseEntity<?> register(@RequestBody SignupRequest signupRequest) {
+//
+//	      try {
+//	          if (uRepo.findByEmail(signupRequest.getEmail()).isPresent()) {
+//	              return ResponseEntity.status(HttpStatus.CONFLICT)
+//	                      .body("Email already registered");
+//	          }
+//
+//	          User user;
+//	          switch (signupRequest.getRole().toUpperCase()) {
+//	              case "ADMIN":
+//	                  user = new Admin();
+//	                  break;
+//	              case "PARTNER":
+//	                  user = new Partner();
+//	                  break;
+//	              case "ATTENDEE":
+//	                  user = new Attendee();
+//	                  break;
+//	              default:
+//	                  return ResponseEntity.badRequest().body("Invalid role");
+//	          }
+//
+//	          user.setEmail(signupRequest.getEmail());
+//	          user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
+//	          user.setRole(signupRequest.getRole());
+//	          user.setPhoneNumber(signupRequest.getPhoneNumber());
+//	          user.setFullname(signupRequest.getFullname());
+//	          user.setCompany(signupRequest.getCompany());
+//	          user.setJoinDate(LocalDateTime.now());
+//	          user.setStatus(
+//	                  signupRequest.getStatus() != null ? signupRequest.getStatus() : "Active"
+//	          );
+//
+//	          uRepo.save(user);
+//
+//	          return ResponseEntity.ok("User registered successfully");
+//
+//	      } catch (Exception e) {
+//	          e.printStackTrace();
+//	          return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//	                  .body("Signup failed");
+//	      }
+//	  }
+	  
+	    @PostMapping("/signup")
+	    public ResponseEntity<?> register(@RequestBody SignupRequest signupRequest) {
+	        try {
+	            if (uRepo.findByEmail(signupRequest.getEmail()).isPresent()) {
+	                return ResponseEntity.status(HttpStatus.CONFLICT)
+	                        .body("Email already registered");
+	            }
+
+	            User user;
+	            switch (signupRequest.getRole().toUpperCase()) {
+	                case "ADMIN":
+	                    user = new Admin();
+	                    break;
+	                case "PARTNER":
+	                    user = new Partner();
+	                    break;
+	                case "ATTENDEE":
+	                default:
+	                    user = new Attendee();
+	            }
+
+	            user.setEmail(signupRequest.getEmail());
+	            user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
+	            user.setFullname(signupRequest.getFullname());
+	            user.setPhoneNumber(signupRequest.getPhoneNumber());
+	            user.setRole(signupRequest.getRole());
+	            user.setCompany(signupRequest.getCompany());
+	            user.setJoinDate(LocalDateTime.now());
+
+	            // ✅ Set status to PENDING
+	            user.setStatus("Pending");
+
+	            // ✅ Generate OTP
+	            String otp = otpService.generateOtp();
+	            user.setOtpCode(otp);
+	            user.setOtpExpiry(LocalDateTime.now().plusMinutes(10)); // OTP valid for 10 mins
+
+	            // Save user with Pending status
+	            uRepo.save(user);
+
+	            // Send OTP email
+	            emailService.sendOtpEmail(user.getEmail(), otp);
+
+	            return ResponseEntity.ok("Signup successful. Please check your email for OTP.");
+
+	        } catch (Exception e) {
+	            e.printStackTrace();
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                    .body("Signup failed. Please try again.");
 	        }
-	        
-	        uRepo.save(user);
-	        return ResponseEntity.ok("User registered successfully");
-	    } catch (Exception e) {
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Registration failed");
 	    }
-	}
+	  
+	  
+	  
+	  @PostMapping("/signupPartner")
+			public ResponseEntity<?> registerPartner(
+			        @ModelAttribute SignupRequest signupRequest,
+			        @RequestParam("panCardImage") MultipartFile panCardImage,
+			        @RequestParam("businessTranscriptsImage") MultipartFile businessTranscriptsImage
+			) {
+
+			    try {
+			        if (uRepo.findByEmail(signupRequest.getEmail()).isPresent()) {
+			            return ResponseEntity.status(HttpStatus.CONFLICT)
+			                    .body("Email already registered");
+			        }
+
+			        Partner user = new Partner();
+
+			        user.setEmail(signupRequest.getEmail());
+			        user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
+			        user.setRole("PARTNER");
+			        user.setPhoneNumber(signupRequest.getPhoneNumber());
+			        user.setFullname(signupRequest.getFullname());
+			        user.setCompany(signupRequest.getCompany());
+			        user.setJoinDate(LocalDateTime.now());
+			        user.setStatus("Pending");
+
+			        // REQUIRED FILES
+			        if (panCardImage == null || panCardImage.isEmpty()) {
+			            return ResponseEntity.badRequest().body("PAN Card is required");
+			        }
+			        if (businessTranscriptsImage == null || businessTranscriptsImage.isEmpty()) {
+			            return ResponseEntity.badRequest().body("Business transcript is required");
+			        }
+
+			        String panUrl = cloudinaryService.uploadFile(panCardImage, "partner/panCard");
+			        String transUrl = cloudinaryService.uploadFile(businessTranscriptsImage, "partner/businessTranscripts");
+
+			        user.setPanCard(panUrl);
+			        user.setBusinessTranscripts(transUrl);
+
+			        uRepo.save(user);
+
+			        return ResponseEntity.ok("Partner registered successfully");
+
+			    } catch (Exception e) {
+			        e.printStackTrace();
+			        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+			                .body("Partner signup failed");
+			    }
+			}
+
 
 
 	@PostMapping("/login")
@@ -266,31 +401,58 @@ public class SignupController {
 
 
     //verify the otp 
-    @PostMapping("/verify-otp")
-    public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> request) {
-        String email = request.get("email");
-        String otp = request.get("otp");
+    // Step 2: Verify OTP
+    @PostMapping("/verify-signup-otp")
+    public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtpRequest request) {
+		System.out.println(request +"request otp");
         try {
-            User user = uRepo.findByEmail(email)
-                .orElseThrow(() -> new Exception("User not found"));
-
-            if (user.getOtpCode() == null || !user.getOtpCode().equals(otp)) {
-                throw new Exception("Invalid OTP");
-            }
-            if (user.getOtpExpiry() == null || user.getOtpExpiry().isBefore(LocalDateTime.now())) {
-                throw new Exception("OTP expired");
+            if (request == null || request.getEmail() == null || request.getOtp() == null) {
+                return ResponseEntity.badRequest().body("Email and OTP are required");
             }
 
-            // Clear OTP after successful verification
+            String email = request.getEmail().trim();
+            String otp = request.getOtp().trim();
+
+            Optional<User> optionalUser = uRepo.findByEmail(email);
+            if (optionalUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            }
+
+            User user = optionalUser.get();
+
+            String userOtp = user.getOtpCode();
+            LocalDateTime otpExpiry = user.getOtpExpiry();
+
+            if (userOtp == null || otpExpiry == null) {
+                return ResponseEntity.badRequest().body("OTP not found or expired. Please request a new OTP.");
+            }
+
+            if (!userOtp.equals(otp)) {
+                return ResponseEntity.badRequest().body("Invalid OTP");
+            }
+
+            if (otpExpiry.isBefore(LocalDateTime.now())) {
+                return ResponseEntity.badRequest().body("OTP has expired");
+            }
+
+            // OTP is valid
+            user.setStatus("Active");
             user.setOtpCode(null);
             user.setOtpExpiry(null);
             uRepo.save(user);
 
-            return ResponseEntity.ok(Map.of("message", "OTP verified"));
+            return ResponseEntity.ok("OTP verified successfully. You can now login.");
+
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+            e.printStackTrace(); // Logs exact reason for 500
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Internal server error");
         }
     }
+
+
+
+
 
     //reset oasswird after verify otp
     @PostMapping("/reset-password")

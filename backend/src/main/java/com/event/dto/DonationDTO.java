@@ -5,7 +5,8 @@ import java.time.LocalDate;
 public class DonationDTO {
 
     private Long donationId;
-
+    
+    private String status;
     // Personal Information
     private String fullName;
     private String email;
@@ -194,4 +195,12 @@ public class DonationDTO {
     public void setPickupInstructions(String pickupInstructions) {
         this.pickupInstructions = pickupInstructions;
     }
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
 }

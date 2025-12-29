@@ -5,7 +5,7 @@ import { mapService } from "./mapService"
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || "http://localhost:8080",
   headers: {
-    "Content-Type": "application/json",
+    // "Content-Type": "application/json",
   },
 });
 
@@ -65,15 +65,28 @@ const authService = {
   return response.data;
 },
 
+  // signup: async (userData) => {
+  //   const response = await api.post("/auth/signup", userData);
+  //   return response.data;
+  // },
+
   signup: async (userData) => {
     const response = await api.post("/auth/signup", userData);
     return response.data;
   },
 
-  // partnerSignup: async (partnerData) => {
-  //   const response = await api.post("/auth/partner-signup", partnerData);
-  //   return response.data;
-  // },
+signupPartner: async (partnerData) => {
+  const response = await api.post(
+    "/auth/signupPartner",
+    partnerData,  
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+  return response.data;
+},
 
   requestPasswordReset: async (email) => {
     const response = await api.post("/auth/forgot-password", { email });
@@ -85,6 +98,10 @@ const authService = {
 logout: async () => {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+
+     // 2️⃣ Clear user context if provided
+  // if (setUser) setUser(null);
 
   try {
       await fetch("http://localhost:8080/logout", {
@@ -119,6 +136,7 @@ logout: async () => {
 },
 
 
+
 requestPasswordReset: async (email) => {
     const response = await api.post("/auth/request-password-reset", { email });
     return response.data;
@@ -134,8 +152,18 @@ requestPasswordReset: async (email) => {
     return response.data;
   },
 
+  verifyOtp: async ({email, otp}) => {
+  const response = await api.post("/auth/verify-signup-otp", { 
+    email, 
+    otp 
+  });
+  return response.data;
+},
+
   isAuthenticated: () => !!localStorage.getItem("jwtToken"),
 };
+
+
 
 // Venue API services
 const venueService = {
@@ -271,6 +299,50 @@ const userService = {
     }
   },
 
+  
+  updateLocation: async (id, location) => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+       const response = await api.put(`/admin/users/update-location/${id}`, { location },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error updating location:", error);
+      throw error;
+    }
+  },
+
+  // getCurrentUser: async (token) => {
+  //   try {
+  //     const response = await api.get("admin/users/me", {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+  //     return response.data; // contains location, email, user_id
+  //   } catch (err) {
+  //     throw err;
+  //   }
+  // },
+
+  getCurrentUser: async () => {
+  try {
+    const token = localStorage.getItem("jwtToken");
+    if (!token) throw new Error("No JWT token found");
+
+    const response = await api.get("/users/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (err) {
+    console.error("getCurrentUser error:", err);
+    throw err;
+  }
+},
+
 
   // Add new user
   addUser: async (userData) => {
@@ -354,6 +426,9 @@ console.log('JWT Token:', token);
       throw error;
     }
   }
+
+
+  
 };
 
 const partnerService = {
@@ -459,6 +534,7 @@ listPartners: async () => {
   },
   
   
+  
 };
 
 export { api, authService, venueService, userService, partnerService,profileService ,imageService, mapService};
@@ -467,11 +543,12 @@ export { api, authService, venueService, userService, partnerService,profileServ
 const contactService = {
   sendMessage: async (contactData) => {
     try {
-      const token = localStorage.getItem('jwtToken');
-      const response = await api.post("/contact", contactData, {
+      const token = localStorage.getItem("jwtToken");
+      const response = await api.post("/contacts/new", contactData, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data", // necessary for FormData
+        },
       });
       return response.data;
     } catch (error) {
@@ -685,6 +762,40 @@ const bookingService = {
     }
   },
 
+  // updateBookingStatus: async (bookingId,status) => {
+  //   try {
+  //     const token = localStorage.getItem('jwtToken');
+  //     const response = await api.put(`/bookings/${bookingId}/${status}`, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`
+  //       }
+  //     });
+  //     return response.data;
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // },
+  updateBookingStatus: async (bookingId, status) => {
+  try {
+    const token = localStorage.getItem("jwtToken");
+    const headers = {};
+
+    if (token && token !== "null" && token !== "undefined") {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await api.put(
+      `/bookings/${bookingId}/status/${status}`, // make sure your backend URL matches
+      {}, // empty body
+      { headers } // headers go here, not in the body
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+},
+
   getBookingsByVenueAndDate: async (venueId, date) => {
   try {
     const token = localStorage.getItem('jwtToken');
@@ -759,7 +870,11 @@ const donationAPI = {
   addDonation: async (donationData) => {
     try {
       const token = localStorage.getItem("jwtToken");
+<<<<<<< Updated upstream
       const response = await api.post("/donations/new", donationData, {
+=======
+      const response = await api.post("/donations/new", {...donationData, program:{programId: donationData.programId}}, {
+>>>>>>> Stashed changes
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -784,13 +899,432 @@ const donationAPI = {
       throw error;
     }
   },
+<<<<<<< Updated upstream
 };
 
 export { donationAPI };
 
+=======
+   // ✅ Get all donations
+   listDonations: async () => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await api.get("/donations", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log(typeof response.data)
+      return response.data
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  updateDonationStatus: async (donationId, status) => {
+  try {
+    const token = localStorage.getItem("jwtToken");
+
+    const headers = {};
+
+    if (token && token !== "null" && token !== "undefined") {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await api.put(
+      `/donations/${donationId}/status/${status}`, // must match backend
+      {}, 
+      { headers }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+},
+
+  // ✅ Delete donation by ID
+  deleteDonation: async (id) => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await api.delete(`/donations/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+};
+>>>>>>> Stashed changes
 
 
 
+
+export { donationAPI };
+
+// Program APIs
+const programService = {
+
+  // Add new program
+  addProgram: async (programData) => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await api.post("/programs/add", programData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get all programs
+  listPrograms: async () => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await api.get("/programs", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get program by ID
+  getProgram: async (id) => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await api.get(`/programs/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Update program
+  updateProgram: async (id, programData) => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await api.put(`/programs/edit/${id}`, programData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Delete program
+  deleteProgram: async (id) => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const response = await api.delete(`/programs/delete/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+};
+
+export { programService };
+
+const uploadProgramImage = async (programId, file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`http://localhost:8080/api/files/program/${programId}`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) throw new Error("Upload failed");
+
+  const imageUrl = await res.text(); // this is the Cloudinary URL
+  return imageUrl;
+};
+
+
+export const cartService = {
+  getUserCart: async (userId) => {
+    const token = localStorage.getItem("jwtToken");
+    const res = await fetch(`http://localhost:8080/cart/${userId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+    return res.json();
+  },
+
+  addItem: async (userId, venueId, quantity) => {
+    const token = localStorage.getItem("jwtToken");
+    const res = await fetch(
+      `http://localhost:8080/cart/add?userId=${userId}&venueId=${venueId}&quantity=${quantity}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      }
+    );
+    return res.json();
+  },
+
+  updateItem: async (cartItemId, quantity) => {
+    const token = localStorage.getItem("jwtToken");
+    const res = await fetch(
+      `http://localhost:8080/cart/update/${cartItemId}?quantity=${quantity}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      }
+    );
+    return res.json();
+  },
+
+  removeItem: async (cartItemId) => {
+    const token = localStorage.getItem("jwtToken");
+    return fetch(`http://localhost:8080/cart/remove/${cartItemId}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+  },
+
+  clearCart: async (userId) => {
+    const token = localStorage.getItem("jwtToken");
+    return fetch(`http://localhost:8080/cart/clear/${userId}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+  },
+};
+
+
+
+export const orderAPI = {
+  // Checkout: create order
+  // checkout: async (orderData) => {
+  //   try {
+  //     const token = localStorage.getItem('jwtToken');
+  //     const headers = {};
+
+  //     if (token && token !== 'null' && token !== 'undefined') {
+  //       headers.Authorization = `Bearer ${token}`;
+  //     }
+
+  //     const response = await api.post('/api/orders/checkout', orderData, { headers });
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error('Checkout failed:', error);
+  //     throw error;
+  //   }
+  // },
+
+   checkout: async (orderData) => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers = {};
+      if (token && token !== 'null' && token !== 'undefined') {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      const response = await api.post('/api/orders/checkout', orderData, { headers });
+      return response.data; // <-- keep returning the data as-is
+    } catch (error) {
+      console.error('Checkout failed:', error);
+      throw error;
+    }
+  },
+
+   initiateEsewaPayment: async (orderId) => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers = {};
+      if (token && token !== 'null' && token !== 'undefined') {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      const response = await api.post(`/api/payments/esewa/initiate/${orderId}`, {}, { headers });
+      return response.data;
+    } catch (error) {
+      console.error('eSewa payment initiation failed:', error);
+      throw error;
+    }
+  },
+
+
+
+  getCurrentUser: async (token) => {
+    try {
+      const response = await api.get("/users/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (err) {
+      console.error("Failed to fetch current user:", err);
+      throw err;
+    }
+  },
+
+   // Get all orders of a user
+  getUserOrders: async (userId) => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const headers = {};
+      if (token && token !== "null" && token !== "undefined") {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await api.get(`/api/orders/user/${userId}`, { headers });
+      return response.data;
+    } catch (error) {
+      console.error("Fetching user orders failed:", error);
+      return [];
+    }
+  },
+
+  // Get all orders
+  listOrders: async () => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers = {};
+      if (token && token !== 'null' && token !== 'undefined') {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      const response = await api.get('/api/orders', { headers });
+      return response.data;
+    } catch (error) {
+      console.error('Fetching orders failed:', error);
+      throw error;
+    }
+  },
+
+  // Get single order
+  getOrder: async (orderId) => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers = {};
+      if (token && token !== 'null' && token !== 'undefined') {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      const response = await api.get(`/api/orders/${orderId}`, { headers });
+      return response.data;
+    } catch (error) {
+      console.error('Fetching order failed:', error);
+      throw error;
+    }
+  },
+
+  // Update order status
+  updateOrderStatus: async (orderId, status) => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers = {};
+      if (token && token !== 'null' && token !== 'undefined') {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      const response = await api.put(`/api/orders/${orderId}/status/${status}`, {}, { headers });
+      return response.data;
+    } catch (error) {
+      console.error('Updating order status failed:', error);
+      throw error;
+    }
+  },
+};
+
+
+const productService = {
+  // GET all products
+  listProducts: async () => {
+    const token = localStorage.getItem("jwtToken");
+    const response = await api.get("/products/all", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  },
+
+  // GET product by ID
+  getProduct: async (id) => {
+    const token = localStorage.getItem("jwtToken");
+    const response = await api.get(`/products/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  },
+
+  // CREATE product
+  addProduct: async (productData) => {
+    const token = localStorage.getItem("jwtToken");
+    const response = await api.post("/products/new", productData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+
+  // UPDATE product
+  editProduct: async (id, productData) => {
+    const token = localStorage.getItem("jwtToken");
+    const response = await api.put(`/products/update/${id}`, productData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  },
+
+  // DELETE product
+  deleteProduct: async (id) => {
+    const token = localStorage.getItem("jwtToken");
+    const response = await api.delete(`/products/delete/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  },
+
+  // SEARCH products
+  searchProducts: async (params) => {
+    // params is an object: { category, brand, tag }
+    const token = localStorage.getItem("jwtToken");
+    const response = await api.get("/products/filter", {
+      params,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  },
+};
+
+export default productService;
 
 export { contactService, notificationService, bookingService };
 // // In your services/api.js file

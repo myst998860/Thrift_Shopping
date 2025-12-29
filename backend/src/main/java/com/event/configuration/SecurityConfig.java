@@ -51,8 +51,47 @@ public class SecurityConfig {
                     
                     .requestMatchers(HttpMethod.POST, "/auth/forgot-password").permitAll()
                     
+<<<<<<< Updated upstream
                     .requestMatchers(HttpMethod.POST, "/auth/donations/new\", \"/donations\", \"/donations/filter/").permitAll()
                     .requestMatchers("/donations/add", "/donations/edit/**", "/donations/delete/**").hasRole("ADMIN")
+=======
+                    .requestMatchers("/auth/signup","/auth/signupPartner", "/auth/request-password-reset", "/auth/verify-otp", "/auth/reset-password").permitAll()
+                    
+                    .requestMatchers(HttpMethod.PUT, "/admin/users/update-location/**").authenticated()
+
+
+                    
+                    .requestMatchers(HttpMethod.POST, "/auth/donations/new", "/donations", "/donations/filter/").permitAll()
+                    .requestMatchers("/donations/add", "/donations/edit/**", "/donations/delete/**").hasRole("ADMIN")
+                    .requestMatchers("/api/contacts/new").permitAll() // Allow public access for creating contacts
+                    
+                    
+            
+                    
+                    .requestMatchers(
+                            HttpMethod.GET, 
+                            "/programs", "/programs/**",
+                            "/api/programs", "/api/programs/**"
+                    ).permitAll()
+
+                    // Endpoints accessible by ADMIN or PARTNER (creating new programs)
+                    .requestMatchers(
+                            HttpMethod.POST, 
+                            "/programs/add", "/auth/programs/new",
+                            "/api/programs/add", "/api/programs/new"
+                    ).hasAnyRole("ADMIN","PARTNER")
+
+                    // Admin-only endpoints (edit and delete)
+                    .requestMatchers(
+                    		 "/programs/edit/**", "/programs/delete/**",
+                    	        "/api/programs/edit/**", "/api/programs/delete/**"
+                    ).hasRole("ADMIN")
+                    
+                    .requestMatchers("/users/me").authenticated()
+                    .requestMatchers("/admin/**").hasRole("ADMIN")
+                 
+
+>>>>>>> Stashed changes
                     
                     // Allow OPTIONS for all (preflight)
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -63,6 +102,9 @@ public class SecurityConfig {
                     // Restricted endpoints needing roles
                     .requestMatchers(HttpMethod.GET, "/profile", "/profile/**", "/api/stats", "/api/stats/**", "/venues/**","/bookings/**","/bookings")
                         .hasAnyRole("ADMIN", "ATTENDEE", "PARTNER")
+                        
+                        .requestMatchers(HttpMethod.PUT, "/bookings/**/status/**").hasRole("ADMIN")
+
                     
                     .requestMatchers("/venues/new", "/venues/add")
                         .hasAnyRole("ADMIN", "PARTNER")
@@ -79,6 +121,26 @@ public class SecurityConfig {
                     // Permit auth, users, partners, bookings (if you want anonymous access)
                     .requestMatchers("/auth/**", "/users/**", "/partners/**", "/bookings/**", "/venues/add", "/venues")
                         .permitAll()
+                        
+                        .requestMatchers("/cart/**")
+                        .hasRole("ATTENDEE")
+                        // All other requests
+                        
+                        // Allow public product browsing
+                        .requestMatchers("/api/products", "/api/products/**").permitAll()
+
+                        // Allow auth endpoints
+                        .requestMatchers("/api/auth/**").permitAll()
+
+                        // Admin actions - only ADMIN role
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        
+                        .requestMatchers("/api/payments/esewa/**").permitAll()
+
+                      
+                        
+                        
+                   
                     
                     // All other requests require authentication
                     .anyRequest().authenticated()

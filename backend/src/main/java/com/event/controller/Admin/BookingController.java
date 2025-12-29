@@ -10,6 +10,7 @@ import com.event.model.Venue;
 import com.event.repository.AttendeeRepo;
 import com.event.repository.BookingRepo;
 import com.event.repository.VenueRepo;
+import com.event.service.EmailService;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -34,6 +35,9 @@ public class BookingController {
 	
 	 @Autowired
 	    private AttendeeRepo attendeeRepo;
+	 
+	 @Autowired
+	 private EmailService emailService;
 	
 	public BookingController(BookingRepo bookingRepo) {
         this.bookingRepo = bookingRepo;
@@ -111,6 +115,76 @@ public class BookingController {
         return ResponseEntity.ok(updatedDTO);
     }
     
+
+//     @PutMapping("/{id}/status/{status}")
+//    public ResponseEntity<BookingDTO> updateBookingStatus(@PathVariable("id") Long id,@PathVariable("status") String status) {
+//        Optional<Booking> optionalBooking = bookingRepo.findById(id);
+//        if (optionalBooking.isEmpty()) {
+//            return ResponseEntity.notFound().build();
+//        }
+//
+//        Booking booking = optionalBooking.get();
+//
+//        // Update editable fields
+//        booking.setStatus(status);
+//
+//        // TODO: send email from here
+//        
+//        
+//        
+//
+//        bookingRepo.save(booking);
+//
+//        BookingDTO updatedDTO = BookingDTO.fromBooking(booking);
+//        return ResponseEntity.ok(updatedDTO);
+//    }
+    @PutMapping("/{id}/status/{status}")
+    public ResponseEntity<BookingDTO> updateBookingStatus(
+            @PathVariable("id") Long id,
+            @PathVariable("status") String status) {
+
+        Optional<Booking> optionalBooking = bookingRepo.findById(id);
+        if (optionalBooking.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Booking booking = optionalBooking.get();
+        booking.setStatus(status);
+        bookingRepo.save(booking);
+
+        // Send email based on status
+        String userEmail = booking.getAttendee().getEmail(); // adjust according to your User model
+
+        if (userEmail != null && !userEmail.isBlank()) {
+            switch(status.toLowerCase()) {
+                case "confirmed":
+                    emailService.sendEmail(
+                        userEmail,
+                        "Pickup Confirmed",
+                        "Hello, your pickup is confirmed. The vehicle is on its way!"
+                    );
+                    break;
+
+                case "pickedup": // or "picked_up" depending on your naming
+                    emailService.sendEmail(
+                        userEmail,
+                        "Pickup Completed",
+                        "Hello, your pickup is completed. Thank you for choosing us!"
+                    );
+                    break;
+
+                default:
+                    // no email for other statuses
+                    break;
+            }
+        }
+
+        bookingRepo.save(booking);
+        
+        BookingDTO updatedDTO = BookingDTO.fromBooking(booking);
+        return ResponseEntity.ok(updatedDTO);
+    }
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<BookingDTO>> getBookingsByUserId(@PathVariable Long userId) {
         List<Booking> bookings = bookingRepo.findBookingsByUserId(userId);  // fixed method name & param

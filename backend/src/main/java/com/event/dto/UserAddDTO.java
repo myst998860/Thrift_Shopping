@@ -11,6 +11,7 @@ public class UserAddDTO {
 	    private String password;
 	    private String phoneNumber;
 	    private String fullname;
+	    private String location;
 	    private String company;
 	    private String role; 
 
@@ -88,6 +89,12 @@ public class UserAddDTO {
 		}
 		public void setStatus(String status) {
 			this.status = status;
+		}
+		public String getLocation() {
+			return location;
+		}
+		public void setLocation(String location) {
+			this.location = location;
 		}
 
 	    

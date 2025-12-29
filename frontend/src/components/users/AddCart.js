@@ -1,154 +1,220 @@
+
+// "use client"
+
+// import { useMemo } from "react"
+// import { useCart } from "../../context/CartContext"
+// import "../../styles/CartPage.css"
+
+// export default function CartPage() {
+//   const { items, loading, updateItem, removeItem, clearCart } = useCart()
+
+//   const { totalQuantity, totalAmount } = useMemo(() => {
+//     if (!items?.length) return { totalQuantity: 0, totalAmount: 0 }
+
+//     return items.reduce(
+//       (acc, item) => {
+//         const quantity = item.quantity || 0
+//         const price = item.price || item.venue?.price || 0
+
+//         acc.totalQuantity += quantity
+//         acc.totalAmount += quantity * price
+
+//         return acc
+//       },
+//       { totalQuantity: 0, totalAmount: 0 }
+//     )
+//   }, [items])
+
+//   if (loading) {
+//     return (
+//       <div className="cart-page cart-page--state">
+//         <p>Loading your cart...</p>
+//       </div>
+//     )
+//   }
+
+//   if (!items || items.length === 0) {
+//     return (
+//       <div className="cart-page cart-page--state">
+//         <p>Your cart is empty.</p>
+//       </div>
+//     )
+//   }
+
+//   return (
+//     <section className="cart-page">
+//       <header className="cart-header">
+//         <div>
+//           <h1>My Cart</h1>
+//           <p className="cart-subtitle">
+//             {totalQuantity} {totalQuantity === 1 ? "item" : "items"} ready for checkout
+//           </p>
+//         </div>
+//         <button className="cart-clear" onClick={clearCart}>
+//           Clear Cart
+//         </button>
+//       </header>
+
+//       <div className="cart-content">
+//         <div className="cart-list">
+//           {items.map((item) => {
+//             const venueName = item.venue?.venueName || item.venueName || "Venue"
+//             const price = item.price || item.venue?.price || 0
+
+//             return (
+//               <article key={item.id} className="cart-card">
+//                 <div className="cart-card__info">
+//                   <h2>{venueName}</h2>
+//                   {item.venue?.location && <p className="cart-card__meta">{item.venue.location}</p>}
+//                 </div>
+
+//                 <div className="cart-card__price">
+//                   <span className="label">Price</span>
+//                   <strong>NPR {price.toLocaleString()}</strong>
+//                 </div>
+
+//                 <label className="cart-card__quantity">
+//                   <span className="label">Qty</span>
+//                   <input
+//                     type="number"
+//                     min={1}
+//                     value={item.quantity}
+//                     onChange={(e) => updateItem(item.id, Number(e.target.value))}
+//                   />
+//                 </label>
+
+//                 <button className="cart-card__remove" onClick={() => removeItem(item.id)}>
+//                   Remove
+//                 </button>
+//               </article>
+//             )
+//           })}
+//         </div>
+
+//         <aside className="cart-summary">
+//           <div className="cart-summary__row">
+//             <span>Items</span>
+//             <strong>{totalQuantity}</strong>
+//           </div>
+//           <div className="cart-summary__row">
+//             <span>Total</span>
+//             <strong>NPR {totalAmount.toLocaleString()}</strong>
+//           </div>
+//           <button className="cart-summary__checkout">Proceed to Checkout</button>
+//         </aside>
+//       </div>
+//     </section>
+//   )
+// }
 import { useMemo } from "react";
-import Header from "./Header";
-import Footer from "./Footer";
 import { useCart } from "../../context/CartContext";
-import { useUserSession } from "../../context/UserSessionContext";
-import "../../styles/payment-page.css";
+import { useNavigate } from "react-router-dom";
+import "../../styles/CartPage.css";
 
-const currency = (n) => `$${Number(n).toFixed(2)}`;
+export default function CartPage() {
+  const { items, loading, updateItem, removeItem, clearCart } = useCart();
+  const navigate = useNavigate();
 
-export default function AddCart() {
-  const { items, totals, setQuantity, removeItem, clear } = useCart();
-  const { isUserLoggedIn } = useUserSession();
+  const { totalQuantity, totalAmount } = useMemo(() => {
+    if (!items?.length) return { totalQuantity: 0, totalAmount: 0 };
 
-  const isEmpty = items.length === 0;
+    return items.reduce(
+      (acc, item) => {
+        const quantity = item.quantity || 0;
+        const price = item.price || item.venue?.price || 0;
+        acc.totalQuantity += quantity;
+        acc.totalAmount += quantity * price;
+        return acc;
+      },
+      { totalQuantity: 0, totalAmount: 0 }
+    );
+  }, [items]);
 
-  const orderSummary = useMemo(
-    () => [
-      { label: "Subtotal", value: currency(totals.subtotal) },
-      { label: "Shipping", value: currency(totals.shipping) },
-      { label: "Tax", value: currency(totals.tax) },
-    ],
-    [totals]
-  );
-
-  if (!isUserLoggedIn) {
+  if (loading) {
     return (
-      <div>
-        <Header />
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 16px" }}>
-          <h1 style={{ fontSize: 28, marginBottom: 16 }}>Shopping Cart</h1>
-          <div style={{ background: "#f8fffa", border: "1px solid #e2f7ea", borderRadius: 12, padding: 24 }}>
-            Please sign in to view your cart.
-            <div style={{ marginTop: 12 }}>
-              <button onClick={() => (window.location.href = "/login")} style={{ ...primaryBtnStyle }}>
-                Sign In
-              </button>
-            </div>
-          </div>
-        </div>
-        <Footer />
+      <div className="cart-page cart-page--state">
+        <p>Loading your cart...</p>
+      </div>
+    );
+  }
+
+  if (!items || items.length === 0) {
+    return (
+      <div className="cart-page cart-page--state">
+        <p>Your cart is empty.</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <Header />
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 16px" }}>
-        <h1 style={{ fontSize: 28, marginBottom: 16 }}>Shopping Cart</h1>
+    <section className="cart-page">
+      <header className="cart-header">
+        <div>
+          <h1>My Cart</h1>
+          <p className="cart-subtitle">
+            {totalQuantity} {totalQuantity === 1 ? "item" : "items"} ready for checkout
+          </p>
+        </div>
+        <button className="cart-clear" onClick={clearCart}>
+          Clear Cart
+        </button>
+      </header>
 
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
-          <div>
-            {isEmpty ? (
-              <div style={{ background: "#f8fffa", border: "1px solid #e2f7ea", borderRadius: 12, padding: 24 }}>
-                Your cart is empty.
-              </div>
-            ) : (
-              items.map((item) => (
-                <div key={item.id} style={{ background: "#f8fffa", border: "1px solid #e2f7ea", borderRadius: 12, padding: 16, display: "flex", gap: 16, alignItems: "center", marginBottom: 12 }}>
-                  <div style={{ width: 96, height: 96, borderRadius: 8, overflow: "hidden", background: "#eef2f7" }}>
-                    {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    ) : null}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700 }}>{item.title}</div>
-                    {item.meta ? <div style={{ color: "#64748b", fontSize: 13 }}>{item.meta}</div> : null}
-                    <div style={{ color: "#16a34a", fontWeight: 700, marginTop: 6 }}>{currency(item.price)}</div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <button onClick={() => setQuantity(item.id, Math.max(1, (item.quantity || 1) - 1))} style={qtyBtnStyle}>
-                      −
-                    </button>
-                    <div style={{ minWidth: 24, textAlign: "center" }}>{item.quantity || 1}</div>
-                    <button onClick={() => setQuantity(item.id, (item.quantity || 1) + 1)} style={qtyBtnStyle}>
-                      +
-                    </button>
-                  </div>
-                  <button onClick={() => removeItem(item.id)} aria-label="Remove" style={removeBtnStyle}>
-                    🗑
-                  </button>
+      <div className="cart-content">
+        <div className="cart-list">
+          {items.map((item) => {
+            const venueName = item.venue?.venueName || item.venueName || "Venue";
+            const price = item.price || item.venue?.price || 0;
+
+            return (
+              <article key={item.id} className="cart-card">
+                <div className="cart-card__info">
+                  <h2>{venueName}</h2>
+                  {item.venue?.location && <p className="cart-card__meta">{item.venue.location}</p>}
                 </div>
-              ))
-            )}
+
+                <div className="cart-card__price">
+                  <span className="label">Price</span>
+                  <strong>NPR {price.toLocaleString()}</strong>
+                </div>
+
+                <label className="cart-card__quantity">
+                  <span className="label">Qty</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={item.quantity}
+                    onChange={(e) => updateItem(item.id, Number(e.target.value))}
+                  />
+                </label>
+
+                <button className="cart-card__remove" onClick={() => removeItem(item.id)}>
+                  Remove
+                </button>
+              </article>
+            );
+          })}
+        </div>
+
+        <aside className="cart-summary">
+          <div className="cart-summary__row">
+            <span>Items</span>
+            <strong>{totalQuantity}</strong>
+          </div>
+          <div className="cart-summary__row">
+            <span>Total</span>
+            <strong>NPR {totalAmount.toLocaleString()}</strong>
           </div>
 
-          <aside style={{ background: "#f8fffa", border: "1px solid #e2f7ea", borderRadius: 12, padding: 16, height: "fit-content" }}>
-            <div style={{ fontWeight: 800, marginBottom: 12 }}>Order Summary</div>
-            <div style={{ display: "grid", gap: 8 }}>
-              {orderSummary.map((row) => (
-                <div key={row.label} style={{ display: "flex", justifyContent: "space-between", color: "#0f172a" }}>
-                  <span>{row.label}</span>
-                  <span>{row.value}</span>
-                </div>
-              ))}
-            </div>
-            <div style={{ borderTop: "1px solid #e2e8f0", margin: "12px 0" }} />
-            <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 800, marginBottom: 12 }}>
-              <span>Total</span>
-              <span>{currency(totals.total)}</span>
-            </div>
-            <button disabled={isEmpty} onClick={() => alert("Proceeding to checkout...")} style={{ ...primaryBtnStyle, width: "100%" }}>
-              Proceed to Checkout
-            </button>
-            {!isEmpty && (
-              <button onClick={clear} style={{ ...secondaryBtnStyle, width: "100%", marginTop: 8 }}>
-                Clear Cart
-              </button>
-            )}
-          </aside>
-        </div>
+          {/* Only Proceed to Checkout */}
+          <button
+            className="cart-summary__checkout"
+            onClick={() => navigate("/checkout")}
+          >
+            Proceed to Checkout
+          </button>
+        </aside>
       </div>
-      <Footer />
-    </div>
+    </section>
   );
 }
-
-const qtyBtnStyle = {
-  width: 32,
-  height: 32,
-  borderRadius: 8,
-  border: "1px solid #e2e8f0",
-  background: "#ffffff",
-  cursor: "pointer",
-};
-
-const removeBtnStyle = {
-  border: 0,
-  background: "transparent",
-  cursor: "pointer",
-  fontSize: 18,
-};
-
-const primaryBtnStyle = {
-  background: "#16a34a",
-  color: "white",
-  border: 0,
-  borderRadius: 8,
-  padding: "10px 14px",
-  cursor: "pointer",
-  fontWeight: 700,
-};
-
-const secondaryBtnStyle = {
-  background: "#f1f5f9",
-  color: "#0f172a",
-  border: "1px solid #e2e8f0",
-  borderRadius: 8,
-  padding: "10px 14px",
-  cursor: "pointer",
-  fontWeight: 700,
-};
-
-

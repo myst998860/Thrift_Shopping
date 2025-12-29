@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { contactService } from "../../services/api"
+import { useState } from "react"
 import "../../styles/ContactPage.css"
 import Header from "./Header"
 import Footer from "./Footer"
@@ -12,86 +11,77 @@ const ContactPage = () => {
     contactNumber: "",
     emailAddress: "",
     message: "",
+    images: [],   // <-- FIXED name
   })
 
-  const [errors, setErrors] = useState({
-    fullName: "",
-    contactNumber: "",
-    emailAddress: "",
-    message: "",
-  })
-
-  const [touched, setTouched] = useState({
-    fullName: false,
-    contactNumber: false,
-    emailAddress: false,
-    message: false,
-  })
-
+  const [errors, setErrors] = useState({})
+  const [touched, setTouched] = useState({})
+  const [imagePreview, setImagePreview] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState("idle")
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [apiError, setApiError] = useState("")
 
-  // Auto-hide success message after 5 seconds
-  useEffect(() => {
-    if (submitStatus === "success") {
-      setShowSuccessModal(true)
-      const timer = setTimeout(() => {
-        setSubmitStatus("idle")
-        setShowSuccessModal(false)
-      }, 5000)
-      return () => clearTimeout(timer)
-    }
-  }, [submitStatus])
-
   const validateField = (name, value) => {
     switch (name) {
       case "fullName":
-        if (!value.trim()) {
-          return "Full name is required"
-        }
-        if (value.trim().length < 2) {
-          return "Full name must be at least 2 characters"
-        }
-        if (!/^[a-zA-Z\s]+$/.test(value.trim())) {
-          return "Full name can only contain letters and spaces"
-        }
+        if (!value.trim()) return "Full name is required"
+        if (value.length < 2) return "Full name must be at least 2 characters"
+        if (!/^[a-zA-Z\s]+$/.test(value)) return "Letters only"
         return ""
 
       case "contactNumber":
-        if (!value.trim()) {
-          return "Contact number is required"
-        }
-        if (!/^\+?[\d\s\-()]{10,15}$/.test(value.trim())) {
-          return "Please enter a valid phone number (10-15 digits)"
-        }
+        if (!value.trim()) return "Contact number is required"
+        if (!/^\+?[\d\s\-()]{10,15}$/.test(value)) return "Invalid phone number"
         return ""
 
       case "emailAddress":
-        if (!value.trim()) {
-          return "Email address is required"
-        }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
-          return "Please enter a valid email address"
-        }
+        if (!value.trim()) return "Email address is required"
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Invalid email"
         return ""
 
       case "message":
-        if (!value.trim()) {
-          return "Message is required"
-        }
-        if (value.trim().length < 10) {
-          return "Message must be at least 10 characters"
-        }
-        if (value.trim().length > 500) {
-          return "Message must not exceed 500 characters"
-        }
+        if (!value.trim()) return "Message is required"
+        if (value.length < 10) return "Min 10 characters"
         return ""
 
       default:
         return ""
     }
+  }
+
+  const handleInputChange = (e) => {
+    const { name, value, files } = e.target
+
+    // FIXED: image field handler
+    if (name === "images" && files && files.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        images: files,
+      }))
+
+      const reader = new FileReader()
+      reader.onloadend = () => setImagePreview(reader.result)
+      reader.readAsDataURL(files[0])
+      return
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target
+    setTouched((prev) => ({ ...prev, [name]: true }))
+    const error = validateField(name, value)
+    setErrors((prev) => ({ ...prev, [name]: error }))
+  }
+
+  const handleRemoveImage = () => {
+    setFormData((prev) => ({ ...prev, images: [] }))
+    setImagePreview(null)
   }
 
   const validateForm = () => {
@@ -102,82 +92,49 @@ const ContactPage = () => {
       message: validateField("message", formData.message),
     }
     setErrors(newErrors)
-    return !Object.values(newErrors).some((error) => error !== "")
-  }
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }))
-
-    if (touched[name]) {
-      const error = validateField(name, value)
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        [name]: error,
-      }))
-    }
-
-    // Clear API error when user starts typing
-    if (apiError) {
-      setApiError("")
-    }
-  }
-
-  const handleBlur = (e) => {
-    const { name, value } = e.target
-    setTouched((prevTouched) => ({
-      ...prevTouched,
-      [name]: true,
-    }))
-
-    const error = validateField(name, value)
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [name]: error,
-    }))
+    return !Object.values(newErrors).some((e) => e)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
-    setSubmitStatus("idle")
-    setApiError("")
-
-    setTouched({
-      fullName: true,
-      contactNumber: true,
-      emailAddress: true,
-      message: true,
-    })
 
     if (!validateForm()) {
       setIsSubmitting(false)
-      // Focus on first error field
-      const firstErrorField = Object.keys(errors).find((key) => errors[key])
-      if (firstErrorField) {
-        document.getElementById(firstErrorField)?.focus()
-      }
       return
     }
 
     try {
-      const contactData = {
-        name: formData.fullName,
-        phone: formData.contactNumber,
-        email: formData.emailAddress,
-        message: formData.message,
-        subject: "Contact Form Submission",
-        timestamp: new Date().toISOString()
+      const fd = new FormData()
+      fd.append("fullName", formData.fullName)
+      fd.append("contactNumber", formData.contactNumber)
+      fd.append("emailAddress", formData.emailAddress)
+      fd.append("message", formData.message)
+
+      // FIXED — correct Loop + correct field name
+      if (formData.images && formData.images.length > 0) {
+        for (let i = 0; i < formData.images.length; i++) {
+          fd.append("images", formData.images[i])
+        }
       }
 
-      console.log("Submitting contact form:", contactData)
-      const response = await contactService.sendMessage(contactData)
-      console.log("Contact form submitted successfully:", response)
+      const token = localStorage.getItem("jwtToken")
+
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/contacts/new`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: fd,
+        }
+      )
+
+      if (!response.ok) throw new Error("Failed to submit")
 
       setSubmitStatus("success")
+      setShowSuccessModal(true)
 
       // Reset form
       setFormData({
@@ -185,330 +142,294 @@ const ContactPage = () => {
         contactNumber: "",
         emailAddress: "",
         message: "",
-      })
-      setErrors({
-        fullName: "",
-        contactNumber: "",
-        emailAddress: "",
-        message: "",
-      })
-      setTouched({
-        fullName: false,
-        contactNumber: false,
-        emailAddress: false,
-        message: false,
+        images: [],
       })
 
+      setImagePreview(null)
     } catch (error) {
-      console.error("Contact form submission failed:", error)
+      setApiError(error.message)
       setSubmitStatus("error")
-      
-      if (error.response?.data?.message) {
-        setApiError(error.response.data.message)
-      } else {
-        setApiError("Failed to send message. Please try again or contact us directly.")
-      }
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  const copyToClipboard = (email) => {
-    navigator.clipboard.writeText(email).then(() => {
-      // Show a brief feedback
-      const button = document.querySelector(`[data-email="${email}"]`)
-      if (button) {
-        const originalText = button.textContent
-        button.textContent = "Copied!"
-        setTimeout(() => {
-          button.textContent = originalText
-        }, 2000)
-      }
-    })
   }
 
   return (
     <div className="wedding-contact-wrapper">
       <Header />
 
-      {/* Success Modal */}
+      <section className="banner-area">
+        <div className="banner-text">
+          <h1>We’d Love To Hear From You</h1>
+          <p>Questions about a product, a pickup, or just want to say hi? Let’s chat.</p>
+          <div className="hero-cta">
+            <button
+              type="button"
+              className="hero-btn"
+              onClick={() => window.scrollTo({ top: document.body.scrollHeight / 3, behavior: "smooth" })}
+            >
+              Plan Your Visit
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* SUCCESS MODAL */}
       {showSuccessModal && (
-        <div className="success-modal-overlay" onClick={() => setShowSuccessModal(false)}>
-          <div className="success-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="success-modal-overlay">
+          <div className="success-modal">
             <div className="success-icon">✅</div>
             <h3>Message Sent Successfully!</h3>
-            <p>Thank you for reaching out. We'll get back to you within 24 hours.</p>
-            <button onClick={() => setShowSuccessModal(false)} className="modal-close-btn">
+            <p>We’ll get back to you as soon as possible.</p>
+            <button className="modal-close-btn" onClick={() => setShowSuccessModal(false)}>
               Close
             </button>
           </div>
         </div>
       )}
 
-      {/* Hero Section */}
-      <div className="banner-area">
-        <div className="banner-text">
-          <h1>We are Your Event Partner</h1>
-          <p>We bring dream events to life!</p>
-          <div className="hero-cta">
-            <button
-              className="hero-btn"
-              onClick={() => document.getElementById("contact-form").scrollIntoView({ behavior: "smooth" })}
-            >
-              Get Started
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
       <div className="page-container">
         <div className="layout-columns">
-          {/* Contact Form */}
-          <div className="inquiry-form" id="contact-form">
+          <form onSubmit={handleSubmit} className="inquiry-form">
             <div className="form-header">
               <h2>Say Hello!</h2>
-              <p>Ready to plan your dream event? Let's start the conversation.</p>
+              <p>Share a little about what you’re looking for and we’ll reply within 1 business day.</p>
             </div>
 
-            {submitStatus === "error" && (
-              <div className="error-message" role="alert">
-                <span className="error-icon">⚠️</span>
-                {apiError || "Something went wrong. Please try again or contact us directly."}
-              </div>
-            )}
+            {apiError && <div className="error-message">{apiError}</div>}
 
-            <form onSubmit={handleSubmit} noValidate>
-              <div className="form-row">
-                <div className="input-wrapper">
-                  <label htmlFor="fullName">
-                    Full Name <span className="required">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="fullName"
-                    name="fullName"
-                    placeholder="Enter your full name"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
-                    required
-                    disabled={isSubmitting}
-                    className={errors.fullName && touched.fullName ? "error" : ""}
-                    aria-describedby={errors.fullName && touched.fullName ? "fullName-error" : undefined}
-                  />
-                  {errors.fullName && touched.fullName && (
-                    <span className="error-text" id="fullName-error" role="alert">
-                      {errors.fullName}
-                    </span>
-                  )}
-                </div>
-
-                <div className="input-wrapper">
-                  <label htmlFor="contactNumber">
-                    Contact Number <span className="required">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    id="contactNumber"
-                    name="contactNumber"
-                    placeholder="+977 (988) 777-6655"
-                    value={formData.contactNumber}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
-                    required
-                    disabled={isSubmitting}
-                    className={errors.contactNumber && touched.contactNumber ? "error" : ""}
-                    aria-describedby={errors.contactNumber && touched.contactNumber ? "contactNumber-error" : undefined}
-                  />
-                  {errors.contactNumber && touched.contactNumber && (
-                    <span className="error-text" id="contactNumber-error" role="alert">
-                      {errors.contactNumber}
-                    </span>
-                  )}
-                </div>
-              </div>
-
+            <div className="form-row">
               <div className="input-wrapper">
-                <label htmlFor="emailAddress">
-                  Email Address <span className="required">*</span>
+                <label htmlFor="fullName">
+                  Full Name <span className="required">*</span>
                 </label>
                 <input
-                  type="email"
-                  id="emailAddress"
-                  name="emailAddress"
-                  placeholder="your.email@example.com"
-                  value={formData.emailAddress}
+                  id="fullName"
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
                   onChange={handleInputChange}
                   onBlur={handleBlur}
-                  required
+                  placeholder="Jane Doe"
+                  className={errors.fullName && touched.fullName ? "error" : ""}
                   disabled={isSubmitting}
-                  className={errors.emailAddress && touched.emailAddress ? "error" : ""}
-                  aria-describedby={errors.emailAddress && touched.emailAddress ? "emailAddress-error" : undefined}
                 />
-                {errors.emailAddress && touched.emailAddress && (
-                  <span className="error-text" id="emailAddress-error" role="alert">
-                    {errors.emailAddress}
-                  </span>
-                )}
+                {errors.fullName && <p className="error-text">{errors.fullName}</p>}
               </div>
 
               <div className="input-wrapper">
-                <label htmlFor="message">
-                  Message <span className="required">*</span>
+                <label htmlFor="contactNumber">
+                  Contact Number <span className="required">*</span>
                 </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  placeholder="Tell us about your event requirements..."
-                  value={formData.message}
+                <input
+                  id="contactNumber"
+                  type="tel"
+                  name="contactNumber"
+                  value={formData.contactNumber}
                   onChange={handleInputChange}
                   onBlur={handleBlur}
-                  required
+                  placeholder="+1 555 123 4567"
+                  className={errors.contactNumber && touched.contactNumber ? "error" : ""}
                   disabled={isSubmitting}
-                  className={errors.message && touched.message ? "error" : ""}
-                  aria-describedby="message-help message-error"
                 />
-                <div className="message-help">
-                  <div className="character-count" id="message-help">
-                    {formData.message.length}/500 characters
-                  </div>
-                  <div className="message-hint">
-                    Include your event date, venue preferences, and any special requirements.
-                  </div>
-                </div>
-                {errors.message && touched.message && (
-                  <span className="error-text" id="message-error" role="alert">
-                    {errors.message}
-                  </span>
-                )}
+                {errors.contactNumber && <p className="error-text">{errors.contactNumber}</p>}
               </div>
-
-              <button type="submit" className="send-button" disabled={isSubmitting} aria-describedby="submit-help">
-                {isSubmitting ? (
-                  <>
-                    <span className="loading-spinner"></span>
-                    Sending...
-                  </>
-                ) : (
-                  "Send Message"
-                )}
-              </button>
-              <div className="submit-help" id="submit-help">
-                We'll respond within 24 hours
-              </div>
-            </form>
-          </div>
-
-          {/* Contact Information */}
-          <div className="details-section">
-            <div className="contact-intro">
-              <h2>Get in Touch</h2>
-              <p>Choose the best way to reach us based on your needs.</p>
             </div>
 
-            {/* Compact Contact Grid */}
+            <div className="input-wrapper">
+              <label htmlFor="emailAddress">
+                Email Address <span className="required">*</span>
+              </label>
+              <input
+                id="emailAddress"
+                type="email"
+                name="emailAddress"
+                value={formData.emailAddress}
+                onChange={handleInputChange}
+                onBlur={handleBlur}
+                placeholder="you@email.com"
+                className={errors.emailAddress && touched.emailAddress ? "error" : ""}
+                disabled={isSubmitting}
+              />
+              {errors.emailAddress && <p className="error-text">{errors.emailAddress}</p>}
+            </div>
+
+            <div className="input-wrapper">
+              <label htmlFor="message">
+                Message <span className="required">*</span>
+              </label>
+              <textarea
+                id="message"
+                name="message"
+                value={formData.message}
+                onChange={handleInputChange}
+                onBlur={handleBlur}
+                placeholder="Tell us about the items or support you need..."
+                className={errors.message && touched.message ? "error" : ""}
+                maxLength={500}
+                disabled={isSubmitting}
+              />
+              <div className="message-help">
+                <span className="character-count">{`${formData.message.length}/500`}</span>
+                <span className="message-hint">Minimum 10 characters</span>
+              </div>
+              {errors.message && <p className="error-text">{errors.message}</p>}
+            </div>
+
+            <div className="input-wrapper">
+              <label htmlFor="images">Upload Images (optional)</label>
+              <div className="image-upload-container">
+                <input
+                  type="file"
+                  id="images"
+                  name="images"
+                  accept="image/*"
+                  onChange={handleInputChange}
+                  className="image-input"
+                  multiple
+                  disabled={isSubmitting}
+                />
+                <label htmlFor="images" className="image-upload-label">
+                  {imagePreview ? (
+                    <div className="image-preview-wrapper">
+                      <img className="image-preview" src={imagePreview} alt="Preview" />
+                      <button
+                        type="button"
+                        className="remove-image-btn"
+                        onClick={handleRemoveImage}
+                        disabled={isSubmitting}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="image-upload-placeholder">
+                      <span className="upload-icon">📷</span>
+                      <span>Drop up to 3 product photos</span>
+                      <span className="upload-hint">PNG, JPG up to 5MB</span>
+                    </div>
+                  )}
+                </label>
+              </div>
+            </div>
+
+            <button className="send-button" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <span className="loading-spinner" />
+                  Sending...
+                </>
+              ) : (
+                "Send Message"
+              )}
+            </button>
+            <p className="submit-help">We typically reply within one business day.</p>
+          </form>
+
+          <section className="details-section">
+            <div className="contact-intro">
+              <h2>Contact Our Team</h2>
+              <p>Reach out directly or book an appointment to visit the thrift studio.</p>
+            </div>
+
             <div className="contact-grid">
-              <div className="contact-card">
+              <article className="contact-card">
+                <div className="card-header">
+                  <span className="category-icon">🛍️</span>
+                  <h3>Shopping Support</h3>
+                </div>
+                <p>Need help finding a piece or confirming availability? We’re on it.</p>
+                <div className="contact-actions">
+                  <a className="email-link" href="mailto:shop@thriftco.com">
+                    shop@thriftco.com
+                  </a>
+                  <button
+                    type="button"
+                    className="copy-btn"
+                    onClick={() => navigator.clipboard.writeText("shop@thriftco.com")}
+                  >
+                    Copy
+                  </button>
+                </div>
+              </article>
+
+              <article className="contact-card featured">
                 <div className="card-header">
                   <span className="category-icon">🤝</span>
-                  <h3>Vendors</h3>
+                  <h3>Donations & Partnerships</h3>
                 </div>
-                <p>Business partnerships and vendor registration</p>
+                <p>Have items to donate or want to collaborate on a pop-up? Let’s talk.</p>
                 <div className="contact-actions">
-                  <a href="mailto:vendors@company.com" className="email-link">
-                    vendors@company.com
+                  <a className="email-link" href="mailto:partners@thriftco.com">
+                    partners@thriftco.com
                   </a>
                   <button
+                    type="button"
                     className="copy-btn"
-                    onClick={() => copyToClipboard("vendors@company.com")}
-                    data-email="vendors@company.com"
-                    title="Copy email"
+                    onClick={() => navigator.clipboard.writeText("partners@thriftco.com")}
                   >
                     Copy
                   </button>
                 </div>
-              </div>
+              </article>
 
-              <div className="contact-card">
+              <article className="contact-card">
                 <div className="card-header">
-                  <span className="category-icon">💬</span>
-                  <h3>Support</h3>
+                  <span className="category-icon">📦</span>
+                  <h3>Order Questions</h3>
                 </div>
-                <p>Customer feedback and general queries</p>
+                <p>Tracking, exchanges, or custom requests—drop us a quick note.</p>
                 <div className="contact-actions">
-                  <a href="mailto:info@company.com" className="email-link">
-                    info@company.com
+                  <a className="email-link" href="mailto:orders@thriftco.com">
+                    orders@thriftco.com
                   </a>
                   <button
+                    type="button"
                     className="copy-btn"
-                    onClick={() => copyToClipboard("info@company.com")}
-                    data-email="info@company.com"
-                    title="Copy email"
+                    onClick={() => navigator.clipboard.writeText("orders@thriftco.com")}
                   >
                     Copy
                   </button>
                 </div>
-              </div>
-
-              <div className="contact-card">
-                <div className="card-header">
-                  <span className="category-icon">💕</span>
-                  <h3>Event Planning</h3>
-                </div>
-                <p>Ready to plan your dream event? Let's start the conversation!</p>
-                <div className="contact-actions">
-                  <a href="mailto:hello@company.com" className="email-link">
-                    hello@company.com
-                  </a>
-                  <button
-                    className="copy-btn"
-                    onClick={() => copyToClipboard("hello@company.com")}
-                    data-email="hello@company.com"
-                    title="Copy email"
-                  >
-                    Copy
-                  </button>
-                </div>
-              </div>
+              </article>
             </div>
 
-            {/* Quick Contact Info */}
             <div className="quick-contact">
               <h3>Quick Contact</h3>
               <div className="quick-contact-items">
                 <div className="quick-contact-item">
                   <span className="contact-icon">📞</span>
                   <div>
-                    <strong>Phone</strong>
-                    <a href="tel:+1234567890">+977 (988) 777-6655</a>
+                    <strong>Call or Text</strong>
+                    <a href="tel:+15551234567">+1 (555) 123-4567</a>
+                    <span>Mon–Sat, 9am–6pm EST</span>
                   </div>
                 </div>
                 <div className="quick-contact-item">
                   <span className="contact-icon">📍</span>
                   <div>
-                    <strong>Address</strong>
-                    <span>123 Event St, Kathmandu, Nepal</span>
+                    <strong>Visit Us</strong>
+                    <span>
+                      214 Market Street, Suite 8
+                      <br />
+                      Brooklyn, NY
+                    </span>
                   </div>
                 </div>
                 <div className="quick-contact-item">
-                  <span className="contact-icon">🕒</span>
+                  <span className="contact-icon">💬</span>
                   <div>
-                    <strong>Hours</strong>
-                    <span>
-                      Mon-Fri: 9AM-6PM
-                      <br />
-                      Sat: 10AM-4PM
-                    </span>
+                    <strong>Live Chat</strong>
+                    <span>Weekdays 10am–5pm</span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
       </div>
 
-      <Footer /> 
+      <Footer />
     </div>
   )
 }

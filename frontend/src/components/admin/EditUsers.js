@@ -171,6 +171,8 @@ const EditUser = () => {
               ))}
             </>
           )}
+.
+          <img src={formData.businessTranscripts} alt="User Image" width={100} height={100} style={{borderRadius: '10px'}} />
 
           <button type="submit" className="edit-user-submit-btn" disabled={isSubmitting} aria-busy={isSubmitting}>
             {isSubmitting ? (

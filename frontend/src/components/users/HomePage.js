@@ -5,16 +5,19 @@ import Navbar from "./Header";
 import { useCart } from "../../context/CartContext";
 import { useUserSession } from "../../context/UserSessionContext";
 import Footer from "./Footer";
-import { venueService, imageService } from "../../services/api";
+import { venueService, imageService, programService } from "../../services/api";
+
+
 import "../../styles/HomePage.css";
 
 const HomePage = () => {
   const { addItem } = useCart();
   const { isUserLoggedIn } = useUserSession();
   const [venues, setVenues] = useState([]);
+  const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-const [images, setImages] = useState({});
+  const [images, setImages] = useState({});
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
 
@@ -26,41 +29,74 @@ const [images, setImages] = useState({});
   };
 
   useEffect(() => {
-   const fetchTopVenues = async () => {
-    try {
-      setLoading(true);
-      const response = await venueService.listVenue();
-      const topVenues = Array.isArray(response) ? response.slice(0, 8) : [];
-      setVenues(topVenues);
-      setError(null);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch venues
+        const response = await venueService.listVenue();
+        const topVenues = Array.isArray(response) ? response.slice(0, 8) : [];
+        setVenues(topVenues);
+        setError(null);
 
-      // Fetch images for each venue
-      const imagePromises = topVenues.map(async (venue) => {
+        // Fetch images for each venue
+        const imagePromises = topVenues.map(async (venue) => {
+          try {
+            const imageBlob = await imageService.getImage(venue.venue_id);
+            return { venue_id: venue.venue_id, imageUrl: URL.createObjectURL(imageBlob) };
+          } catch {
+            return { venue_id: venue.venue_id, imageUrl: null };
+          }
+        });
+
+        const imagesArray = await Promise.all(imagePromises);
+        const imageMap = {};
+        imagesArray.forEach(({ venue_id, imageUrl }) => {
+          imageMap[venue_id] = imageUrl;
+        });
+
+        setImages(imageMap);
+
+        // Fetch programs
         try {
-          const imageBlob = await imageService.getImage(venue.venue_id);
-          return { venue_id: venue.venue_id, imageUrl: URL.createObjectURL(imageBlob) };
-        } catch {
-          return { venue_id: venue.venue_id, imageUrl: null };
+          const programsData = await programService.listPrograms();
+          const safePrograms = Array.isArray(programsData) 
+            ? programsData.map((p) => ({
+                programId: p.programId,
+                programTitle: p.programTitle || "Untitled Program",
+                name: p.name || "ThriftGood",
+                description: p.description || "No description available",
+                category: p.category || "Other",
+                programImage: p.programImage || "/default-image.png",
+                programLocation: p.programLocation || "Kathmandu",
+                targetItemsToCollect: p.targetItemsToCollect || 1,
+                estimatedBeneficiaries: p.estimatedBeneficiaries || 0,
+                createdAt: p.createdAt,
+              }))
+            : [];
+          // Sort by most recently added (by programId descending, or createdAt if available)
+          const sortedPrograms = safePrograms.sort((a, b) => {
+            if (a.createdAt && b.createdAt) {
+              return new Date(b.createdAt) - new Date(a.createdAt);
+            }
+            // Fallback to sorting by programId (higher ID = more recent)
+            return (b.programId || 0) - (a.programId || 0);
+          });
+          setPrograms(sortedPrograms.slice(0, 4)); // Show 4 most recently added programs
+        } catch (programError) {
+          console.error("Error fetching programs:", programError);
+          // Don't set error state for programs, just log it
         }
-      });
+      } catch (error) {
+        console.error("Error fetching top venues:", error);
+        setError("Failed to load venues. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      const imagesArray = await Promise.all(imagePromises);
-      const imageMap = {};
-      imagesArray.forEach(({ venue_id, imageUrl }) => {
-        imageMap[venue_id] = imageUrl;
-      });
-
-      setImages(imageMap);
-    } catch (error) {
-      console.error("Error fetching top venues:", error);
-      setError("Failed to load venues. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchTopVenues();
-}, []);
+    fetchData();
+  }, []);
 
   if (loading) {
     return (
@@ -84,11 +120,11 @@ const [images, setImages] = useState({});
     return (
       <div className="homepage">
         <Navbar />
-        <div style={{ 
-          display: 'flex', 
+        <div style={{
+          display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'center', 
-          alignItems: 'center', 
+          justifyContent: 'center',
+          alignItems: 'center',
           height: '50vh',
           fontSize: '18px',
           color: '#e74c3c',
@@ -119,162 +155,44 @@ const [images, setImages] = useState({});
       <Navbar />
 
       {/* Hero */}
-      <section style={{
-        background: "linear-gradient(180deg, #f6fbf7 0%, #ffffff 100%)",
-        padding: "109px 16px 48px",
-        textAlign: "center"
-      }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{
-            display: "inline-block",
-            background: "#e6f7eb",
-            color: "#2f855a",
-            padding: "6px 10px",
-            borderRadius: 8,
-            fontSize: 12,
-            fontWeight: 600,
-            marginBottom: 18
-          }}>Sustainable Fashion · Social Impact</div>
-          <h1 style={{
-            fontSize: 48,
-            lineHeight: 1.1,
-            margin: 0,
-            fontWeight: 700,
-            color: "#0f172a"
-          }}>
-            Fashion That Makes a <span style={{ color: "#16a34a" }}>Difference</span>
+      <section className="hero">
+        <div className="hero-content">
+          <div className="hero-eyebrow">Curated Vintage · Every Purchase Helps</div>
+          <h1 className="hero-title">
+            Timeless <span className="accent-blue">Treasures</span><br/>for the <span className="accent-orange">Conscious</span>
           </h1>
-          <p style={{
-            color: "#475569",
-            marginTop: 14,
-            fontSize: 16
-          }}>
-            Shop unique thrift finds and donate clothes to support NGO programs. Every purchase and donation creates positive social impact.
+          <p className="hero-subtitle">
+            Discover curated vintage finds. Every piece tells a story. Every purchase makes a difference.
           </p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 20, flexWrap: "wrap" }}>
-            <button style={{
-              backgroundColor: "#16a34a",
-              color: "white",
-              border: "none",
-              padding: "12px 18px",
-              borderRadius: 8,
-              cursor: "pointer",
-              fontWeight: 600
-            }}>Shop Now</button>
-            <button style={{
-              backgroundColor: "#f1f5f9",
-              color: "#0f172a",
-              border: "1px solid #e2e8f0",
-              padding: "12px 18px",
-              borderRadius: 8,
-              cursor: "pointer",
-              fontWeight: 600
-            }}>Donate Clothes</button>
+          <div className="cta-group">
+            <button className="btn btn-primary" onClick={() => (window.location.href = "/shop")}>Explore Now</button>
+            <button className="btn btn-secondary" onClick={() => (window.location.href = "/donate")}>Donate Items</button>
           </div>
         </div>
       </section>
 
-      {/* How it Works */}
-      <section style={{ padding: "32px 16px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <h2 style={{ textAlign: "center", color: "#0f172a", marginBottom: 8 }}>How ThriftGood Works</h2>
-          <p style={{ textAlign: "center", color: "#64748b", marginTop: 0 }}>A simple platform connecting sustainable fashion with social impact</p>
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: 16,
-            marginTop: 20
-          }}>
-            {[{
-              title: "Shop Thrift Items",
-              desc: "Browse unique, pre-loved clothing at affordable prices"
-            }, {
-              title: "Donate Clothes",
-              desc: "Give your unused clothes a second life through NGO programs"
-            }, {
-              title: "Support Communities",
-              desc: "Every transaction supports NGO programs and social initiatives"
-            }].map((card, idx) => (
-              <div key={idx} style={{
-                background: "#f8fffa",
-                border: "1px solid #e2f7ea",
-                borderRadius: 12,
-                padding: 18
-              }}>
-                <div style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 999,
-                  background: "#e6f7eb",
-                  marginBottom: 12
-                }} />
-                <div style={{ fontWeight: 700, color: "#0f172a", marginBottom: 6 }}>{card.title}</div>
-                <div style={{ color: "#64748b", fontSize: 14 }}>{card.desc}</div>
-              </div>
-            ))}
+      {/* Latest Finds */}
+      <section className="latest">
+        <div className="latest-inner">
+          <div className="section-head">
+            <h2>Recent Added </h2>
           </div>
-        </div>
-      </section>
-
-      {/* Featured Items */}
-      <section style={{ padding: "24px 16px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h2 style={{ color: "#0f172a", margin: 0 }}>Featured Items</h2>
-            <button style={{
-              background: "#f1f5f9",
-              border: "1px solid #e2e8f0",
-              padding: "8px 12px",
-              borderRadius: 8,
-              cursor: "pointer"
-            }}>View All</button>
-          </div>
-          <p style={{ color: "#64748b", marginTop: 6 }}>Discover unique finds from our thrift collection</p>
-
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
-            gap: 16,
-            marginTop: 12
-          }}>
-            {venues.slice(0, 4).map((venue) => {
+          <div className="card-grid">
+            {venues.slice(0, 3).map((venue) => {
               const imageUrl = images[venue.venue_id];
               return (
-                <div key={venue.venue_id} style={{
-                  background: "#f8fffa",
-                  border: "1px solid #e2f7ea",
-                  borderRadius: 12,
-                  overflow: "hidden",
-                  display: "flex",
-                  flexDirection: "column"
-                }}>
-                  <div style={{ background: "#eef2f7", height: 180 }}>
+                <div key={venue.venue_id} className="card">
+                  <div className="card-media">
                     {imageUrl ? (
-                      <img src={imageUrl} alt={venue.name || "Featured item"} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      <img src={imageUrl} alt={venue.name || "Item"} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     ) : null}
                   </div>
-                  <div style={{ padding: 12, background: "#f0fff4" }}>
-                    <div style={{ fontWeight: 700, color: "#0f172a" }}>{venue.name || venue.title || "Item"}</div>
-                    <div style={{ color: "#64748b", fontSize: 13 }}>{venue.subtitle || venue.location || "Good condition"}</div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
-                      <div style={{ fontWeight: 700, color: "#0f172a" }}>{venue.price ? `NPR${venue.price}` : "NPR--"}</div>
-                      <button onClick={() => {
-                        if (!isUserLoggedIn) {
-                          triggerToast("Please sign in to add items to your cart");
-                          setTimeout(() => (window.location.href = "/login"), 500);
-                          return;
-                        }
-                        addItem({ id: venue.venue_id, title: venue.name || venue.title || "Item", price: Number(venue.price || 0), imageUrl: images[venue.venue_id], meta: venue.location || venue.subtitle });
-                        triggerToast(`${venue.name || venue.title || "Item"} added to cart`);
-                      }} style={{
-                        background: "#16a34a",
-                        color: "white",
-                        border: "none",
-                        padding: "8px 10px",
-                        borderRadius: 8,
-                        cursor: "pointer",
-                        fontWeight: 600
-                      }}>Add to Cart</button>
+                  <div className="card-body">
+                    <div className="card-title">{venue.venueName || venue.title || "Item"}</div>
+                    <div className="card-sub">{venue.subtitle || venue.description || "Good condition"}</div>
+                    <div className="price-row">
+                      <div className="price">{venue.price ? `NPR ${venue.price}` : "NPR --"}</div>
+                      <button className="btn btn-secondary btn-small" onClick={() => (window.location.href = `/venues/${venue.venue_id}`)}>View</button>
                     </div>
                   </div>
                 </div>
@@ -284,48 +202,82 @@ const [images, setImages] = useState({});
         </div>
       </section>
 
-      {/* Active Programs */}
-      <section style={{ padding: "24px 16px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <h2 style={{ color: "#0f172a", marginTop: 0 }}>Active Programs</h2>
-          <p style={{ color: "#64748b", marginTop: 6 }}>See how your donations are making a difference in communities</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
-            <div style={{ background: "#f8fffa", border: "1px solid #e2f7ea", borderRadius: 12, padding: 16 }}>
-              <div style={{ display: "inline-block", background: "#e6f7eb", color: "#2f855a", padding: "4px 8px", borderRadius: 999, fontSize: 12, fontWeight: 700, marginBottom: 10 }}>Ongoing</div>
-              <div style={{ fontWeight: 700, color: "#0f172a" }}>Winter Clothing Drive</div>
-              <div style={{ color: "#64748b", fontSize: 14, marginTop: 6 }}>Providing warm clothes to homeless shelters across the city</div>
-              <div style={{ marginTop: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#64748b" }}>
-                  <span>Progress: 75% complete</span>
-                  <span>Goal: 500 items</span>
-                </div>
-                <div style={{ height: 8, background: "#e6f7eb", borderRadius: 999, marginTop: 6 }}>
-                  <div style={{ width: "75%", height: "100%", background: "#16a34a", borderRadius: 999 }} />
-                </div>
-              </div>
-            </div>
-            <div style={{ background: "#f8fffa", border: "1px solid #e2f7ea", borderRadius: 12, padding: 16 }}>
-              <div style={{ display: "inline-block", background: "#e6f7eb", color: "#2f855a", padding: "4px 8px", borderRadius: 999, fontSize: 12, fontWeight: 700, marginBottom: 10 }}>Starting Soon</div>
-              <div style={{ fontWeight: 700, color: "#0f172a" }}>School Uniform Program</div>
-              <div style={{ color: "#64748b", fontSize: 14, marginTop: 6 }}>Supporting students with quality school uniforms and supplies</div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#64748b", marginTop: 12 }}>
-                <span>Starts: March 15, 2024</span>
-                <span>Target: 200 students</span>
-              </div>
-            </div>
+      {/* Programs Section */}
+      <section className="latest">
+        <div className="latest-inner">
+          <div className="section-head">
+            <h2>Active Programs</h2>
           </div>
+          {programs.length > 0 ? (
+            <div className="card-grid">
+              {programs.map((program) => (
+                <div key={program.programId} className="card">
+                  <div className="card-media">
+                    {program.programImage && (
+                      <img 
+                        src={program.programImage} 
+                        alt={program.programTitle} 
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                      />
+                    )}
+                  </div>
+                  <div className="card-body">
+                    <div className="card-title">{program.programTitle}</div>
+                    <div className="card-sub">{program.description.length > 80 ? program.description.substring(0, 80) + "..." : program.description}</div>
+                    <div style={{ marginTop: "8px", fontSize: "12px", color: "#64748b" }}>
+                      📍 {program.programLocation}
+                    </div>
+                    <div style={{ marginTop: "8px", fontSize: "12px", color: "#64748b" }}>
+                      {program.name}
+                    </div>
+                    <div className="price-row" style={{ marginTop: "10px" }}>
+                      <div style={{ fontSize: "12px", color: "#64748b" }}>
+                        Category: {program.category}
+                      </div>
+                      <button 
+                        className="btn btn-secondary btn-small" 
+                        onClick={() => (window.location.href = `/programs/${program.programId}`)}
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
+              No programs available at the moment.
+            </div>
+          )}
         </div>
       </section>
 
+<<<<<<< Updated upstream
       {/* Stats Bar */}
       <section style={{ background: "#0b5e2b", color: "white", padding: "28px 16px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, textAlign: "center" }}>
           {[{ label: "Items Donated", value: "0" }, { label: "People Helped", value: "0" }, { label: "NGO Partners", value: "0" }, { label: "Programs Completed", value: "0" }].map((s, i) => (
+=======
+      {/* Impact Section */}
+      <section className="impact">
+        <div className="impact-inner">
+          {[{ label: "Items Donated", value: "12K+" }, { label: "People Helped", value: "8K+" }, { label: "Active Programs", value: "15" }, { label: "NGO Partners", value: "45" }].map((s, i) => (
+>>>>>>> Stashed changes
             <div key={i}>
-              <div style={{ fontSize: 28, fontWeight: 800 }}>{s.value}</div>
-              <div style={{ opacity: 0.9 }}>{s.label}</div>
+              <div className="impact-value">{s.value}</div>
+              <div className="impact-label">{s.label}</div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="cta">
+        <div className="cta-inner">
+          <h2 className="cta-title">Ready to Shop with Purpose?</h2>
+          <p className="cta-sub">Join our community and discover the beauty of sustainable fashion.</p>
+          <button className="btn btn-primary" onClick={() => (window.location.href = "/shop")}>Start Shopping</button>
         </div>
       </section>
 

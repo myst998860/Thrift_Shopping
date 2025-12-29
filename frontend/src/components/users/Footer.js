@@ -51,7 +51,7 @@ const Footer = () => {
               <li style={{ marginBottom: 8 }}><a href="#help" style={{ color: "inherit", textDecoration: "none" }}>Help Center</a></li>
               <li style={{ marginBottom: 8 }}><a href="#shipping" style={{ color: "inherit", textDecoration: "none" }}>Shipping Info</a></li>
               <li style={{ marginBottom: 8 }}><a href="#returns" style={{ color: "inherit", textDecoration: "none" }}>Returns</a></li>
-              <li><a href="#contact" style={{ color: "inherit", textDecoration: "none" }}>Contact Us</a></li>
+              <li><a href="/contact" style={{ color: "inherit", textDecoration: "none" }}>Contact Us</a></li>
             </ul>
           </div>
 

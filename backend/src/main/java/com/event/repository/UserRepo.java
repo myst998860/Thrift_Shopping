@@ -22,6 +22,13 @@ public interface UserRepo extends JpaRepository<User, Long> {
 	  
 	
 	    List<User> findByRole(String role);
+	    
+	    @Query("SELECT FUNCTION('MONTH', u.joinDate) as month, COUNT(u) FROM User u GROUP BY FUNCTION('MONTH', u.joinDate)")
+	    List<Object[]> countUsersPerMonth();
+	    
+	 // UserRepo
+	    long count();
+
 
 	
 

@@ -14,7 +14,7 @@ public class SignupRequest {
 
 	    private String company;  
 
-	    private String panCard;  
+	    private String panCardImageUrl;  
 
 	    private String businessTranscripts; 
 
@@ -67,12 +67,12 @@ public class SignupRequest {
 
 
 		public String getPanCard() {
-			return panCard;
+			return panCardImageUrl;
 		}
 
 
-		public void setPanCard(String panCard) {
-			this.panCard = panCard;
+		public void setPanCard(String panCardImageUrl) {
+			this.panCardImageUrl = panCardImageUrl;
 		}
 
 

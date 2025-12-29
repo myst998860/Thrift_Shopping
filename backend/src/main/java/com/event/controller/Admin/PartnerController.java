@@ -1,21 +1,28 @@
 package com.event.controller.Admin;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.multipart.MultipartFile;
+import com.event.service.CloudinaryService;
+import com.event.service.EmailService;
 import com.event.dto.UserAddDTO;
 import com.event.model.Partner;
 import com.event.repository.PartnerRepo;
@@ -30,6 +37,12 @@ public class PartnerController {
 	    
 	@Autowired
 	private BCryptPasswordEncoder passwordEncoder;
+	
+    @Autowired
+    private CloudinaryService cloudinaryService;
+    
+    @Autowired
+    private EmailService emailService;
 	  
 	@GetMapping
 	public List<UserAddDTO> listPartners() {
@@ -53,34 +66,98 @@ public class PartnerController {
 	    
 	}
 
-	    
+//	    
+//	@PostMapping("/new")
+//	public ResponseEntity<String> savePartner(@RequestBody Partner partner) {
+//	    try {
+//	        // Encode the password before saving
+//	        String encodedPassword = passwordEncoder.encode(partner.getPassword());
+//	        partner.setPassword(encodedPassword);
+//	        
+//
+//	        partnerRepo.save(partner);
+//	        return ResponseEntity.ok("Partner added successfully");
+//	    } catch (Exception e) {
+//	        return ResponseEntity.status(500).body("Error adding partner: " + e.getMessage());
+//	    }
+//	}
+	
 	@PostMapping("/new")
-	public ResponseEntity<String> savePartner(@RequestBody Partner partner) {
+	public ResponseEntity<?> savePartner(
+	        @ModelAttribute Partner partner,
+	        @RequestParam("panCardImage") MultipartFile panCardImage,
+	        @RequestParam("businessTranscriptsImage") MultipartFile businessTranscriptsImage) {
+
 	    try {
-	        // Encode the password before saving
+
+	        // 1️⃣ Upload panCardImage
+	        if (panCardImage != null && !panCardImage.isEmpty()) {
+	            String uploadedUrl = cloudinaryService.uploadFile(panCardImage, "partner/panCard");
+	            partner.setPanCard(uploadedUrl);
+	        }
+
+	        // 2️⃣ Upload Business Transcript
+	        if (businessTranscriptsImage != null && !businessTranscriptsImage.isEmpty()) {
+	            String uploadedUrl = cloudinaryService.uploadFile(businessTranscriptsImage, "partner/businessTranscripts");
+	            partner.setbusinessTranscripts(uploadedUrl);
+	        }
+
+	        // 3️⃣ Encrypt Password
 	        String encodedPassword = passwordEncoder.encode(partner.getPassword());
 	        partner.setPassword(encodedPassword);
-	        
 
+	        // 4️⃣ Save Partner
 	        partnerRepo.save(partner);
-	        return ResponseEntity.ok("Partner added successfully");
+	        
+	
+
+	        return ResponseEntity.ok("Partner registered successfully");
+
 	    } catch (Exception e) {
+	        e.printStackTrace();
 	        return ResponseEntity.status(500).body("Error adding partner: " + e.getMessage());
 	    }
 	}
+
 	
 	@PutMapping("/approve/{userId}")
-	public ResponseEntity<Void> approvePartner(@PathVariable Long userId) {
-	    Optional<Partner> partnerOpt = partnerRepo.findById(userId);
-	    if (partnerOpt.isPresent()) {
+	public ResponseEntity<?> approvePartner(@PathVariable Long userId) {
+	    try {
+	        Optional<Partner> partnerOpt = partnerRepo.findById(userId); // make sure ID matches Partner entity
+	        if (partnerOpt.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body("Partner not found with id: " + userId);
+	        }
+
 	        Partner partner = partnerOpt.get();
-	        partner.setStatus("Active");
+	        partner.setStatus("Verified"); // use 'Verified' if that’s what frontend expects
 	        partnerRepo.save(partner);
-	        return ResponseEntity.ok().build();
-	    } else {
-	        return ResponseEntity.notFound().build();
+	        
+	        try {
+	            String email = partner.getEmail();
+	            if (email != null && !email.isBlank()) {
+	                String subject = "NGO Partner Approval Notification";
+	                String message = "Hello " + partner.getFullname() + ",\n\n" +
+	                                 "Congratulations! Your submission to become an NGO partner with us has been accepted. " +
+	                                 "You are now a verified partner.\n\n" +
+	                                 "Thank you for joining our community.\n\n" +
+	                                 "Best regards,\nYour Organization Name";
+
+	                emailService.sendEmail(email, subject, message);
+	            }
+	        } catch (Exception emailEx) {
+	            System.err.println("❌ Error sending approval email: " + emailEx.getMessage());
+	            emailEx.printStackTrace();
+	        }
+
+	        return ResponseEntity.ok().body(partner); // return the updated partner
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body("Error approving partner: " + e.getMessage());
 	    }
 	}
+
 
 	    
 	    @DeleteMapping("/delete/{userId}")

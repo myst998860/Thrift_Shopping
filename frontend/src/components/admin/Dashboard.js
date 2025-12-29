@@ -1,16 +1,48 @@
 import React, { useState, useEffect } from "react";
-import { 
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+import {
+  LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   AreaChart, Area
 } from 'recharts';
 import PartnerRequests from "./PartnerRequests";
 import RecentBookings from "./RecentBookings";
 import { useNavigate } from "react-router-dom";
+import { programService } from "../../services/api";
+
+const chartableStats = new Set(["users", "partners", "venues", "bookings"]);
+
+const normalizeProgramsResponse = (payload) => {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload;
+  if (typeof payload !== "object") return [];
+
+  const queue = [payload];
+  const visited = new WeakSet();
+
+  while (queue.length) {
+    const current = queue.shift();
+    if (!current || typeof current !== "object") continue;
+    if (visited.has(current)) continue;
+    visited.add(current);
+
+    if (Array.isArray(current)) return current;
+
+    Object.values(current).forEach((v) => {
+      if (v && (Array.isArray(v) || typeof v === "object")) queue.push(v);
+    });
+  }
+  return [];
+};
+
+const isProgramActive = (program) => {
+  const status = String(program?.status || "").toLowerCase();
+  return !["inactive", "completed", "ended", "archived", "cancelled"].includes(status);
+};
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("bookings");
   const [stats, setStats] = useState([]);
+  const [statsRaw, setStatsRaw] = useState(null);
   const [chartData, setChartData] = useState({
     users: [],
     partners: [],
@@ -19,51 +51,62 @@ const Dashboard = () => {
   });
   const [selectedChart, setSelectedChart] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activePrograms, setActivePrograms] = useState([]);
+  const [activeProgramsCount, setActiveProgramsCount] = useState(0);
+
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("jwtToken");
-
-    if (!token) {
-      console.error("No JWT token found, user might not be logged in");
-      return;
-    }
+    if (!token) return;
 
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // Fetch stats
-        const statsResponse = await fetch("http://localhost:8080/api/stats", {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
+
+        /* ================== STATS ================== */
+        const statsRes = await fetch("http://localhost:8080/api/stats", {
+          headers: { Authorization: `Bearer ${token}` }
         });
-        
-        if (!statsResponse.ok) throw new Error(`HTTP error! status: ${statsResponse.status}`);
-        const statsData = await statsResponse.json();
-        
+
+        const statsData = await statsRes.json();
+
+        setStatsRaw(statsData); // ✅ FIX
+
         setStats([
           { label: "Users", value: statsData.users, type: "users" },
-          { label: "Partners", value: statsData.partners, type: "partners" },
-          { label: "Venues", value: statsData.venues, type: "venues" },
-          { label: "Bookings", value: statsData.bookings, type: "bookings" },
-          { label: "Revenue", value: `NPR ${statsData.revenue?.toLocaleString() || 0}`, type: "revenue" },
+          { label: "NGO", value: statsData.partners, type: "partners" },
+          { label: "Products Added", value: statsData.venues, type: "venues" },
+          { label: "Total Orders", value: statsData.orders, type: "orders" },
+          {
+            label: "Total Sale",
+            value: `NPR ${statsData.orderRevenue?.toLocaleString() || 0}`,
+            type: "revenue"
+          }
         ]);
 
-        // Fetch chart data
-        const chartResponse = await fetch("http://localhost:8080/api/chart-data", {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
+        /* ================== CHART DATA ================== */
+        const chartRes = await fetch("http://localhost:8080/api/chart-data", {
+          headers: { Authorization: `Bearer ${token}` }
         });
-        
-        if (!chartResponse.ok) throw new Error(`HTTP error! status: ${chartResponse.status}`);
-        const chartDataResponse = await chartResponse.json();
-        
-        setChartData(chartDataResponse);
-      } catch (error) {
-        console.error("Error fetching data:", error);
+        const chartJson = await chartRes.json();
+        setChartData(chartJson);
+
+        /* ================== PROGRAMS ================== */
+        const programRes = await programService.listPrograms();
+        const programs = normalizeProgramsResponse(programRes);
+        const activeList = programs.filter(isProgramActive);
+
+        setActiveProgramsCount(activeList.length);
+        setActivePrograms(activeList.slice(0, 5));
+
+        setStats((prev) => [
+          ...prev,
+          { label: "Active Programs", value: activeList.length, type: "activePrograms" }
+        ]);
+
+      } catch (err) {
+        console.error("Dashboard error:", err);
       } finally {
         setLoading(false);
       }
@@ -72,154 +115,104 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
-  const handleStatClick = (statType) => {
-    setSelectedChart(statType);
-  };
-
-  const handleCloseChart = () => {
-    setSelectedChart(null);
-  };
-
   const renderChart = (type) => {
     const data = chartData[type] || [];
-    
-    switch (type) {
-      case 'users':
-        return (
-          <div className="chart-container">
-            <h3>User Growth Trend</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Area type="monotone" dataKey="users" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        );
-      
-      case 'partners':
-        return (
-          <div className="chart-container">
-            <h3>Partner Growth Trend</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="partners" fill="#82ca9d" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        );
-      
-      case 'venues':
-        return (
-          <div className="chart-container">
-            <h3>Venue Growth Trend</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="venues" stroke="#ff7300" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        );
-      
-      case 'bookings':
-        return (
-          <div className="chart-container">
-            <h3>Booking & Revenue Trend</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip />
-                <Legend />
-                <Line yAxisId="left" type="monotone" dataKey="bookings" stroke="#8884d8" strokeWidth={2} />
-                <Line yAxisId="right" type="monotone" dataKey="revenue" stroke="#82ca9d" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        );
-      
-      default:
-        return null;
+
+    if (type === "users") {
+      return (
+        <ResponsiveContainer width="100%" height={300}>
+          <AreaChart data={data}>
+            <XAxis dataKey="month" />
+            <YAxis />
+            <Tooltip />
+            <Area dataKey="users" fill="#8884d8" />
+          </AreaChart>
+        </ResponsiveContainer>
+      );
     }
+
+    if (type === "partners") {
+      return (
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={data}>
+            <XAxis dataKey="month" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="partners" fill="#82ca9d" />
+          </BarChart>
+        </ResponsiveContainer>
+      );
+    }
+
+    if (type === "venues") {
+      return (
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={data}>
+            <XAxis dataKey="month" />
+            <YAxis />
+            <Tooltip />
+            <Line dataKey="venues" stroke="#ff7300" />
+          </LineChart>
+        </ResponsiveContainer>
+      );
+    }
+
+    if (type === "bookings") {
+      return (
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={data}>
+            <XAxis dataKey="month" />
+            <YAxis />
+            <Tooltip />
+            <Line dataKey="bookings" stroke="#8884d8" />
+            <Line dataKey="revenue" stroke="#82ca9d" />
+          </LineChart>
+        </ResponsiveContainer>
+      );
+    }
+    return null;
   };
 
-  if (loading) {
-    return (
-      <main className="dashboard" style={{ flex: 1 }}>
-        <div className="breadcrumb">Admin Dashboard</div>
-        <h1>Admin Dashboard</h1>
-        <p>Loading dashboard data...</p>
-      </main>
-    );
-  }
+  if (loading) return <p>Loading dashboard...</p>;
 
   return (
-    <main className="dashboard" style={{ flex: 1 }}>
-      <div className="breadcrumb">Admin Dashboard</div>
+    <main className="dashboard">
       <h1>Admin Dashboard</h1>
-      <p>Manage the entire platform</p>
-      
+
       <div className="stats-row">
-        {stats.map((stat) => (
-          <div 
-            className={`stat-card ${stat.type !== 'revenue' ? 'clickable' : ''}`} 
-            key={stat.label}
-            onClick={() => stat.type !== 'revenue' && handleStatClick(stat.type)}
-            style={{ cursor: stat.type !== 'revenue' ? 'pointer' : 'default' }}
+        {stats.map((s) => (
+          <div
+            key={s.label}
+            className="stat-card"
+            onClick={() => chartableStats.has(s.type) && setSelectedChart(s.type)}
           >
-            <div className="stat-label">{stat.label}</div>
-            <div className="stat-value">{stat.value}</div>
-            {stat.type !== 'revenue' && (
-              <div className="stat-hint">Click to view chart</div>
-            )}
+            <div>{s.label}</div>
+            <strong>{s.value}</strong>
           </div>
         ))}
       </div>
 
-      {selectedChart && (
-        <div className="chart-modal-overlay" onClick={handleCloseChart}>
-          <div className="chart-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="chart-modal-header">
-              <h2>{selectedChart.charAt(0).toUpperCase() + selectedChart.slice(1)} Analytics</h2>
-              <button className="chart-close-btn" onClick={handleCloseChart}>×</button>
-            </div>
-            <div className="chart-modal-body">
-              {renderChart(selectedChart)}
-            </div>
-          </div>
-        </div>
+      {selectedChart && renderChart(selectedChart)}
+
+      {/* ================== ORDER OVERVIEW ================== */}
+      {statsRaw && (
+        <section className="dashboard-card">
+          <h2>Order Overview</h2>
+          <p>Total Orders: {statsRaw.orders}</p>
+          <p>Total Revenue: NPR {statsRaw.orderRevenue?.toLocaleString()}</p>
+          <p>Pending: {statsRaw.orderStatus?.pending ?? 0}</p>
+          <p>Processing: {statsRaw.orderStatus?.processing ?? 0}</p>
+          <p>Shipped: {statsRaw.orderStatus?.shipped ?? 0}</p>
+          <p>Completed: {statsRaw.orderStatus?.completed ?? 0}</p>
+          <p>Cancelled: {statsRaw.orderStatus?.cancelled ?? 0}</p>
+        </section>
       )}
 
       <div className="tabs">
-        <button
-          className={activeTab === "pending" ? "active" : ""}
-          onClick={() => setActiveTab("pending")}
-        >
-          Pending Partners
-        </button>
-        <button
-          className={activeTab === "bookings" ? "active" : ""}
-          onClick={() => setActiveTab("bookings")}
-        >
-          Recent Bookings
-        </button>
+        <button onClick={() => setActiveTab("pending")}>Pending Partners</button>
+        <button onClick={() => setActiveTab("bookings")}>Recent Bookings</button>
       </div>
+
       {activeTab === "pending" ? <PartnerRequests /> : <RecentBookings />}
     </main>
   );

@@ -37,8 +37,8 @@ export default function PartnerSignupPage() {
     password: "",
     confirmPassword: "",
     companyName: "",
-    panCard: "",
-    businessTranscript: "",
+    panCard: null,
+    businessTranscripts: null,
     role:"partner",
     status:"Pending"
   });
@@ -52,7 +52,7 @@ export default function PartnerSignupPage() {
     confirmPassword: "",
     companyName: "",
     panCard: "",
-    businessTranscript: "",
+    businessTranscripts: "",
      role:"partner",
      status:"Pending"
   });
@@ -66,7 +66,7 @@ export default function PartnerSignupPage() {
     confirmPassword: false,
     companyName: false,
     panCard: false,
-    businessTranscript: false,
+    businessTranscripts: false,
     status:"Pending"
   });
 
@@ -167,22 +167,19 @@ export default function PartnerSignupPage() {
     }
 
     // Pan Card validation
-    if (!formData.panCard.trim()) {
+    if (!formData.panCard || "") {
       newErrors.panCard = "Pan card is required";
       isValid = false;
-    } else if (formData.panCard.trim().length < 5) {
-      newErrors.panCard = "Please enter a valid pan card number";
-      isValid = false;
-    } else {
+    }  else {
       newErrors.panCard = "";
     }
 
     // Business Transcript validation
-    if (!formData.businessTranscript.trim()) {
-      newErrors.businessTranscript = "Business transcript is required";
+    if (!formData.businessTranscripts || "") {
+      newErrors.businessTranscripts = "Business transcript is required";
       isValid = false;
     } else {
-      newErrors.businessTranscript = "";
+      newErrors.businessTranscripts = "";
     }
 
     setErrors(newErrors);
@@ -243,12 +240,26 @@ export default function PartnerSignupPage() {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-       role:"partner"
-    });
+    const { name, value, files } = e.target;
+    
+    if(name ==='businessTranscripts'){
+      setFormData((prev) => ({
+        ...prev,
+        [name]: e.target.files[0],
+      }));
+    }
+
+    else if(name ==='panCard'){
+      setFormData((prev) => ({
+        ...prev,
+        [name]: e.target.files[0],
+      }));
+    }
+
+   else {
+      setFormData({ ...formData, [name]: value });
+    }
+   
 
     if (name === "password") {
       checkPasswordStrength(value);
@@ -268,75 +279,71 @@ export default function PartnerSignupPage() {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    // Mark all fields as touched to show validation errors
-    const allTouched = {};
-    Object.keys(formData).forEach((key) => {
-      allTouched[key] = true;
-    });
-    setTouched(allTouched);
+  // Mark all fields as touched to show validation errors
+  const allTouched = {};
+  Object.keys(formData).forEach((key) => (allTouched[key] = true));
+  setTouched(allTouched);
 
-    if (validateForm()) {
-      setIsSubmitting(true);
-      setApiError("");
+  if (!validateForm()) return;
 
-      try {
-        // Prepare data for API (excluding confirmPassword)
-        const partnerData = {
-          fullname: formData.firstName + " " + formData.lastName,
-          email: formData.email,
-          phoneNumber: formData.mobile,
-          password: formData.password,
-          company: formData.companyName,
-          panCard: formData.panCard,
-          businessTranscripts: formData.businessTranscript,
-          role: "partner",
-          status:"Pending"
-        };
+  setIsSubmitting(true);
+  setApiError("");
 
-        // Call the partner signup API
-        const response = await authService.signup(partnerData);
+  try {
+    // Prepare FormData for API
+    const partnerData = new FormData();
+    partnerData.append("fullname", formData.firstName + " " + formData.lastName);
+    partnerData.append("email", formData.email);
+    partnerData.append("phoneNumber", formData.mobile);
+    partnerData.append("password", formData.password);
+    partnerData.append("company", formData.companyName);
+    partnerData.append("role", "partner");
+    partnerData.append("status", "Pending");
 
-        console.log("Partner signup successful:", response);
+    // Attach files
+    if (formData.panCard) partnerData.append("panCardImage", formData.panCard);
+    if (formData.businessTranscripts)
+      partnerData.append("businessTranscriptsImage", formData.businessTranscripts);
 
-        // Success animation before alert/navigation
-        await new Promise((resolve) => setTimeout(resolve, 300));
+    // Send FormData to API
+    const response = await authService.signupPartner(partnerData); // <-- use partnerData
 
-        // Show success message and redirect to login
-        alert(
-          "Partner signup request submitted successfully! Our team will review your application and contact you shortly."
-        );
-        navigate("/login");
-      } catch (error) {
-        console.error("Partner signup failed:", error);
+    console.log("Partner signup successful:", response);
 
-        // Handle specific error responses
-        if (error.response) {
-          if (error.response.status === 409) {
-            setApiError("An account with this email already exists.");
-          } else if (error.response.data && error.response.data.message) {
-            setApiError(error.response.data.message);
-          } else {
-            setApiError("Partner signup failed. Please try again later.");
-          }
-        } else {
-          setApiError(
-            "Unable to connect to the server. Please try again later."
-          );
-        }
-      } finally {
-        setIsSubmitting(false);
+    alert(
+      "Partner signup request submitted successfully! Our team will review your application and contact you shortly."
+    );
+    navigate("/login");
+  } catch (error) {
+    console.error("Partner signup failed:", error);
+
+    if (error.response) {
+      if (error.response.status === 409) {
+        setApiError("An account with this email already exists.");
+      } else if (error.response.data?.message) {
+        setApiError(error.response.data.message);
+      } else {
+        setApiError("Partner signup failed. Please try again later.");
       }
+    } else {
+      setApiError("Unable to connect to the server. Please try again later.");
     }
-  };
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   const navigateToLogin = (e) => {
     e.preventDefault();
     console.log("Navigating to login page");
     navigate("/login");
   };
+
+  console.log(formData, "formdata")
 
   return (
     <AuthCard
@@ -390,7 +397,7 @@ export default function PartnerSignupPage() {
                 id="firstName"
                 name="firstName"
                 placeholder="Enter your name..."
-                value={formData.firstName}
+                value={formData.firstName || ""}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 className={
@@ -446,7 +453,7 @@ export default function PartnerSignupPage() {
                 id="lastName"
                 name="lastName"
                 placeholder="Enter your name..."
-                value={formData.lastName}
+                value={formData.lastName || ""}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 className={
@@ -508,7 +515,7 @@ export default function PartnerSignupPage() {
                 id="email"
                 name="email"
                 placeholder="info@xyz.com"
-                value={formData.email}
+                value={formData.email || ""}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 className={touched.email && !errors.email ? "input-valid" : ""}
@@ -561,7 +568,7 @@ export default function PartnerSignupPage() {
                 id="mobile"
                 name="mobile"
                 placeholder="+977 - 98596 56000"
-                value={formData.mobile}
+                value={formData.mobile || ""}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 className={
@@ -625,7 +632,9 @@ export default function PartnerSignupPage() {
                 id="password"
                 name="password"
                 placeholder="xxxxxxxxx"
-                value={formData.password}
+                  autoComplete="new-password"
+    value={formData.password || ""}
+                // value={formData.password}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 className={
@@ -722,7 +731,7 @@ export default function PartnerSignupPage() {
                 id="confirmPassword"
                 name="confirmPassword"
                 placeholder="xxxxxxxxx"
-                value={formData.confirmPassword}
+                value={formData.confirmPassword || ""}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 className={
@@ -795,7 +804,7 @@ export default function PartnerSignupPage() {
               id="companyName"
               name="companyName"
               placeholder="Enter company name..."
-              value={formData.companyName}
+              value={formData.companyName || ""}
               onChange={handleChange}
               onBlur={handleBlur}
               className={
@@ -851,11 +860,11 @@ export default function PartnerSignupPage() {
             <motion.input
               whileFocus={{ scale: 1.01 }}
               transition={{ duration: 0.2 }}
-              type="text"
+              type="file"
               id="panCard"
               name="panCard"
-              placeholder="Enter pan card number..."
-              value={formData.panCard}
+      accept="image/*,.pdf"
+          // value={formData.panCard || ""}
               onChange={handleChange}
               onBlur={handleBlur}
               className={
@@ -898,9 +907,9 @@ export default function PartnerSignupPage() {
           custom={6}
         >
           <label
-            htmlFor="businessTranscript"
+            htmlFor="businessTranscripts"
             className={
-              touched.businessTranscript && errors.businessTranscript
+              touched.businessTranscripts && errors.businessTranscripts
                 ? "text-error"
                 : ""
             }
@@ -909,7 +918,7 @@ export default function PartnerSignupPage() {
           </label>
           <div
             className={`input-container2 ${
-              touched.businessTranscript && errors.businessTranscript
+              touched.businessTranscripts && errors.businessTranscripts
                 ? "input-error"
                 : ""
             }`}
@@ -917,21 +926,21 @@ export default function PartnerSignupPage() {
             <motion.input
               whileFocus={{ scale: 1.01 }}
               transition={{ duration: 0.2 }}
-              type="text"
-              id="businessTranscript"
-              name="businessTranscript"
-              placeholder="Enter business transcript..."
-              value={formData.businessTranscript}
+              type="file"
+              id="businessTranscripts"
+              name="businessTranscripts"
+              accept="image/*,.pdf"
+              // value={formData.businessTranscripts || ""}
               onChange={handleChange}
               onBlur={handleBlur}
               className={
-                touched.businessTranscript && !errors.businessTranscript
+                touched.businessTranscripts && !errors.businessTranscripts
                   ? "input-valid"
                   : ""
               }
             />
             <AnimatePresence>
-              {touched.businessTranscript && !errors.businessTranscript && (
+              {touched.businessTranscripts && !errors.businessTranscripts && (
                 <motion.div
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -952,7 +961,7 @@ export default function PartnerSignupPage() {
                 exit={{ opacity: 0, y: -10, height: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                {errors.businessTranscript}
+                {errors.businessTranscripts}
               </motion.p>
             )}
           </AnimatePresence>

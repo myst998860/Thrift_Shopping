@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.util.List;
 
 @RestController
 public class ImageProxyController {
@@ -37,10 +38,12 @@ public class ImageProxyController {
         Venue venue = venueRepo.findById(venue_id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venue not found"));
 
-        String url = venue.getImageUrl();
-        if (url == null || url.isBlank()) {
+        List<String> urls = venue.getImageUrls();
+        if (urls == null || urls.isEmpty() || urls.get(0).isBlank()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No image set for venue");
         }
+
+        String url = urls.get(0); // use the first image
 
         try {
             URL imageUrl = new URL(url);
@@ -60,4 +63,3 @@ public class ImageProxyController {
         }
     }
 }
-

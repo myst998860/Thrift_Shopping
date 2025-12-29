@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { venueService, imageService } from '../../services/api';
+import { venueService } from '../../services/api';
 import { useUserSession } from '../../context/UserSessionContext';
+import { useCart } from '../../context/CartContext';
 import Header from '../users/Header';
 import Footer from '../users/Footer';
 import VenueMap from './VenueMap'; // Import the new Leaflet map component
@@ -12,10 +13,13 @@ const UserViewVenue = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isUserLoggedIn } = useUserSession();
+  const { addItem } = useCart();
   const [venue, setVenue] = useState(null);
-  const [venueImage, setVenueImage] = useState(null);
+  const [venueImages, setVenueImages] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
     const fetchVenueDetails = async () => {
@@ -32,13 +36,13 @@ const UserViewVenue = () => {
         const venueData = await venueService.getVenue(id);
         setVenue(venueData);
 
-        try {
-          const imageBlob = await imageService.getImage(id);
-          const imageUrl = URL.createObjectURL(imageBlob);
-          setVenueImage(imageUrl);
-        } catch (imgError) {
-          console.warn('Could not load venue image:', imgError);
-          setVenueImage('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80');
+        if (venueData.imageUrls && venueData.imageUrls.length > 0) {
+          setVenueImages(venueData.imageUrls);
+          setSelectedImage(venueData.imageUrls[0]); // first image default
+        } else {
+          const fallback = 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80';
+          setVenueImages([fallback]);
+          setSelectedImage(fallback);
         }
       } catch (error) {
         console.error('Error fetching venue details:', error);
@@ -55,31 +59,73 @@ const UserViewVenue = () => {
     };
 
     fetchVenueDetails();
-
-    return () => {
-      if (venueImage && venueImage.startsWith('blob:')) {
-        URL.revokeObjectURL(venueImage);
-      }
-    };
   }, [id]);
 
-  const handleBookVenue = () => {
-    if (isUserLoggedIn) {
-      navigate('/venue-booking', { state: { venueId: id, venueName: venue?.venueName } });
-    } else {
-      // Redirect to login page with return URL
+  const handleAddToCart = async () => {
+    if (!isUserLoggedIn) {
       navigate('/login', { 
         state: { 
           from: `/venues/${id}`,
-          message: 'Please log in to book this venue'
+          message: 'Please log in to add items to cart'
         } 
       });
+      return;
+    }
+
+    if (!venue || !id) return;
+
+    setAddingToCart(true);
+    try {
+      const success = await addItem({ venueId: parseInt(id), quantity: 1 });
+      if (success) {
+        alert('Venue added to cart successfully!');
+      } else {
+        alert('Failed to add venue to cart. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error adding to cart:', err);
+      alert('Failed to add venue to cart. Please try again.');
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (!isUserLoggedIn) {
+      navigate('/login', { 
+        state: { 
+          from: `/venues/${id}`,
+          message: 'Please log in to purchase this venue'
+        } 
+      });
+      return;
+    }
+
+    if (!venue || !id) return;
+
+    // Add to cart first, then navigate to checkout
+    setAddingToCart(true);
+    try {
+      const success = await addItem({ venueId: parseInt(id), quantity: 1 });
+      if (success) {
+        navigate('/checkout');
+      } else {
+        alert('Failed to add venue to cart. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error adding to cart:', err);
+      alert('Failed to add venue to cart. Please try again.');
+    } finally {
+      setAddingToCart(false);
     }
   };
 
   const handleBackToVenues = () => {
     navigate('/venues');
   };
+
+  // Use the actual venue images array
+  const thumbnailImages = venueImages.length > 0 ? venueImages : [];
 
   if (loading) {
     return (
@@ -142,178 +188,185 @@ const UserViewVenue = () => {
       </div>
 
       <div className="uvv-container">
-        <div className="uvv-hero">
-          <div className="uvv-hero__image-container">
-            <img
-              src={venueImage || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80'}
-              alt={venue.venueName}
-              className="uvv-hero__image"
-            />
-            <div className="uvv-hero__overlay">
-              <div className="uvv-hero__content">
-                <h1 className="uvv-hero__title">{venue.venueName}</h1>
-                <div className="uvv-hero__location">
-                  <span className="uvv-hero__location-icon">📍</span>
-                  {venue.location}
+        <div className="uvv-product-layout">
+          {/* Left Side - Image Gallery */}
+          <div className="uvv-product-images">
+            <div className="uvv-product-image-main">
+              <img
+                src={selectedImage || (venueImages.length > 0 ? venueImages[0] : 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80')}
+                alt={venue.venueName}
+                className="uvv-product-image"
+              />
+            </div>
+            {thumbnailImages.length > 0 && (
+              <div className="uvv-product-thumbnails">
+                {thumbnailImages.map((thumb, index) => (
+                  <button
+                    key={index}
+                    className={`uvv-thumbnail ${selectedImage === thumb ? 'uvv-thumbnail--active' : ''}`}
+                    onClick={() => setSelectedImage(thumb)}
+                  >
+                    <img src={thumb} alt={`${venue.venueName} view ${index + 1}`} />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Right Side - Product Information */}
+          <div className="uvv-product-info">
+            <h1 className="uvv-product-title">{venue.venueName}</h1>
+            
+            {/* Condition & Category Tags */}
+            <div className="uvv-product-tags">
+              <span className="uvv-tag uvv-tag--condition">{venue.quality || 'Excellent'}</span>
+              {/* <span className="uvv-tag uvv-tag--category">{venue.brand || 'Venue'}</span> */}
+            </div>
+
+            {/* Pricing */}
+            <div className="uvv-product-pricing">
+              <div className="uvv-price-current">NPR {venue.price}</div>
+              <div className="uvv-price-original">NPR {Math.round(venue.price * 1.5)}</div>
+              <span className="uvv-discount-badge">33% off</span>
+            </div>
+
+            {/* Description */}
+            <div className="uvv-product-description">
+              <p>
+                {venue.description ||
+                  `${venue.venueName} is a premium venue located in ${venue.location}. 
+                  Perfect for weddings, corporate events, and special celebrations. 
+                  This venue offers modern amenities and elegant décor to make your event memorable.`}
+              </p>
+            </div>
+
+            {/* Product Details */}
+            <div className="uvv-product-details">
+              <h3 className="uvv-details-title">Product Details</h3>
+              <div className="uvv-details-grid">
+                <div className="uvv-detail-item">
+                  <span className="uvv-detail-label">Brand:</span>
+                  <span className="uvv-detail-value">{venue.brand || 'N/A'}</span>
                 </div>
+                {/* <div className="uvv-detail-item">
+                  <span className="uvv-detail-label">Location:</span>
+                  <span className="uvv-detail-value">{venue.location}</span>
+                </div> */}
+                <div className="uvv-detail-item">
+                  <span className="uvv-detail-label">Status:</span>
+                  <span className="uvv-detail-value">{venue.status || 'Available'}</span>
+                </div>
+                <div className="uvv-detail-item">
+                  <span className="uvv-detail-label">Quality:</span>
+                  <span className="uvv-detail-value">{venue.quality || 'Premium'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Measurements / Specifications */}
+            <div className="uvv-product-measurements">
+              <h3 className="uvv-measurements-title">Specifications</h3>
+              <div className="uvv-measurements-grid">
+                <div className="uvv-measurement-item">
+                  {/* <span className="uvv-measurement-label">Capacity:</span> */}
+                  {/* <span className="uvv-measurement-value">{venue.brand || 'N/A'} guests</span> */}
+                </div>
+                <div className="uvv-measurement-item">
+                  <span className="uvv-measurement-label">Price:</span>
+                  <span className="uvv-measurement-value">NPR {venue.price}</span>
+                </div>
+                <div className="uvv-measurement-item">
+                  {/* <span className="uvv-measurement-label">Location:</span> */}
+                  <span className="uvv-measurement-value">{venue.location}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="uvv-product-actions">
+              <button 
+                onClick={handleAddToCart} 
+                className="uvv-button uvv-button--cart"
+                disabled={addingToCart}
+              >
+                <span className="uvv-button-icon">🛒</span>
+                {addingToCart ? 'Adding...' : 'Add to Cart'}
+              </button>
+              <button 
+                onClick={handleBuyNow} 
+                className="uvv-button uvv-button--buy"
+                disabled={addingToCart}
+              >
+                Buy Now
+              </button>
+            </div>
+
+            {/* Service Guarantees */}
+            <div className="uvv-service-guarantees">
+              <div className="uvv-guarantee-item">
+                <span className="uvv-guarantee-icon">🚚</span>
+                <span className="uvv-guarantee-text">Free shipping over NPR 50,000</span>
+              </div>
+              <div className="uvv-guarantee-item">
+                <span className="uvv-guarantee-icon">↩️</span>
+                <span className="uvv-guarantee-text">7-day returns</span>
+              </div>
+              <div className="uvv-guarantee-item">
+                <span className="uvv-guarantee-icon">🛡️</span>
+                <span className="uvv-guarantee-text">Quality guaranteed</span>
+              </div>
+            </div>
+
+            {/* Seller Information */}
+            <div className="uvv-seller-info">
+              <div className="uvv-seller-item">
+                <span className="uvv-seller-label">Sold by:</span>
+                <span className="uvv-seller-value">ThriftGood Curated</span>
+              </div>
+              <div className="uvv-seller-item">
+                <span className="uvv-seller-label">Listed:</span>
+                <span className="uvv-seller-value">{new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="uvv-content">
-          <div className="uvv-main-info">
-            <div className="uvv-stats">
-              <div className="uvv-stats__item">
-                <div className="uvv-stats__icon">👥</div>
-                <div className="uvv-stats__content">
-                  <div className="uvv-stats__label">Capacity</div>
-                  <div className="uvv-stats__value">{venue.capacity} guests</div>
-                </div>
-              </div>
-
-              <div className="uvv-stats__item">
-                <div className="uvv-stats__icon">💰</div>
-                <div className="uvv-stats__content">
-                  <div className="uvv-stats__label">Price</div>
-                  <div className="uvv-stats__value">NPR {venue.price}/hour</div>
-                </div>
-              </div>
-
-              <div className="uvv-stats__item">
-                <div className="uvv-stats__icon">⭐</div>
-                <div className="uvv-stats__content">
-                  <div className="uvv-stats__label">Rating</div>
-                  <div className="uvv-stats__value">4.8/5</div>
-                </div>
-              </div>
-
-              <div className="uvv-stats__item">
-                <div className="uvv-stats__icon">📅</div>
-                <div className="uvv-stats__content">
-                  <div className="uvv-stats__label">Status</div>
-                  <div className="uvv-stats__value">{venue.status || 'Available'}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="uvv-description">
-              <h2 className="uvv-description__title">About This Venue</h2>
-              <p className="uvv-description__text">
-                {venue.description ||
-                  `${venue.venueName} is a premium venue located in ${venue.location}. 
-                  Perfect for weddings, corporate events, and special celebrations. 
-                  With a capacity of ${venue.capacity} guests, this venue offers 
-                  modern amenities and elegant décor to make your event memorable.`}
-              </p>
-            </div>
-
-            {/* Updated Location Map Section using Leaflet */}
-            {(venue.mapLocationUrl || venue.location) && (
-              <div className="uvv-location">
-                <h2 className="uvv-location__title">Location</h2>
-                <div className="uvv-location__content">
-                  <VenueMap
-                    venueId={id}
-                    mapLocationUrl={venue.mapLocationUrl}
-                    venueName={venue.venueName}
-                    location={venue.location}
-                    height="350px"
-                    showDirections={true}
-                    zoom={16}
-                  />
-                  <div className="uvv-location__details">
-                    <div className="uvv-location__address">
-                      <span className="uvv-location__icon">📍</span>
-                      <span>{venue.location}</span>
-                    </div>
-                    {venue.mapLocationUrl && (
-                      <a 
-                        href={venue.mapLocationUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="uvv-location__link"
-                      >
-                        View on Google Maps →
-                      </a>
-                    )}
+        {/* Location Map Section */}
+        {(venue.mapLocationUrl || venue.location) && (
+          <div className="uvv-additional-info">
+            <div className="uvv-location">
+              <h2 className="uvv-location__title">Location</h2>
+              <div className="uvv-location__content">
+                <VenueMap
+                  venueId={id}
+                  mapLocationUrl={venue.mapLocationUrl}
+                  venueName={venue.venueName}
+                  location={venue.location}
+                  height="350px"
+                  showDirections={true}
+                  zoom={16}
+                />
+                <div className="uvv-location__details">
+                  <div className="uvv-location__address">
+                    <span className="uvv-location__icon">📍</span>
+                    <span>{venue.location}</span>
                   </div>
-                </div>
-              </div>
-            )}
-
-            <div className="uvv-features">
-              <h2 className="uvv-features__title">Features & Amenities</h2>
-              <div className="uvv-features__grid">
-                <div className="uvv-features__item"><span className="uvv-features__icon">🅿️</span><span>Free Parking</span></div>
-                <div className="uvv-features__item"><span className="uvv-features__icon">📶</span><span>WiFi Available</span></div>
-                <div className="uvv-features__item"><span className="uvv-features__icon">❄️</span><span>Air Conditioning</span></div>
-                <div className="uvv-features__item"><span className="uvv-features__icon">🎵</span><span>Sound System</span></div>
-                <div className="uvv-features__item"><span className="uvv-features__icon">💡</span><span>Professional Lighting</span></div>
-                <div className="uvv-features__item"><span className="uvv-features__icon">🍽️</span><span>Catering Available</span></div>
-              </div>
-            </div>
-
-            <div className="uvv-contact">
-              <h2 className="uvv-contact__title">Contact Information</h2>
-              <div className="uvv-contact__details">
-                <div className="uvv-contact__item"><span className="uvv-contact__icon">📧</span><span>info@{venue.venueName?.toLowerCase().replace(/\s+/g, '')}.com</span></div>
-                <div className="uvv-contact__item"><span className="uvv-contact__icon">📞</span><span>+977-1-4567890</span></div>
-                <div className="uvv-contact__item"><span className="uvv-contact__icon">🌐</span><span>www.{venue.venueName?.toLowerCase().replace(/\s+/g, '')}.com</span></div>
-              </div>
-            </div>
-          </div>
-
-          <div className="uvv-sidebar">
-            <div className="uvv-booking">
-              <div className="uvv-booking__header">
-                <h3 className="uvv-booking__title">Book This Venue</h3>
-                <div className="uvv-booking__price">
-                  <span className="uvv-booking__price-value">NPR {venue.price}</span>
-                  <span className="uvv-booking__price-unit">/hour</span>
-                </div>
-              </div>
-              
-
-              <div className="uvv-booking__content">
-                <p className="uvv-booking__description">
-                  {isUserLoggedIn 
-                    ? 'Ready to book this amazing venue for your event?' 
-                    : 'Log in to book this amazing venue for your event'}
-                </p>
-                <button onClick={handleBookVenue} className="uvv-booking__button">
-                  {isUserLoggedIn ? 'Book Now' : 'Log in to Book'}
-                </button>
-                <div className="uvv-booking__note">
-                  <small>* Final pricing may vary based on event requirements</small>
-                  {!isUserLoggedIn && (
-                    <div className="uvv-booking__login-note">
-                      <small>You must be logged in to book venues</small>
-                    </div>
+                  {venue.mapLocationUrl && (
+                    <a 
+                      href={venue.mapLocationUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="uvv-location__link"
+                    >
+                      View on Google Maps →
+                    </a>
                   )}
                 </div>
               </div>
             </div>
-
-            <div className="uvv-actions">
-              <button onClick={handleBackToVenues} className="uvv-actions__button uvv-actions__button--secondary">← Back to Venues</button>
-              <button onClick={() => window.print()} className="uvv-actions__button uvv-actions__button--secondary">🖨️ Print Details</button>
-              <button
-                onClick={() => navigator.share && navigator.share({
-                  title: venue.venueName,
-                  text: `Check out ${venue.venueName} - ${venue.location}`,
-                  url: window.location.href
-                })}
-                className="uvv-actions__button uvv-actions__button--secondary"
-              >
-                📤 Share
-              </button>
-            </div>
           </div>
-        </div>
+        )}
       </div>
-
-      <Footer />
     </div>
   );
 };

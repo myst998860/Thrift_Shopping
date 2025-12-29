@@ -2,12 +2,15 @@ package com.event.model;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class Donation {
@@ -15,6 +18,8 @@ public class Donation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long donationId;
+    
+    private String status;
 
     // Personal Information
     private String fullName;
@@ -206,4 +211,26 @@ public class Donation {
     public void setPickupInstructions(String pickupInstructions) {
         this.pickupInstructions = pickupInstructions;
     }
+    
+    @ManyToOne
+    @JoinColumn(name = "program_id")
+    @JsonBackReference
+    private Program program;  // The program this donation is for
+
+    // Getters and setters for program
+    public Program getProgram() {
+        return program;
+    }
+
+    public void setProgram(Program program) {
+        this.program = program;
+    }
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
 }

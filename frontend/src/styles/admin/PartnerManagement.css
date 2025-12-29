@@ -298,6 +298,140 @@
     border-color: #22c55e;
 }
 
+/* Simple pending partner view */
+.pending-partners {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.pending-partner-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+}
+
+.pending-partner-card h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    color: #111827;
+}
+
+.documents {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
+    margin: 0.5rem 0 0.75rem;
+}
+
+.documents p {
+    margin: 0 0 0.35rem 0;
+    color: #374151;
+    font-weight: 500;
+}
+
+.documents a {
+    color: #2563eb;
+    font-size: 0.95rem;
+}
+
+.document-image {
+    width: 100%;
+    max-height: 180px;
+    object-fit: cover;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.document-thumb {
+    max-width: 140px;
+    max-height: 140px;
+    cursor: pointer;
+    object-fit: cover;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.actions button {
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid #d1d5db;
+    background: #f9fafb;
+    cursor: pointer;
+    font-weight: 600;
+    color: #111827;
+}
+
+.actions button:hover {
+    background: #f3f4f6;
+}
+
+.actions button:nth-child(1) {
+    border-color: #f87171;
+    color: #b91c1c;
+    background: #fef2f2;
+}
+
+.actions button:nth-child(2) {
+    border-color: #22c55e;
+    color: #166534;
+    background: #ecfdf3;
+}
+
+/* Image preview modal */
+.image-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.image-modal__content {
+    position: relative;
+    background: #fff;
+    border-radius: 10px;
+    padding: 1rem;
+    max-width: 90vw;
+    max-height: 90vh;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.image-modal__content img {
+    max-width: 100%;
+    max-height: 80vh;
+    display: block;
+    border-radius: 8px;
+}
+
+.image-modal__close {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
 .partner-actions button svg {
     width: 16px;
     height: 16px;

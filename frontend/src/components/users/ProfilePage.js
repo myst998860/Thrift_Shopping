@@ -15,97 +15,102 @@ const ProfilePage = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [showBookingDetails, setShowBookingDetails] = useState(false);
 
+  // NEW: location modal & value
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [newLocation, setNewLocation] = useState("");
+  const [savingLocation, setSavingLocation] = useState(false);
+
   useEffect(() => {
-  const fetchUserData = async () => {
-    try {
-      setLoading(true);
-
-      // Fetch user profile using JWT token
-      const userDetails = await profileService.getProfile();
-      console.log("User details fetched via token:", userDetails);
-
-      setUserData({
-        name: userDetails.fullname || userDetails.name || "John Doe",
-        email: userDetails.email || "john.doe@example.com",
-        location: userDetails.location || "Kathmandu, Nepal",
-        phone: userDetails.phoneNumber || userDetails.phone || "+977 98-12345678",
-        profileImage: userDetails.profileImage || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-        joinDate: userDetails.joinDate || "January 2023",
-        // Add other userDetails fields as needed
-      });
-
-      // Fetch user bookings
+    const fetchUserData = async () => {
       try {
-  const userId = userDetails.id || userDetails.user_id; // Adjust based on your backend response
-  const bookings = await bookingService.getUserBookings(userId);
-  console.log("User bookings fetched:", bookings);
+        setLoading(true);
 
-  if (Array.isArray(bookings) && bookings.length > 0) {
-    console.log("Raw bookings data from API:", bookings);
-  const formattedBookings = bookings.map(b => ({
-    id: b.bookingId,
-    venue: b.venueName || "Unknown Venue",
-    date: b.bookedTime ? b.bookedTime.split("T")[0] : "N/A",
-    time: b.bookedTime ? b.bookedTime.split("T")[1]?.substring(0, 5) : "N/A",
-    location: b.venueLocation || "N/A",
-    status: b.status,
-    amount: b.amount || 0,  // If you want amount, add it to DTO and backend
-    guests: b.guests,
-    duration: b.duration,
-    
-  }));
-console.log("Formatted bookings:", formattedBookings);
-console.log('Final bookings for UI:', formattedBookings);
-formattedBookings.forEach(b => console.log('Venue:', b.venue));
-    setUserBookings(formattedBookings);
-  } else {
-    console.log("No bookings found for this user.");
-    setUserBookings([]); // No bookings
-  }
+        // Fetch user profile using JWT token
+        const userDetails = await profileService.getProfile();
+        console.log("User details fetched via token:", userDetails);
 
-} catch (bookingError) {
-  console.error("Could not fetch user bookings:", bookingError);
+        setUserData({
+          id: userDetails.id || userDetails.user_id,
+          name: userDetails.fullname || userDetails.name || "John Doe",
+          email: userDetails.email || "john.doe@example.com",
+          location: userDetails.location || "Kathmandu, Nepal",
+          phone: userDetails.phoneNumber || userDetails.phone || "+977 98-12345678",
+          profileImage: userDetails.profileImage || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+          joinDate: userDetails.joinDate || "January 2023",
+          // Add other userDetails fields as needed
+        });
 
-  // Use fallback/mock data if API fails
-  setUserBookings([
-    {
-      id: 1,
-      eventName: "Wedding Reception",
-      venue: "Grand Ballroom",
-      date: "2024-02-15",
-      time: "18:00",
-      location: "Kathmandu, Nepal",
-      status: "confirmed",
-      amount: 75000,
-      guests: 150,
-      duration: 6,
-    },
-    {
-      id: 2,
-      eventName: "Corporate Meeting",
-      venue: "Conference Hall A",
-      date: "2024-01-28",
-      time: "14:00",
-      location: "Lalitpur, Nepal",
-      status: "confirmed",
-      amount: 25000,
-      guests: 50,
-      duration: 4,
-    },
-  ]);
-}
+        // Fetch user bookings
+        try {
+          const userId = userDetails.id || userDetails.user_id; // Adjust based on your backend response
+          const bookings = await bookingService.getUserBookings(userId);
+          console.log("User bookings fetched:", bookings);
 
-      setError(null);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      setError("Failed to load profile data. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
-  };
+          if (Array.isArray(bookings) && bookings.length > 0) {
+            console.log("Raw bookings data from API:", bookings);
+            const formattedBookings = bookings.map(b => ({
+              id: b.bookingId,
+              venue: b.venueName || "Unknown Venue",
+              date: b.bookedTime ? b.bookedTime.split("T")[0] : "N/A",
+              time: b.bookedTime ? b.bookedTime.split("T")[1]?.substring(0, 5) : "N/A",
+              location: b.venueLocation || "N/A",
+              status: b.status,
+              amount: b.amount || 0,  // If you want amount, add it to DTO and backend
+              guests: b.guests,
+              duration: b.duration,
+            }));
+            console.log("Formatted bookings:", formattedBookings);
+            console.log('Final bookings for UI:', formattedBookings);
+            formattedBookings.forEach(b => console.log('Venue:', b.venue));
+            setUserBookings(formattedBookings);
+          } else {
+            console.log("No bookings found for this user.");
+            setUserBookings([]); // No bookings
+          }
 
-  fetchUserData();
-}, []);
+        } catch (bookingError) {
+          console.error("Could not fetch user bookings:", bookingError);
+
+          // Use fallback/mock data if API fails
+          setUserBookings([
+            {
+              id: 1,
+              eventName: "Wedding Reception",
+              venue: "Grand Ballroom",
+              date: "2024-02-15",
+              time: "18:00",
+              location: "Kathmandu, Nepal",
+              status: "confirmed",
+              amount: 75000,
+              guests: 150,
+              duration: 6,
+            },
+            {
+              id: 2,
+              eventName: "Corporate Meeting",
+              venue: "Conference Hall A",
+              date: "2024-01-28",
+              time: "14:00",
+              location: "Lalitpur, Nepal",
+              status: "confirmed",
+              amount: 25000,
+              guests: 50,
+              duration: 4,
+            },
+          ]);
+        }
+
+        setError(null);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setError("Failed to load profile data. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -157,6 +162,41 @@ formattedBookings.forEach(b => console.log('Venue:', b.venue));
 
     const config = statusConfig[status] || statusConfig.upcoming;
     return <span className={`profile-status-badge ${config.class}`}>{config.text}</span>;
+  };
+
+  // NEW: Update location handler
+  const handleUpdateLocation = async () => {
+    try {
+      if (!newLocation || !newLocation.trim()) {
+        alert("Please enter a location.");
+        return;
+      }
+      if (!userData || !userData.id) {
+        alert("User ID not available.");
+        return;
+      }
+
+      setSavingLocation(true);
+
+      // Call userService - adjust method signature if your service expects an object vs string
+      // The example assumes userService.updateLocation(userId, location)
+      await userService.updateLocation(userData.id, newLocation);
+
+      // Update UI immediately
+      setUserData(prev => ({
+        ...prev,
+        location: newLocation
+      }));
+
+      setShowLocationModal(false);
+      setNewLocation("");
+      alert("Location updated successfully!");
+    } catch (err) {
+      console.error("Error updating location:", err);
+      alert("Failed to update location. Try again.");
+    } finally {
+      setSavingLocation(false);
+    }
   };
 
   // Calculate user stats
@@ -305,9 +345,33 @@ formattedBookings.forEach(b => console.log('Venue:', b.venue));
                 <span className="profile-detail-label">Email:</span>
                 <span className="profile-detail-value">{userData.email}</span>
               </div>
-              <div className="profile-detail-item">
-                <span className="profile-detail-label">Location:</span>
-                <span className="profile-detail-value">{userData.location}</span>
+              <div className="profile-detail-item" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <span className="profile-detail-label">Location:</span>
+                  <span className="profile-detail-value">{userData.location}</span>
+                </div>
+
+                {/* Change button */}
+                <button 
+                  className="profile-edit-btn"
+                  onClick={() => {
+                    setNewLocation(userData.location || "");
+                    setShowLocationModal(true);
+                  }}
+                  style={{
+                    marginLeft: "10px",
+                    padding: "6px 10px",
+                    fontSize: "13px",
+                    background: "#1f2937",
+                    color: "white",
+                    borderRadius: "6px",
+                    border: "none",
+                    cursor: "pointer",
+                    height: "36px"
+                  }}
+                >
+                  Change
+                </button>
               </div>
               <div className="profile-detail-item">
                 <span className="profile-detail-label">Phone:</span>
@@ -324,28 +388,9 @@ formattedBookings.forEach(b => console.log('Venue:', b.venue));
 
       {/* Main Content */}
       <main className="profile-main">
-        {/* Stats Section */}
-        <section className="profile-stats-section">
-          <h2 className="profile-section-title">Your Stats</h2>
-          <div className="profile-stats-grid">
-            <div className="profile-stat-card">
-              <div className="profile-stat-number">{userStats.totalBookings}</div>
-              <div className="profile-stat-label">Total Bookings</div>
-            </div>
-            {/* <div className="profile-stat-card">
-              <div className="profile-stat-number">{userStats.upcomingEvents}</div>
-              <div className="profile-stat-label">Upcoming Events</div>
-            </div> */}
-            <div className="profile-stat-card">
-              <div className="profile-stat-number">NPR {userStats.totalSpent.toLocaleString()}</div>
-              <div className="profile-stat-label">Total Spent</div>
-            </div>
-          </div>
-        </section>
-
         {/* Bookings Section */}
         <section className="profile-bookings-section">
-          <h2 className="profile-section-title">Your Bookings</h2>
+          <h2 className="profile-section-title">Your Orders</h2>
           {userBookings.length === 0 ? (
             <div style={{ 
               textAlign: 'center', 
@@ -424,6 +469,55 @@ formattedBookings.forEach(b => console.log('Venue:', b.venue));
         </div>
       )}
 
+      {/* Location Update Modal (NEW) */}
+      {showLocationModal && (
+        <div className="venue-modal-overlay" onClick={() => { if (!savingLocation) setShowLocationModal(false); }}>
+          <div className="venue-modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="venue-modal-header">
+              <h3>Update Location</h3>
+              <button className="venue-modal-close" onClick={() => { if (!savingLocation) setShowLocationModal(false); }}>
+                ×
+              </button>
+            </div>
+            <div className="venue-modal-body">
+              <p>Enter your new location:</p>
+              <input
+                type="text"
+                className="profile-file-input"
+                placeholder="e.g. Kathmandu, Nepal"
+                value={newLocation}
+                onChange={(e) => setNewLocation(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  fontSize: "16px",
+                  marginTop: "10px",
+                  borderRadius: "5px",
+                  border: "1px solid #ddd"
+                }}
+                disabled={savingLocation}
+              />
+            </div>
+            <div className="venue-modal-actions">
+              <button 
+                className="venue-modal-btn-primary"
+                onClick={handleUpdateLocation}
+                disabled={savingLocation}
+              >
+                {savingLocation ? "Saving..." : "Save"}
+              </button>
+              <button 
+                className="venue-modal-btn-secondary"
+                onClick={() => { if (!savingLocation) setShowLocationModal(false); }}
+                disabled={savingLocation}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Booking Details Modal */}
       {showBookingDetails && selectedBooking && (
         <div className="venue-modal-overlay" onClick={() => setShowBookingDetails(false)}>
@@ -479,3 +573,6 @@ formattedBookings.forEach(b => console.log('Venue:', b.venue));
 }
 
 export default ProfilePage
+
+
+

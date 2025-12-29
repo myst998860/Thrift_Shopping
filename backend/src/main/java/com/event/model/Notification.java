@@ -13,6 +13,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
+
 @Entity
 @Table(name = "notifications")
 public class Notification {
@@ -27,7 +29,7 @@ public class Notification {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_user_id", referencedColumnName = "user_id")
-    private User sender; // Optional - who triggered the notification
+    private User sender;
     
     @Column(nullable = false)
     private String title;
@@ -36,7 +38,7 @@ public class Notification {
     private String message;
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)  // ADD THIS LINE!
     private NotificationType type;
     
     @Enumerated(EnumType.STRING)

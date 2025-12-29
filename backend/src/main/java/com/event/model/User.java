@@ -29,6 +29,8 @@ public abstract class User {
     private String phoneNumber;
 
     private String fullname;
+    
+    private String location;
 
     private String company;  
 
@@ -171,6 +173,14 @@ public abstract class User {
 
 	public void setOtpCode(String otpCode) {
 		this.otpCode = otpCode;
+	}
+
+	public String getLocation() {
+		return location;
+	}
+
+	public void setLocation(String location) {
+		this.location = location;
 	}
 	
 	
