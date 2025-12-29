@@ -1,10 +1,7 @@
 package com.event.controller.Admin;
 
 import java.util.List;
-<<<<<<< Updated upstream
-=======
 import java.util.Map;
->>>>>>> Stashed changes
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,9 +10,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.event.model.Donation;
-<<<<<<< Updated upstream
-import com.event.repository.DonationRepo;
-=======
 import com.event.model.Program;
 import com.event.repository.DonationRepo;
 import com.event.repository.ProgramRepo;
@@ -23,7 +17,6 @@ import com.event.service.EmailService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
->>>>>>> Stashed changes
 
 @RequestMapping("/donations")
 @RestController
@@ -32,15 +25,6 @@ public class DonationController {
     @Autowired
     private DonationRepo donationRepo;
 
-<<<<<<< Updated upstream
-    // ✅ Get all donations
-    @GetMapping
-    public List<Donation> getAllDonations() {
-        return donationRepo.findAll();
-    }
-
-    // ✅ Get a single donation by ID
-=======
     @Autowired
     private ProgramRepo programRepo; // ✅ Needed to link donations to programs
 
@@ -92,7 +76,6 @@ public class DonationController {
 //     return page.getContent(); // get List<Donation>
 // }
     // ---------------- GET DONATION BY ID ----------------
->>>>>>> Stashed changes
     @GetMapping("/{id}")
     public ResponseEntity<Donation> getDonationById(@PathVariable Long id) {
         return donationRepo.findById(id)
@@ -100,29 +83,6 @@ public class DonationController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-<<<<<<< Updated upstream
-    // ✅ Create a new donation (public endpoint for donors)
-    @PostMapping("/new")
-    public Donation createDonation(@RequestBody Donation donation) {
-        return donationRepo.save(donation);
-    }
-
-    // ✅ Admin can manually add a donation record
-    @PostMapping("/add")
-    @PreAuthorize("hasRole('ADMIN')")
-    public Donation addDonationByAdmin(@RequestBody Donation donation) {
-        return donationRepo.save(donation);
-    }
-
-    // ✅ Update existing donation
-    @PutMapping("/edit/{id}")
-    public ResponseEntity<Donation> updateDonation(
-            @PathVariable Long id,
-            @RequestBody Donation updatedDonation
-    ) {
-        return donationRepo.findById(id)
-                .map(existing -> {
-=======
     // ---------------- CREATE NEW DONATION ----------------
 //    @PostMapping("/new")
 //    public Donation createDonation(@RequestBody Donation donation) {
@@ -264,7 +224,6 @@ public class DonationController {
         return donationRepo.findById(id)
                 .map(existing -> {
                 	 existing.setStatus(updatedDonation.getStatus());
->>>>>>> Stashed changes
                     existing.setFullName(updatedDonation.getFullName());
                     existing.setEmail(updatedDonation.getEmail());
                     existing.setPhoneNumber(updatedDonation.getPhoneNumber());
@@ -285,9 +244,6 @@ public class DonationController {
                     existing.setPreferredPickupDate(updatedDonation.getPreferredPickupDate());
                     existing.setPickupInstructions(updatedDonation.getPickupInstructions());
 
-<<<<<<< Updated upstream
-                    Donation saved = donationRepo.save(existing);
-=======
                     // ✅ Update program link if provided
                     if (programId != null) {
                         Program program = programRepo.findById(programId).orElse(null);
@@ -350,17 +306,12 @@ public class DonationController {
 //                    } catch (Exception e) {
 //                        System.err.println("❌ Error sending status update email: " + e.getMessage());
 //                    }
->>>>>>> Stashed changes
                     return ResponseEntity.ok(saved);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
-<<<<<<< Updated upstream
-    // ✅ Delete donation by ID
-=======
     // ---------------- DELETE DONATION ----------------
->>>>>>> Stashed changes
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteDonation(@PathVariable Long id) {
         if (!donationRepo.existsById(id)) {
@@ -370,21 +321,12 @@ public class DonationController {
         return ResponseEntity.noContent().build();
     }
 
-<<<<<<< Updated upstream
-    // ✅ Filter donations by city and/or condition
-    @GetMapping("/filter")
-    public List<Donation> filterDonations(
-            @RequestParam(required = false) String city,
-            @RequestParam(required = false) String overallCondition
-    ) {
-=======
     // ---------------- FILTER DONATIONS ----------------
     @GetMapping("/filter")
     public List<Donation> filterDonations(
             @RequestParam(required = false) String city,
             @RequestParam(required = false) String overallCondition) {
 
->>>>>>> Stashed changes
         if (city != null && overallCondition != null) {
             return donationRepo.findByCityIgnoreCaseAndOverallConditionIgnoreCase(city, overallCondition);
         } else if (city != null) {
@@ -395,9 +337,6 @@ public class DonationController {
             return donationRepo.findAll();
         }
     }
-<<<<<<< Updated upstream
-}
-=======
 
     // ---------------- GET TOTAL DONATIONS FOR A PROGRAM ----------------
     @GetMapping("/program/{programId}/count")
@@ -534,4 +473,3 @@ public class DonationController {
 //
 //
 //
->>>>>>> Stashed changes

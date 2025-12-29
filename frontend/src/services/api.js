@@ -870,11 +870,7 @@ const donationAPI = {
   addDonation: async (donationData) => {
     try {
       const token = localStorage.getItem("jwtToken");
-<<<<<<< Updated upstream
-      const response = await api.post("/donations/new", donationData, {
-=======
       const response = await api.post("/donations/new", {...donationData, program:{programId: donationData.programId}}, {
->>>>>>> Stashed changes
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -899,12 +895,6 @@ const donationAPI = {
       throw error;
     }
   },
-<<<<<<< Updated upstream
-};
-
-export { donationAPI };
-
-=======
    // ✅ Get all donations
    listDonations: async () => {
     try {
@@ -954,7 +944,6 @@ export { donationAPI };
     }
   },
 };
->>>>>>> Stashed changes
 
 
 

@@ -253,17 +253,10 @@ const HomePage = () => {
         </div>
       </section>
 
-<<<<<<< Updated upstream
-      {/* Stats Bar */}
-      <section style={{ background: "#0b5e2b", color: "white", padding: "28px 16px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 16, textAlign: "center" }}>
-          {[{ label: "Items Donated", value: "0" }, { label: "People Helped", value: "0" }, { label: "NGO Partners", value: "0" }, { label: "Programs Completed", value: "0" }].map((s, i) => (
-=======
       {/* Impact Section */}
       <section className="impact">
         <div className="impact-inner">
           {[{ label: "Items Donated", value: "12K+" }, { label: "People Helped", value: "8K+" }, { label: "Active Programs", value: "15" }, { label: "NGO Partners", value: "45" }].map((s, i) => (
->>>>>>> Stashed changes
             <div key={i}>
               <div className="impact-value">{s.value}</div>
               <div className="impact-label">{s.label}</div>

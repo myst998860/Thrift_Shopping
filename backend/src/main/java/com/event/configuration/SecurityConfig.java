@@ -51,10 +51,10 @@ public class SecurityConfig {
                     
                     .requestMatchers(HttpMethod.POST, "/auth/forgot-password").permitAll()
                     
-<<<<<<< Updated upstream
+
                     .requestMatchers(HttpMethod.POST, "/auth/donations/new\", \"/donations\", \"/donations/filter/").permitAll()
                     .requestMatchers("/donations/add", "/donations/edit/**", "/donations/delete/**").hasRole("ADMIN")
-=======
+
                     .requestMatchers("/auth/signup","/auth/signupPartner", "/auth/request-password-reset", "/auth/verify-otp", "/auth/reset-password").permitAll()
                     
                     .requestMatchers(HttpMethod.PUT, "/admin/users/update-location/**").authenticated()
@@ -91,7 +91,7 @@ public class SecurityConfig {
                     .requestMatchers("/admin/**").hasRole("ADMIN")
                  
 
->>>>>>> Stashed changes
+
                     
                     // Allow OPTIONS for all (preflight)
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
