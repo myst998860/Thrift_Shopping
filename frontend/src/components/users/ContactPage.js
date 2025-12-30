@@ -161,15 +161,15 @@ const ContactPage = () => {
       <section className="banner-area">
         <div className="banner-text">
           <h1>We’d Love To Hear From You</h1>
-          <p>Questions about a product, a pickup, or just want to say hi? Let’s chat.</p>
+          <p>Contact Us</p>
           <div className="hero-cta">
-            <button
+            {/* <button
               type="button"
               className="hero-btn"
               onClick={() => window.scrollTo({ top: document.body.scrollHeight / 3, behavior: "smooth" })}
             >
               Plan Your Visit
-            </button>
+            </button> */}
           </div>
         </div>
       </section>
@@ -192,8 +192,8 @@ const ContactPage = () => {
         <div className="layout-columns">
           <form onSubmit={handleSubmit} className="inquiry-form">
             <div className="form-header">
-              <h2>Say Hello!</h2>
-              <p>Share a little about what you’re looking for and we’ll reply within 1 business day.</p>
+              <h2>Hello</h2>
+              <p>If you have quality clothes you can send us a message with image our partner will contact you as soon as possible</p>
             </div>
 
             {apiError && <div className="error-message">{apiError}</div>}

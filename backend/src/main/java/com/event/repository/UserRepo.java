@@ -30,7 +30,17 @@ public interface UserRepo extends JpaRepository<User, Long> {
 	    long count();
 
 
-	
+
+	    @Query("""
+	        SELECT 
+	            FUNCTION('MONTH', u.createdAt) AS month,
+	            COUNT(u)
+	        FROM User u
+	        WHERE FUNCTION('YEAR', u.createdAt) = :year
+	        GROUP BY FUNCTION('MONTH', u.createdAt)
+	        ORDER BY FUNCTION('MONTH', u.createdAt)
+	    """)
+	    List<Object[]> countUsersPerMonth(@Param("year") int year);
 
 }
 

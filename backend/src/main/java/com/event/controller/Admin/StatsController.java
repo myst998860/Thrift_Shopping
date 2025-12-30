@@ -110,59 +110,113 @@ public class StatsController {
 
 	    @GetMapping("/chart-data")
 	    public Map<String, Object> getChartData(Authentication authentication) {
+
 	        boolean isAdmin = authentication.getAuthorities().stream()
-	            .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+	            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
 	        if (!isAdmin) {
 	            return Map.of("error", "Access denied");
 	        }
 
-	        // Generate mock data for the last 12 months
-	        List<Map<String, Object>> usersData = new ArrayList<>();
-	        List<Map<String, Object>> partnersData = new ArrayList<>();
-	        List<Map<String, Object>> venuesData = new ArrayList<>();
-	        List<Map<String, Object>> bookingsData = new ArrayList<>();
+	        int year = LocalDate.now().getYear();
 
-	        String[] months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-	        
-	        for (int i = 0; i < 12; i++) {
-	            // Users data
-	            Map<String, Object> userMonth = new HashMap<>();
-	            userMonth.put("month", months[i]);
-	            userMonth.put("users", 20 + (i * 5) + (int)(Math.random() * 10));
-	            userMonth.put("growth", (int)(Math.random() * 20) - 10);
-	            usersData.add(userMonth);
-
-	            // Partners data
-	            Map<String, Object> partnerMonth = new HashMap<>();
-	            partnerMonth.put("month", months[i]);
-	            partnerMonth.put("partners", 10 + (i * 3) + (int)(Math.random() * 8));
-	            partnerMonth.put("growth", (int)(Math.random() * 15) - 8);
-	            partnersData.add(partnerMonth);
-
-	            // Venues data
-	            Map<String, Object> venueMonth = new HashMap<>();
-	            venueMonth.put("month", months[i]);
-	            venueMonth.put("venues", 15 + (i * 4) + (int)(Math.random() * 12));
-	            venueMonth.put("growth", (int)(Math.random() * 18) - 9);
-	            venuesData.add(venueMonth);
-
-	            // Bookings data
-	            Map<String, Object> bookingMonth = new HashMap<>();
-	            bookingMonth.put("month", months[i]);
-	            bookingMonth.put("bookings", 50 + (i * 8) + (int)(Math.random() * 20));
-	            bookingMonth.put("revenue", 20000 + (i * 5000) + (int)(Math.random() * 10000));
-	            bookingsData.add(bookingMonth);
-	        }
-
-	        Map<String, Object> response = new HashMap<>();
-	        response.put("users", usersData);
-	        response.put("partners", partnersData);
-	        response.put("venues", venuesData);
-	        response.put("bookings", bookingsData);
-
-	        return response;
+	        return Map.of(
+	            "users", buildMonthlyData(userRepo.countUsersPerMonth(year), "users"),
+	            "partners", buildMonthlyData(partnerRepo.countPartnersPerMonth(year), "partners"),
+	            "venues", buildMonthlyData(venueRepo.countVenuesPerMonth(year), "venues"),
+	            "orders", buildMonthlyData(orderRepo.countOrdersPerMonth(year), "orders"),
+	            "sales", buildMonthlyRevenue(orderRepo.sumOrderRevenuePerMonth(year))
+	        );
 	    }
+	    
+	    
+	    private static final String[] MONTHS = {
+	    	    "Jan","Feb","Mar","Apr","May","Jun",
+	    	    "Jul","Aug","Sep","Oct","Nov","Dec"
+	    	};
+
+	    	private List<Map<String, Object>> buildMonthlyData(
+	    	        List<Object[]> dbData, String key) {
+
+	    	    Map<Integer, Long> map = new HashMap<>();
+	    	    for (Object[] row : dbData) {
+	    	        map.put(((Number) row[0]).intValue(), (Long) row[1]);
+	    	    }
+
+	    	    List<Map<String, Object>> result = new ArrayList<>();
+	    	    for (int m = 1; m <= 12; m++) {
+	    	        Map<String, Object> obj = new HashMap<>();
+	    	        obj.put("month", MONTHS[m - 1]);
+	    	        obj.put(key, map.getOrDefault(m, 0L));
+	    	        result.add(obj);
+	    	    }
+	    	    return result;
+	    	}
+
+	    	private List<Map<String, Object>> buildMonthlyRevenue(
+	    	        List<Object[]> dbData) {
+
+	    	    Map<Integer, BigDecimal> map = new HashMap<>();
+	    	    for (Object[] row : dbData) {
+	    	        map.put(
+	    	            ((Number) row[0]).intValue(),
+	    	            row[1] != null ? (BigDecimal) row[1] : BigDecimal.ZERO
+	    	        );
+	    	    }
+
+	    	    List<Map<String, Object>> result = new ArrayList<>();
+	    	    for (int m = 1; m <= 12; m++) {
+	    	        Map<String, Object> obj = new HashMap<>();
+	    	        obj.put("month", MONTHS[m - 1]);
+	    	        obj.put("revenue", map.getOrDefault(m, BigDecimal.ZERO));
+	    	        result.add(obj);
+	    	    }
+	    	    return result;
+	    	}
+
+	    
+	    
+//	    @GetMapping("/chart-users")
+//	    public Map<String, Object> getUserChart(Authentication authentication) {
+//
+//	        boolean isAdmin = authentication.getAuthorities().stream()
+//	            .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+//
+//	        if (!isAdmin) {
+//	            return Map.of("error", "Access denied");
+//	        }
+//
+//	        int currentYear = LocalDate.now().getYear();
+//
+//	        List<Object[]> dbData = userRepo.countUsersPerMonth(currentYear);
+//
+//	        // Convert DB result to map: month -> count
+//	        Map<Integer, Long> monthCountMap = new HashMap<>();
+//	        for (Object[] row : dbData) {
+//	            Integer month = ((Number) row[0]).intValue(); // 1–12
+//	            Long count = (Long) row[1];
+//	            monthCountMap.put(month, count);
+//	        }
+//
+//	        String[] months = {
+//	            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+//	            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+//	        };
+//
+//	        List<Map<String, Object>> chartData = new ArrayList<>();
+//
+//	        for (int m = 1; m <= 12; m++) {
+//	            Map<String, Object> item = new HashMap<>();
+//	            item.put("month", months[m - 1]);
+//	            item.put("users", monthCountMap.getOrDefault(m, 0L));
+//	            chartData.add(item);
+//	        }
+//
+//	        return Map.of(
+//	            "year", currentYear,
+//	            "users", chartData
+//	        );
+//	    }
 }
 
 

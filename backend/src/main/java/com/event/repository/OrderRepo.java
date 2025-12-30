@@ -8,32 +8,50 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface OrderRepo extends JpaRepository<Order, Long> {
     // You can add custom queries here if needed
 	
-	List<Order> findByUserId(Long userId);
-	
-	 long countByUserId(Long userId);
+	 List<Order> findByUserId(Long userId);
 
-//	    long countByStatus(String status);
+	    long countByUserId(Long userId);
 
 	    long countByUserIdAndStatus(Long userId, String status);
 
-	    // ✅ TOTAL ORDER AMOUNT (Admin dashboard)
-	    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o")
-	    BigDecimal findTotalOrderAmount();
-	
 	    long countByStatus(String status);
 
-	    // ✅ Grouped status count (dashboard-friendly)
+	    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o")
+	    BigDecimal findTotalOrderAmount();
+
 	    @Query("SELECT o.status, COUNT(o) FROM Order o GROUP BY o.status")
 	    List<Object[]> countOrdersGroupedByStatus();
-	    
+
 	    Optional<Order> findByTransactionUuid(String transactionUuid);
+
+	    // ✅ Monthly revenue
+	    @Query("""
+	        SELECT FUNCTION('MONTH', o.createdAt), SUM(o.totalAmount)
+	        FROM Order o
+	        WHERE FUNCTION('YEAR', o.createdAt) = :year
+	        GROUP BY FUNCTION('MONTH', o.createdAt)
+	        ORDER BY FUNCTION('MONTH', o.createdAt)
+	    """)
+	    List<Object[]> sumOrderRevenuePerMonth(@Param("year") int year);
+
+	    // ✅ Monthly order count (THIS WAS MISSING)
+	    @Query("""
+	        SELECT FUNCTION('MONTH', o.createdAt), COUNT(o)
+	        FROM Order o
+	        WHERE FUNCTION('YEAR', o.createdAt) = :year
+	        GROUP BY FUNCTION('MONTH', o.createdAt)
+	        ORDER BY FUNCTION('MONTH', o.createdAt)
+	    """)
+	    List<Object[]> countOrdersPerMonth(@Param("year") int year);
 }
+
 
 
 // package com.event.repository;

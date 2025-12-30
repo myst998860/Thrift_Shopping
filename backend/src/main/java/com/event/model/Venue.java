@@ -20,7 +20,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+
 @Entity
+@Table(name = "venue")
 public class Venue {
 
     @Id
@@ -31,60 +33,52 @@ public class Venue {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "partner_id", nullable = true)
-    
     private Partner partner;
 
     private String location;
-    
     private String quality;
-
     private String brand;
-    
     private String size;
-
     private BigDecimal price;
-
     private String category;
 
     @OneToMany(mappedBy = "venue", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Booking> bookings = new ArrayList<>();
 
     private String status;
-    
+
+    private LocalDateTime createdAt;
+    private LocalDateTime joinDate;
+
     @Lob
     @Column(columnDefinition = "TEXT")
-//    private String imageUrl;
-    
     private String mapLocationUrl;
+
     private Integer minBookingHours;
     private LocalTime openingTime;
     private LocalTime closingTime;
+
     @Column(length = 2000)
     private String description;
+
     @ElementCollection
     private List<String> amenities;
+
     @ElementCollection
     private List<String> imageUrls = new ArrayList<>();
-    
-    private LocalDateTime joinDate;
 
+    // ✅ Only ONE PrePersist method
     @PrePersist
-    public void prePersist() {
-        if (joinDate == null) {
-            joinDate = LocalDateTime.now();
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        if (this.joinDate == null) {
+            this.joinDate = LocalDateTime.now();
         }
     }
-    
-    public LocalDateTime getJoinDate() {
-        return joinDate;
-    }
 
-    public void setJoinDate(LocalDateTime joinDate) {
-        this.joinDate = joinDate;
-    }
-    
-
-    // Getters and setters
+    // Getters and Setters
 
     public Long getVenue_id() {
         return venue_id;
@@ -118,12 +112,28 @@ public class Venue {
         this.location = location;
     }
 
+    public String getQuality() {
+        return quality;
+    }
+
+    public void setQuality(String quality) {
+        this.quality = quality;
+    }
+
     public String getBrand() {
         return brand;
     }
 
     public void setBrand(String brand) {
         this.brand = brand;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
     }
 
     public BigDecimal getPrice() {
@@ -134,89 +144,6 @@ public class Venue {
         this.price = price;
     }
 
-  
-
-    public List<Booking> getBookings() {
-		return bookings;
-	}
-
-	public void setBookings(List<Booking> bookings) {
-		this.bookings = bookings;
-	}
-
-	public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-//	public String getImageUrl() {
-//		return imageUrl;
-//	}
-//
-//	public void setImageUrl(String imageUrl) {
-//		this.imageUrl = imageUrl;
-//	}
-
-	public List<String> getImageUrls() {
-	    return imageUrls;
-	}
-
-	public void setImageUrls(List<String> imageUrls) {
-	    this.imageUrls = imageUrls;
-	}
-	public String getMapLocationUrl() {
-		return mapLocationUrl;
-	}
-
-	public void setMapLocationUrl(String mapLocationUrl) {
-		this.mapLocationUrl = mapLocationUrl;
-	}
-
-	
-
-	public Integer getMinBookingHours() {
-		return minBookingHours;
-	}
-
-	public void setMinBookingHours(Integer minBookingHours) {
-		this.minBookingHours = minBookingHours;
-	}
-
-	public LocalTime getOpeningTime() {
-		return openingTime;
-	}
-
-	public void setOpeningTime(LocalTime openingTime) {
-		this.openingTime = openingTime;
-	}
-
-	public LocalTime getClosingTime() {
-		return closingTime;
-	}
-
-	public void setClosingTime(LocalTime closingTime) {
-		this.closingTime = closingTime;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	public List<String> getAmenities() {
-		return amenities;
-	}
-
-	public void setAmenities(List<String> amenities) {
-		this.amenities = amenities;
-	}
-    
     public String getCategory() {
         return category;
     }
@@ -225,21 +152,91 @@ public class Venue {
         this.category = category;
     }
 
-	public String getQuality() {
-		return quality;
-	}
+    public List<Booking> getBookings() {
+        return bookings;
+    }
 
-	public void setQuality(String quality) {
-		this.quality = quality;
-	}
+    public void setBookings(List<Booking> bookings) {
+        this.bookings = bookings;
+    }
 
-	public String getSize() {
-		return size;
-	}
+    public String getStatus() {
+        return status;
+    }
 
-	public void setSize(String size) {
-		this.size = size;
-	}
-    
-    
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getJoinDate() {
+        return joinDate;
+    }
+
+    public void setJoinDate(LocalDateTime joinDate) {
+        this.joinDate = joinDate;
+    }
+
+    public String getMapLocationUrl() {
+        return mapLocationUrl;
+    }
+
+    public void setMapLocationUrl(String mapLocationUrl) {
+        this.mapLocationUrl = mapLocationUrl;
+    }
+
+    public Integer getMinBookingHours() {
+        return minBookingHours;
+    }
+
+    public void setMinBookingHours(Integer minBookingHours) {
+        this.minBookingHours = minBookingHours;
+    }
+
+    public LocalTime getOpeningTime() {
+        return openingTime;
+    }
+
+    public void setOpeningTime(LocalTime openingTime) {
+        this.openingTime = openingTime;
+    }
+
+    public LocalTime getClosingTime() {
+        return closingTime;
+    }
+
+    public void setClosingTime(LocalTime closingTime) {
+        this.closingTime = closingTime;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public List<String> getAmenities() {
+        return amenities;
+    }
+
+    public void setAmenities(List<String> amenities) {
+        this.amenities = amenities;
+    }
+
+    public List<String> getImageUrls() {
+        return imageUrls;
+    }
+
+    public void setImageUrls(List<String> imageUrls) {
+        this.imageUrls = imageUrls;
+    }
 }

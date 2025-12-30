@@ -30,5 +30,14 @@ public interface PartnerRepo extends JpaRepository<Partner, Long> {
 	 
 	// PartnerRepo
 	 long count();
+	 
+	 @Query("""
+			    SELECT FUNCTION('MONTH', p.createdAt), COUNT(p)
+			    FROM Partner p
+			    WHERE FUNCTION('YEAR', p.createdAt) = :year
+			    GROUP BY FUNCTION('MONTH', p.createdAt)
+			    ORDER BY FUNCTION('MONTH', p.createdAt)
+			""")
+			List<Object[]> countPartnersPerMonth(@Param("year") int year);
 }
 

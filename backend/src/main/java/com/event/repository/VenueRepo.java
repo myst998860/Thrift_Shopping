@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.event.model.Partner;
@@ -36,7 +37,14 @@ public interface VenueRepo extends JpaRepository<Venue, Long> {
 	// VenueRepo
 	long count();
 	
-	
+	@Query("""
+		    SELECT FUNCTION('MONTH', v.createdAt), COUNT(v)
+		    FROM Venue v
+		    WHERE FUNCTION('YEAR', v.createdAt) = :year
+		    GROUP BY FUNCTION('MONTH', v.createdAt)
+		    ORDER BY FUNCTION('MONTH', v.createdAt)
+		""")
+		List<Object[]> countVenuesPerMonth(@Param("year") int year);
 	
 
 	

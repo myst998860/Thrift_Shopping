@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { venueService } from '../../services/api';
+import { venueService, imageService } from '../../services/api';
 import { useUserSession } from '../../context/UserSessionContext';
 import { useCart } from '../../context/CartContext';
 import Header from '../users/Header';
@@ -20,6 +20,9 @@ const UserViewVenue = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [relatedProductsLoading, setRelatedProductsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('description');
 
   useEffect(() => {
     const fetchVenueDetails = async () => {
@@ -60,6 +63,55 @@ const UserViewVenue = () => {
 
     fetchVenueDetails();
   }, [id]);
+
+  // Fetch related products (other venues)
+  useEffect(() => {
+    const fetchRelatedProducts = async () => {
+      if (!venue) return;
+
+      try {
+        setRelatedProductsLoading(true);
+        const response = await venueService.listVenue();
+        const allVenues = Array.isArray(response) ? response : [];
+        
+        // Filter out current venue and get up to 4 related products
+        const related = allVenues
+          .filter(v => v.venue_id !== parseInt(id))
+          .slice(0, 4);
+
+        // Fetch images for related products
+        const relatedWithImages = await Promise.all(
+          related.map(async (v) => {
+            let imageUrl = '';
+            try {
+              if (v.imageUrls && v.imageUrls.length > 0) {
+                imageUrl = v.imageUrls[0];
+              } else {
+                const imageBlob = await imageService.getImage(v.venue_id);
+                imageUrl = URL.createObjectURL(imageBlob);
+              }
+            } catch (imgErr) {
+              imageUrl = 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80';
+            }
+            return {
+              ...v,
+              image: imageUrl,
+            };
+          })
+        );
+
+        setRelatedProducts(relatedWithImages);
+      } catch (error) {
+        console.error('Error fetching related products:', error);
+      } finally {
+        setRelatedProductsLoading(false);
+      }
+    };
+
+    if (venue) {
+      fetchRelatedProducts();
+    }
+  }, [venue, id]);
 
   const handleAddToCart = async () => {
     if (!isUserLoggedIn) {
@@ -168,7 +220,7 @@ const UserViewVenue = () => {
           <p className="uvv-error__message">The venue you're looking for doesn't exist or has been removed.</p>
           <button onClick={handleBackToVenues} className="uvv-button--back">← Back to Venues</button>
         </div>
-        <Footer />
+       
       </div>
     );
   }
@@ -240,48 +292,6 @@ const UserViewVenue = () => {
               </p>
             </div>
 
-            {/* Product Details */}
-            <div className="uvv-product-details">
-              <h3 className="uvv-details-title">Product Details</h3>
-              <div className="uvv-details-grid">
-                <div className="uvv-detail-item">
-                  <span className="uvv-detail-label">Brand:</span>
-                  <span className="uvv-detail-value">{venue.brand || 'N/A'}</span>
-                </div>
-                {/* <div className="uvv-detail-item">
-                  <span className="uvv-detail-label">Location:</span>
-                  <span className="uvv-detail-value">{venue.location}</span>
-                </div> */}
-                <div className="uvv-detail-item">
-                  <span className="uvv-detail-label">Status:</span>
-                  <span className="uvv-detail-value">{venue.status || 'Available'}</span>
-                </div>
-                <div className="uvv-detail-item">
-                  <span className="uvv-detail-label">Quality:</span>
-                  <span className="uvv-detail-value">{venue.quality || 'Premium'}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Measurements / Specifications */}
-            <div className="uvv-product-measurements">
-              <h3 className="uvv-measurements-title">Specifications</h3>
-              <div className="uvv-measurements-grid">
-                <div className="uvv-measurement-item">
-                  {/* <span className="uvv-measurement-label">Capacity:</span> */}
-                  {/* <span className="uvv-measurement-value">{venue.brand || 'N/A'} guests</span> */}
-                </div>
-                <div className="uvv-measurement-item">
-                  <span className="uvv-measurement-label">Price:</span>
-                  <span className="uvv-measurement-value">NPR {venue.price}</span>
-                </div>
-                <div className="uvv-measurement-item">
-                  {/* <span className="uvv-measurement-label">Location:</span> */}
-                  <span className="uvv-measurement-value">{venue.location}</span>
-                </div>
-              </div>
-            </div>
-
             {/* Action Buttons */}
             <div className="uvv-product-actions">
               <button 
@@ -331,6 +341,89 @@ const UserViewVenue = () => {
           </div>
         </div>
 
+        {/* Product Information Tabs */}
+        <div className="uvv-product-tabs-section">
+          <div className="uvv-tabs">
+            <button
+              className={`uvv-tab ${activeTab === 'description' ? 'uvv-tab--active' : ''}`}
+              onClick={() => setActiveTab('description')}
+            >
+              Description
+            </button>
+            <button
+              className={`uvv-tab ${activeTab === 'additional' ? 'uvv-tab--active' : ''}`}
+              onClick={() => setActiveTab('additional')}
+            >
+              Additional Information
+            </button>
+            <button
+              className={`uvv-tab ${activeTab === 'review' ? 'uvv-tab--active' : ''}`}
+              onClick={() => setActiveTab('review')}
+            >
+              Review
+            </button>
+          </div>
+
+          <div className="uvv-tab-content">
+            {activeTab === 'description' && (
+              <div className="uvv-tab-panel">
+                <p className="uvv-description-text">
+                  {venue.description ||
+                    `${venue.venueName} is a premium venue located in ${venue.location}. 
+                    Perfect for weddings, corporate events, and special celebrations. 
+                    This venue offers modern amenities and elegant décor to make your event memorable. 
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.`}
+                </p>
+              </div>
+            )}
+
+            {activeTab === 'additional' && (
+              <div className="uvv-tab-panel">
+                <table className="uvv-info-table">
+                  <tbody>
+                    <tr>
+                      <td className="uvv-info-table-label">Brand</td>
+                      <td className="uvv-info-table-value">{venue.brand || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td className="uvv-info-table-label">Size</td>
+                      <td className="uvv-info-table-value">{venue.size || 'S, M, L, XL, XXL'}</td>
+                    </tr>
+                    <tr>
+                      <td className="uvv-info-table-label">Color</td>
+                      <td className="uvv-info-table-value">{venue.color || 'Brown, Grey, Green, Red, Blue'}</td>
+                    </tr>
+                    <tr>
+                      <td className="uvv-info-table-label">Material</td>
+                      <td className="uvv-info-table-value">{venue.material || 'Premium Quality'}</td>
+                    </tr>
+                    <tr>
+                      <td className="uvv-info-table-label">Country of Origin</td>
+                      <td className="uvv-info-table-value">{venue.countryOfOrigin || 'Nepal'}</td>
+                    </tr>
+                    <tr>
+                      <td className="uvv-info-table-label">Status</td>
+                      <td className="uvv-info-table-value">{venue.status || 'Available'}</td>
+                    </tr>
+                    <tr>
+                      <td className="uvv-info-table-label">Quality</td>
+                      <td className="uvv-info-table-value">{venue.quality || 'Premium'}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {activeTab === 'review' && (
+              <div className="uvv-tab-panel">
+                <div className="uvv-review-empty">
+                  <p>No reviews yet. Be the first to review this product!</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Location Map Section */}
         {(venue.mapLocationUrl || venue.location) && (
           <div className="uvv-additional-info">
@@ -366,7 +459,61 @@ const UserViewVenue = () => {
             </div>
           </div>
         )}
+
+        {/* Related Products Section */}
+        {relatedProducts.length > 0 && (
+          <div className="uvv-related-products">
+            <div className="uvv-related-products-header">
+              <h2 className="uvv-related-products-title">Related Products</h2>
+              <p className="uvv-related-products-subtitle">Explore Related Products</p>
+            </div>
+            <div className="uvv-related-products-grid">
+              {relatedProducts.map((product) => {
+                const discountPercent = Math.round(((product.price * 1.5 - product.price) / (product.price * 1.5)) * 100);
+                const originalPrice = Math.round(product.price * 1.5);
+                const rating = product.rating || 4.5;
+
+                return (
+                  <div 
+                    key={product.venue_id} 
+                    className="uvv-related-product-card"
+                    onClick={() => navigate(`/venues/${product.venue_id}`)}
+                  >
+                    <div className="uvv-related-product-image-container">
+                      <img
+                        src={product.image || 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80'}
+                        alt={product.venueName}
+                        className="uvv-related-product-image"
+                      />
+                      {discountPercent > 0 && (
+                        <div className="uvv-related-product-badge">{discountPercent}% off</div>
+                      )}
+                    </div>
+                    <div className="uvv-related-product-info">
+                      <div className="uvv-related-product-category">{product.category || 'Product'}</div>
+                      <h3 className="uvv-related-product-name">{product.venueName || 'Product Name'}</h3>
+                      <div className="uvv-related-product-rating">
+                        <span className="uvv-related-product-stars">
+                          {'★'.repeat(Math.floor(rating))}
+                          {'☆'.repeat(5 - Math.floor(rating))}
+                        </span>
+                        <span className="uvv-related-product-rating-value">{rating.toFixed(1)}</span>
+                      </div>
+                      <div className="uvv-related-product-pricing">
+                        <span className="uvv-related-product-price-current">NPR {product.price || '0'}</span>
+                        {originalPrice > product.price && (
+                          <span className="uvv-related-product-price-original">NPR {originalPrice}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
+ 
     </div>
   );
 };

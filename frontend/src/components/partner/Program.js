@@ -166,7 +166,7 @@ const ProgramAdd = () => {
       data.append("name", formData.name.trim());
       data.append("role", formData.role.trim());
       data.append("objective", formData.objective.trim());
-      data.append("status", 'active');
+      data.append("status", 'ACTIVE');
 
       // Partner info (nested object)
       data.append("partner.user_id", localStorage.getItem("userId")); // make sure backend can parse nested field

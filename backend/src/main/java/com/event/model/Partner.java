@@ -16,6 +16,9 @@ import jakarta.persistence.Table;
 @DiscriminatorValue("PARTNER")
 @PrimaryKeyJoinColumn(name = "user_id")
 @Table(name = "partner")
+
+
+
 public class Partner extends User {
 	
 	  // Store URLs of uploaded documents (from Cloudinary)

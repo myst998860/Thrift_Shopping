@@ -157,7 +157,7 @@ export default function SignupPage() {
     <div className="auth-container2" style={{ backgroundColor: "#e8e3c3" }}>
       <AuthCard
         title="Sign up into your account"
-        imageSrc="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/signupimage-T6LiitVtF9TY0HZ3xQgq0kcQdRrq3f.png"
+        imageSrc="https://i.pinimg.com/736x/d2/ec/7e/d2ec7e71186c0c3ea0f71460f9d51946.jpg"
         imageAlt="Signup Image"
         imagePosition="right"
       >

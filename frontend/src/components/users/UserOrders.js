@@ -104,10 +104,10 @@ export default function UserOrders() {
   return (
     <div
       style={{
-        padding: "24px 16px 48px",
+        padding: "100px 16px 48px",
         maxWidth: 1000,
         margin: "0 auto",
-        backgroundColor: "#f5f5f7",
+        backgroundColor: "#ffffffff",
         minHeight: "100vh",
       }}
     >
@@ -221,7 +221,7 @@ export default function UserOrders() {
                     fontSize: 14,
                   }}
                 >
-                  <span
+                  {/* <span
                     style={{
                       width: 24,
                       height: 24,
@@ -234,8 +234,8 @@ export default function UserOrders() {
                     }}
                   >
                     🛍
-                  </span>
-                  <span>{sellerName}</span>
+                  </span> */}
+                  {/* <span>{sellerName}</span> */}
                 </div>
 
                 <span

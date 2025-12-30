@@ -133,7 +133,7 @@ const AdminPanel = () => {
     { path: "/admin/dashboard", icon: <FiHome />, label: "Dashboard" },
     { path: "/admin/users", icon: <FiUsers />, label: "Users" },
     { path: "/admin/partners", icon: <FiBriefcase />, label: "Partners" },
-    { path: "/admin/venues", icon: <FiMapPin />, label: "Venues" },
+    { path: "/admin/venues", icon: <FiMapPin />, label: "Products" },
     { path: "/admin/bookings", icon: <FiCalendar />, label: "Orders" },
     { path: "/admin/notifications", icon: <FiBell />, label: "Notifications" },
     { path: "/admin/sellercontact", icon: <FiSettings />, label: "SellerContact" },

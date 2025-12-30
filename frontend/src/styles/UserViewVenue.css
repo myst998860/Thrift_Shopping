@@ -76,9 +76,9 @@
 }
 
 .uvv-breadcrumb {
-    max-width: 1200px;
+    max-width: 100%;
     margin: 0 auto;
-    padding: 0 2rem;
+    padding: 0 20px;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -107,19 +107,19 @@
 /* Main Container */
 .uvv-container {
     flex: 1;
-    max-width: 1200px;
+    max-width: 100%;
     margin: 0 auto;
     width: 100%;
-    padding: 2rem;
+    padding: 20px;
 }
 
 /* Product Layout - Two Column */
 .uvv-product-layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 4rem;
+    gap: 3rem;
     background: white;
-    padding: 2rem;
+    padding: 30px;
     border-radius: 0.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     margin-bottom: 3rem;
@@ -134,6 +134,7 @@
 
 .uvv-product-image-main {
     width: 100%;
+    max-width: 500px;
     aspect-ratio: 1;
     background: #f8f9fa;
     border-radius: 0.5rem;
@@ -142,6 +143,7 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin: 0 auto;
 }
 
 .uvv-product-image {
@@ -435,7 +437,7 @@
 /* Additional Information Section */
 .uvv-additional-info {
     background: white;
-    padding: 2rem;
+    padding: 30px;
     border-radius: 0.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     display: flex;
@@ -1032,5 +1034,270 @@
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+    }
+}
+
+/* Product Tabs Section */
+.uvv-product-tabs-section {
+    background: white;
+    padding: 25px;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin: 0 auto 3rem;
+    max-width: 800px;
+    width: 100%;
+}
+
+.uvv-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid #e5e5e5;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.uvv-tab {
+    background: none;
+    border: none;
+    padding: 12px 25px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    bottom: -2px;
+}
+
+.uvv-tab:hover {
+    color: #333;
+}
+
+.uvv-tab--active {
+    color: #333;
+    border-bottom-color: #333;
+    font-weight: 600;
+}
+
+.uvv-tab-content {
+    min-height: 120px;
+}
+
+.uvv-tab-panel {
+    padding: 10px 0;
+}
+
+.uvv-description-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #555;
+    margin: 0;
+    text-align: center;
+}
+
+.uvv-info-table {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.uvv-info-table tbody tr {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.uvv-info-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.uvv-info-table-label {
+    padding: 15px 20px;
+    font-weight: 600;
+    color: #333;
+    width: 200px;
+    vertical-align: top;
+}
+
+.uvv-info-table-value {
+    padding: 15px 20px;
+    color: #666;
+}
+
+.uvv-review-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    font-size: 15px;
+}
+
+/* Related Products Section */
+.uvv-related-products {
+    margin-top: 60px;
+    padding: 40px 0;
+    background-color: #ffffff;
+}
+
+.uvv-related-products-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.uvv-related-products-title {
+    font-size: 32px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 8px 0;
+}
+
+.uvv-related-products-subtitle {
+    font-size: 16px;
+    color: #666;
+    margin: 0;
+}
+
+.uvv-related-products-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.uvv-related-product-card {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e5e5e5;
+}
+
+.uvv-related-product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.uvv-related-product-image-container {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    overflow: hidden;
+    background-color: #f5f5f5;
+}
+
+.uvv-related-product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.uvv-related-product-card:hover .uvv-related-product-image {
+    transform: scale(1.05);
+}
+
+.uvv-related-product-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background-color: #e74c3c;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    z-index: 1;
+}
+
+.uvv-related-product-info {
+    padding: 20px;
+}
+
+.uvv-related-product-category {
+    font-size: 12px;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.uvv-related-product-name {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin: 0 0 10px 0;
+    line-height: 1.4;
+}
+
+.uvv-related-product-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.uvv-related-product-stars {
+    color: #ffc107;
+    font-size: 14px;
+    letter-spacing: 2px;
+}
+
+.uvv-related-product-rating-value {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+.uvv-related-product-pricing {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.uvv-related-product-price-current {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.uvv-related-product-price-original {
+    font-size: 14px;
+    color: #999;
+    text-decoration: line-through;
+}
+
+/* Responsive for Related Products */
+@media (max-width: 1200px) {
+    .uvv-related-products-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .uvv-related-products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        padding: 0 15px;
+    }
+
+    .uvv-related-products-title {
+        font-size: 24px;
+    }
+
+    .uvv-related-product-image-container {
+        height: 250px;
+    }
+}
+
+@media (max-width: 480px) {
+    .uvv-related-products-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .uvv-related-product-image-container {
+        height: 300px;
     }
 }

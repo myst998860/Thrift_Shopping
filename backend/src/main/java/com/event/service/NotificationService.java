@@ -275,24 +275,95 @@ public class NotificationService {
     /**
      * Create order placement notification
      */
+//    public void createOrderNotification(Long userId, Long orderId, BigDecimal totalAmount) {
+//        // 1. Get recipient
+//    userRepository.findById(userId)
+//                .orElseThrow(() -> new RuntimeException("Recipient not found with ID: " + userId));
+//        
+//       
+//        
+//        // 2. Create notification DTO
+//        NotificationDTO notificationDTO = new NotificationDTO();
+//        notificationDTO.setRecipientId(userId);
+//        notificationDTO.setSenderId(userId);
+//        notificationDTO.setTitle("Order Placed Successfully");
+//        notificationDTO.setType("ORDER");
+//        notificationDTO.setMessage("Your order #" + orderId + " has been placed successfully. Total: NPR " + totalAmount);
+//        
+//        // 4. Create and save notifications for all roles
+//        createNotificationsForAllRoles(notificationDTO);
+//        
+//        System.out.println("✅ Order notification created for order #" + orderId);
+//    }
+    
+    
     public void createOrderNotification(Long userId, Long orderId, BigDecimal totalAmount) {
-        // 1. Get recipient
-    userRepository.findById(userId)
+        try {
+            System.out.println("🚀 Creating order notifications for order #" + orderId);
+            
+            // 1. Get the customer who placed the order
+            User customer = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Recipient not found with ID: " + userId));
-        
-       
-        
-        // 2. Create notification DTO
-        NotificationDTO notificationDTO = new NotificationDTO();
-        notificationDTO.setRecipientId(userId);
-        notificationDTO.setSenderId(userId);
-        notificationDTO.setTitle("Order Placed Successfully");
-        notificationDTO.setType("ORDER");
-        notificationDTO.setMessage("Your order #" + orderId + " has been placed successfully. Total: NPR " + totalAmount);
-        
-        // 4. Create and save notifications for all roles
-        createNotificationsForAllRoles(notificationDTO);
-        
-        System.out.println("✅ Order notification created for order #" + orderId);
+            
+            System.out.println("✅ Customer found: " + customer.getEmail());
+            
+            // 2. Create notification for CUSTOMER (your existing working code)
+            NotificationDTO customerNotification = new NotificationDTO();
+            customerNotification.setRecipientId(userId);
+            customerNotification.setSenderId(userId);
+            customerNotification.setTitle("Order Placed Successfully");
+            customerNotification.setType("ORDER");
+            customerNotification.setMessage("Your order #" + orderId + 
+                " has been placed successfully. Total: NPR " + totalAmount);
+            
+            // This is your working method - keep it!
+            createNotificationsForAllRoles(customerNotification);
+            
+            System.out.println("✅ Customer notification created for order #" + orderId);
+            
+            // 3. NEW: Create notifications for ALL ADMIN users
+            List<User> allUsers = userRepository.findAll();
+            int adminCount = 0;
+            
+            for (User user : allUsers) {
+                // Check if user is admin
+                if (user.getRole() != null && 
+                    (user.getRole().equalsIgnoreCase("ADMIN") || 
+                     user.getRole().equalsIgnoreCase("ROLE_ADMIN")) &&
+                    !user.getUser_id().equals(userId)) {
+                    
+                    try {
+                        // Create admin notification DTO
+                        NotificationDTO adminNotification = new NotificationDTO();
+                        adminNotification.setRecipientId(user.getUser_id()); // Admin's ID
+                        adminNotification.setSenderId(userId); // Customer's ID as sender
+                        adminNotification.setTitle("📦 New Order Received");
+                        adminNotification.setType("ORDER");
+                        adminNotification.setMessage("New order #" + orderId + 
+                            " placed by " + customer.getFullname() + 
+                            " (" + customer.getEmail() + ")" +
+                            ". Total: NPR " + totalAmount);
+                        
+                        // Use your existing working method for admins too
+                        createNotificationsForAllRoles(adminNotification);
+                        
+                        adminCount++;
+                        System.out.println("✅ Admin notification sent to: " + user.getEmail());
+                        
+                    } catch (Exception e) {
+                        System.err.println("⚠️ Failed to notify admin " + user.getEmail() + ": " + e.getMessage());
+                    }
+                }
+            }
+            
+            System.out.println("🎯 Total notifications: 1 customer + " + adminCount + " admins");
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error in createOrderNotification: " + e.getMessage());
+            throw e; // Re-throw to see error in OrderController
+        }
     }
+    
+    
+    
 }

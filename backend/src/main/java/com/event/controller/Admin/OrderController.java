@@ -86,8 +86,13 @@ public class OrderController {
                 savedOrder.getTotalAmount()
             );
             
+         
+            
             System.out.println("✅ Order notification sent for order #" + savedOrder.getOrderId());
             
+    
+        
+        
         } catch (Exception e) {
             System.err.println("❌ Failed to send notification: " + e.getMessage());
             // Don't fail the order if notification fails

@@ -3,6 +3,7 @@ package com.event.model;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -20,6 +21,13 @@ public class Order {
     private String paymentMethod;
     private String status;
     private String address;
+    
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
     
     
     @Column(precision = 10, scale = 2)
@@ -115,6 +123,10 @@ public class Order {
 	public void setTransactionUuid(String transactionUuid) {
 	    this.transactionUuid = transactionUuid;
 	}
+	
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 	
 }
 

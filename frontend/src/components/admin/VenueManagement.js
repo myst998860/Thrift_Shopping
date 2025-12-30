@@ -91,6 +91,7 @@ useEffect(() => {
           location: v.location,
           category: v.category,
           price: v.price,
+             price: v.brand,
           minBookingHours: v.minBookingHours,
           capacity: v.capacity,
           openingTime: v.openingTime,
@@ -154,28 +155,29 @@ useEffect(() => {
 
   return (
     <div style={{ background: '#fff', borderRadius: 12, padding: 32, boxShadow: '0 2px 8px #eee' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Venue Management</h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Manage all venues on the platform</p>
+      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Product Management</h1>
+      <p style={{ color: '#888', marginBottom: 24 }}>Manage all Product on the platform</p>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 600 }}>All Venues</h2>
-        <button onClick={handleAdd} style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 22px', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>+ Add New Venue</button>
+        <h2 style={{ fontSize: 22, fontWeight: 600 }}>All Products</h2>
+        <button onClick={handleAdd} style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 22px', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>+ Add New Product</button>
       </div>
-      <input type="text" placeholder="Search venues by name, partner, or location..." style={{ width: 320, padding: 8, borderRadius: 6, border: '1px solid #ddd', marginBottom: 16 }} />
+      <input type="text" placeholder="Search product by name, partner, or location..." style={{ width: 320, padding: 8, borderRadius: 6, border: '1px solid #ddd', marginBottom: 16 }} />
       <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8 }}>
         <thead>
           <tr style={{ background: '#f7f7f7', textAlign: 'left' }}>
             <th style={{ padding: 10 }}>ID</th>
-            <th>Venue Image</th>
-          <th style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>Venue Name</th>
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Partner</th>
+            <th>Product Image</th>
+          <th style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>Product Name</th>
+          {/* <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Partner</th> */}
           <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Location</th>
                  <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>category</th>
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Capacity</th>
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Price/Hour</th>
-          <th style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>Booking Time</th>
+          {/* <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Capacity</th> */}
+          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Price</th>
+            <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Brand</th>
+          {/* <th style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>Booking Time</th>
           <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Opening Time</th>
-          <th style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>Closing Time</th>
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Bookings</th>
+          <th style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>Closing Time</th> */}
+          {/* <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Bookings</th> */}
           <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Status</th>
           <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Actions</th>
           </tr>

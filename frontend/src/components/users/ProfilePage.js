@@ -1,14 +1,55 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { userService, bookingService, profileService } from "../../services/api"
+import { Link } from "react-router-dom"
+import { userService, bookingService, profileService, orderAPI } from "../../services/api"
+import { useUserSession } from "../../context/UserSessionContext"
+import Header from "./Header"
+import Footer from "./Footer"
 import "../../styles/venue-booking.css"
 import "../../styles/profile-page.css"
 import "../../styles/modern-components.css"
 
+// Map backend order status to high‑level tab category (kept for potential future use)
+const getStatusCategory = (status = "") => {
+  const s = String(status).toLowerCase();
+
+  if (s.includes("pending") || s.includes("unpaid")) return "To Pay";
+  if (s.includes("processing") || s.includes("confirmed") || s.includes("toship"))
+    return "To Ship";
+  if (s.includes("shipped") || s.includes("out for delivery") || s.includes("toreceive"))
+    return "To Receive";
+  if (s.includes("delivered") || s.includes("completed")) return "To Review";
+
+  // Cancelled or any other statuses will only show under "All"
+  return "All";
+};
+
+const getStatusBadgeStyle = (status = "") => {
+  const s = String(status).toLowerCase();
+
+  if (s.includes("completed") || s.includes("delivered")) {
+    return { backgroundColor: "#e6f4ea", color: "#256029" };
+  }
+  if (s.includes("cancelled")) {
+    return { backgroundColor: "#fdecea", color: "#a4262c" };
+  }
+  if (s.includes("pending") || s.includes("processing")) {
+    return { backgroundColor: "#fff4e5", color: "#8a4b08" };
+  }
+  if (s.includes("shipped")) {
+    return { backgroundColor: "#e5f1ff", color: "#1f4fbf" };
+  }
+
+  return { backgroundColor: "#f2f4f7", color: "#344054" };
+};
+
 const ProfilePage = () => {
+  const { isUserLoggedIn, user, logout } = useUserSession();
   const [userData, setUserData] = useState(null);
   const [userBookings, setUserBookings] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showImageUpload, setShowImageUpload] = useState(false);
@@ -19,6 +60,10 @@ const ProfilePage = () => {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [newLocation, setNewLocation] = useState("");
   const [savingLocation, setSavingLocation] = useState(false);
+  const [activeNavItem, setActiveNavItem] = useState("personal-info");
+  
+  // Orders search
+  const [orderSearchTerm, setOrderSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -29,15 +74,18 @@ const ProfilePage = () => {
         const userDetails = await profileService.getProfile();
         console.log("User details fetched via token:", userDetails);
 
+        const nameParts = (userDetails.fullname || userDetails.name || "John Doe").split(" ");
         setUserData({
           id: userDetails.id || userDetails.user_id,
+          firstName: nameParts[0] || "John",
+          lastName: nameParts.slice(1).join(" ") || "Doe",
           name: userDetails.fullname || userDetails.name || "John Doe",
-          email: userDetails.email || "john.doe@example.com",
+          email: userDetails.email || "example@gmail.com",
           location: userDetails.location || "Kathmandu, Nepal",
-          phone: userDetails.phoneNumber || userDetails.phone || "+977 98-12345678",
+          phone: userDetails.phoneNumber || userDetails.phone || "+0123-456-789",
           profileImage: userDetails.profileImage || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
           joinDate: userDetails.joinDate || "January 2023",
-          // Add other userDetails fields as needed
+          gender: userDetails.gender || "Female",
         });
 
         // Fetch user bookings
@@ -112,6 +160,31 @@ const ProfilePage = () => {
     fetchUserData();
   }, []);
 
+  // Fetch orders when orders tab is active
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (activeNavItem !== 'orders') return;
+      
+      const userId = parseInt(localStorage.getItem("userId"), 10) || userData?.id;
+      if (!userId) return;
+
+      setOrdersLoading(true);
+      try {
+        const data = await orderAPI.getUserOrders(userId);
+        setOrders(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        setOrders([]);
+      } finally {
+        setOrdersLoading(false);
+      }
+    };
+
+    if (activeNavItem === 'orders' && (userData?.id || localStorage.getItem("userId"))) {
+      fetchOrders();
+    }
+  }, [activeNavItem, userData?.id]);
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const options = { year: "numeric", month: "long", day: "numeric" };
@@ -162,6 +235,25 @@ const ProfilePage = () => {
 
     const config = statusConfig[status] || statusConfig.upcoming;
     return <span className={`profile-status-badge ${config.class}`}>{config.text}</span>;
+  };
+
+  // Handle cancel order
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+
+    try {
+      await orderAPI.updateOrderStatus(orderId, "Cancelled");
+      // Re-fetch orders
+      const userId = parseInt(localStorage.getItem("userId"), 10) || userData?.id;
+      if (userId) {
+        const data = await orderAPI.getUserOrders(userId);
+        setOrders(Array.isArray(data) ? data : []);
+      }
+      alert("Order cancelled successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to cancel the order.");
+    }
   };
 
   // NEW: Update location handler
@@ -323,128 +415,331 @@ const ProfilePage = () => {
 
   return (
     <div className="profile-page">
-      {/* Header Section */}
-      <section className="profile-header">
-        <div className="profile-header-content">
-          <div className="profile-image-container">
-            <img
-              src={userData.profileImage || "/placeholder.svg"}
-              alt={userData.name}
-              className="profile-image"
-              onClick={() => setShowImageUpload(true)}
-            />
-            <button className="profile-image-overlay" onClick={() => setShowImageUpload(true)}>
-              <CameraIcon />
-            </button>
-          </div>
+      <Header isLoggedIn={isUserLoggedIn} user={user} onLogout={logout} hasNotifications={true} />
+      
+      {/* Page Title and Breadcrumbs */}
+      <div className="account-page-header">
+        <h1 className="account-page-title">My Account</h1>
+        <div className="account-breadcrumb">
+          <Link to="/home">Home</Link>
+          <span className="breadcrumb-separator">/</span>
+          <span>My Account</span>
+        </div>
+      </div>
 
-          <div className="profile-info">
-            <h1 className="profile-welcome">Welcome, {userData.name}!</h1>
-            <div className="profile-details">
-              <div className="profile-detail-item">
-                <span className="profile-detail-label">Email:</span>
-                <span className="profile-detail-value">{userData.email}</span>
+      {/* Main Content Area */}
+      <div className="account-main-container">
+        {/* Left Sidebar Navigation */}
+        <aside className="account-sidebar">
+          <nav className="account-nav">
+            <button 
+              className={`account-nav-item ${activeNavItem === 'personal-info' ? 'active' : ''}`}
+              onClick={() => setActiveNavItem('personal-info')}
+            >
+              Personal Information
+            </button>
+            <button 
+              className={`account-nav-item ${activeNavItem === 'orders' ? 'active' : ''}`}
+              onClick={() => setActiveNavItem('orders')}
+            >
+              My Orders
+            </button>
+            <button 
+              className={`account-nav-item ${activeNavItem === 'address' ? 'active' : ''}`}
+              onClick={() => setActiveNavItem('address')}
+            >
+              Manage Address
+            </button>
+            <button 
+              className={`account-nav-item ${activeNavItem === 'payment' ? 'active' : ''}`}
+              onClick={() => setActiveNavItem('payment')}
+            >
+              Payment Method
+            </button>
+            <button 
+              className={`account-nav-item ${activeNavItem === 'password' ? 'active' : ''}`}
+              onClick={() => setActiveNavItem('password')}
+            >
+              Password Manager
+            </button>
+            <button 
+              className={`account-nav-item ${activeNavItem === 'logout' ? 'active' : ''}`}
+              onClick={() => {
+                logout();
+                window.location.href = '/login';
+              }}
+            >
+              Logout
+            </button>
+          </nav>
+        </aside>
+
+        {/* Right Main Content */}
+        <main className="account-content">
+          {activeNavItem === 'personal-info' && (
+            <div className="personal-info-section">
+              {/* Profile Picture */}
+              <div className="profile-picture-section">
+                <div className="profile-picture-container">
+                  <img
+                    src={userData.profileImage || "/placeholder.svg"}
+                    alt={userData.name}
+                    className="account-profile-image"
+                  />
+                  <button 
+                    className="profile-edit-icon"
+                    onClick={() => setShowImageUpload(true)}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M11.333 2.667a1.333 1.333 0 0 1 1.884 0l.45.45a1.333 1.333 0 0 1 0 1.884l-7.333 7.333a1.333 1.333 0 0 1-.943.39H2.667a1.333 1.333 0 0 1-1.334-1.333V9.5a1.333 1.333 0 0 1 .39-.943l7.333-7.333zm-8 8v2h2l5.9-5.9-2-2L3.333 10.667zm8.45-6.45l-.45.45-2-2 .45-.45a1.333 1.333 0 0 1 1.884 0l.116.116a1.333 1.333 0 0 1 0 1.884z" fill="white"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
-              <div className="profile-detail-item" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span className="profile-detail-label">Location:</span>
-                  <span className="profile-detail-value">{userData.location}</span>
+
+              {/* Form Fields */}
+              <form className="personal-info-form">
+                {/* First / Last name side by side */}
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">First Name *</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      value={userData.firstName || ""}
+                      readOnly
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Last Name *</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      value={userData.lastName || ""}
+                      readOnly
+                    />
+                  </div>
                 </div>
 
-                {/* Change button */}
+                <div className="form-group">
+                  <label className="form-label">Email *</label>
+                  <input 
+                    type="email" 
+                    className="form-input" 
+                    value={userData.email || ""}
+                    readOnly
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Phone *</label>
+                  <input 
+                    type="tel" 
+                    className="form-input" 
+                    value={userData.phone || ""}
+                    readOnly
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Location *</label>
+                  <div className="location-input-group">
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      value={userData.location || ""}
+                      readOnly
+                    />
+                    <button 
+                      type="button"
+                      className="location-change-btn"
+                      onClick={() => {
+                        setNewLocation(userData.location || "");
+                        setShowLocationModal(true);
+                      }}
+                    >
+                      Change
+                    </button>
+                  </div>
+                </div>
+
                 <button 
-                  className="profile-edit-btn"
+                  type="button"
+                  className="update-changes-btn"
                   onClick={() => {
                     setNewLocation(userData.location || "");
                     setShowLocationModal(true);
                   }}
-                  style={{
-                    marginLeft: "10px",
-                    padding: "6px 10px",
-                    fontSize: "13px",
-                    background: "#1f2937",
-                    color: "white",
-                    borderRadius: "6px",
-                    border: "none",
-                    cursor: "pointer",
-                    height: "36px"
-                  }}
                 >
-                  Change
+                  Update Changes
                 </button>
-              </div>
-              <div className="profile-detail-item">
-                <span className="profile-detail-label">Phone:</span>
-                <span className="profile-detail-value">{userData.phone}</span>
-              </div>
-              <div className="profile-detail-item">
-                <span className="profile-detail-label">Member since:</span>
-                <span className="profile-detail-value">{userData.joinDate}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Main Content */}
-      <main className="profile-main">
-        {/* Bookings Section */}
-        <section className="profile-bookings-section">
-          <h2 className="profile-section-title">Your Orders</h2>
-          {userBookings.length === 0 ? (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: '50px', 
-              color: '#666',
-              fontSize: '18px'
-            }}>
-              No bookings found. <a href="/venues" style={{ color: '#1f2937' }}>Book your first venue!</a>
-            </div>
-          ) : (
-            <div className="profile-bookings-grid">
-              {userBookings.map((booking) => {
-                const status = getEventStatus(booking);
-                const isPast = status === "past" || status === "completed";
-
-                return (
-                  <div key={booking.id} className={`profile-booking-card ${isPast ? "profile-booking-past" : ""}`}>
-                    <div className="profile-booking-header">
-                      <h3 className="profile-booking-title">{booking.venue}</h3>
-                      {getStatusBadge(status)}
-                    </div>
-
-                    <div className="profile-booking-details">
-                      <div className="profile-booking-detail">
-                        <CalendarIcon />
-                        <span>{formatDate(booking.date)}</span>
-                      </div>
-                      <div className="profile-booking-detail">
-                        <ClockIcon />
-                        <span>{formatTime(booking.time)}</span>
-                      </div>
-                      <div className="profile-booking-detail">
-                        <LocationIcon />
-                        <span>{booking.location}</span>
-                      </div>
-                      <div className="profile-booking-detail">
-                        <UsersIcon />
-                        <span>{booking.guests} guests</span>
-                      </div>
-                    </div>
-
-                    <div className="profile-booking-footer">
-                      <div className="profile-booking-amount">NPR {booking.amount.toLocaleString()}</div>
-                      <button className="profile-booking-btn" onClick={() => handleViewDetails(booking)}>
-                        View Details
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+              </form>
             </div>
           )}
-        </section>
-      </main>
+
+          {activeNavItem === 'orders' && (
+            <div className="orders-section">
+              <h2 className="section-title">My Orders</h2>
+              
+              {/* Search */}
+              <div className="order-search-container">
+                <input
+                  type="text"
+                  placeholder="Search by product name or order ID"
+                  value={orderSearchTerm}
+                  onChange={(e) => setOrderSearchTerm(e.target.value)}
+                  className="order-search-input"
+                />
+              </div>
+
+              {/* Orders List */}
+              {ordersLoading ? (
+                <div className="empty-state">Loading orders...</div>
+              ) : (() => {
+                // Filter orders by search only
+                const filteredOrders = orders.filter((order) => {
+                  if (!orderSearchTerm.trim()) return true;
+                  const term = orderSearchTerm.toLowerCase();
+                  const inId = String(order.orderId).toLowerCase().includes(term);
+                  const inItems = (order.items || []).some((item) => {
+                    const name = (item.venueName || item.productName || "").toLowerCase();
+                    return name.includes(term);
+                  });
+                  return inId || inItems;
+                });
+
+                if (filteredOrders.length === 0) {
+                  return (
+                    <div className="empty-state">
+                      {orders.length === 0 
+                        ? <>No orders found. <Link to="/venues">Start shopping!</Link></>
+                        : "No orders found for this filter."}
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="orders-list">
+                    {filteredOrders.map((order) => {
+                      const firstItem = (order.items || [])[0] || {};
+                      const sellerName = firstItem.venueName || firstItem.sellerName || "Seller";
+                      const badgeStyle = getStatusBadgeStyle(order.status);
+
+                      return (
+                        <div key={order.orderId} className="order-item-card">
+                          {/* Card header: seller + status badge */}
+                          <div className="order-item-header">
+                            <div className="order-seller">
+                              <span className="order-seller-icon">🛍</span>
+                              <span>{sellerName}</span>
+                            </div>
+                            <span className="order-status-badge" style={badgeStyle}>
+                              {order.status}
+                            </span>
+                          </div>
+
+                          {/* Main content row */}
+                          <div className="order-item-content">
+                            <img
+                              src={
+                                firstItem.venueId
+                                  ? `/proxy/image?venue_id=${firstItem.venueId}`
+                                  : "/placeholder.png"
+                              }
+                              alt={firstItem.venueName || "Product image"}
+                              className="order-item-image"
+                            />
+
+                            <div className="order-item-info">
+                              <div className="order-item-details">
+                                <div className="order-item-name">
+                                  {firstItem.venueName || firstItem.productName || "Product"}
+                                </div>
+                                {firstItem.color && (
+                                  <div className="order-item-meta">
+                                    Color: {firstItem.color}
+                                  </div>
+                                )}
+                                <div className="order-item-meta">
+                                  Qty: {firstItem.quantity}{" "}
+                                  {order.items && order.items.length > 1
+                                    ? `+ ${order.items.length - 1} more item(s)`
+                                    : ""}
+                                </div>
+                              </div>
+
+                              <div className="order-item-footer">
+                                <div className="order-item-price">
+                                  NPR {order.totalAmount?.toLocaleString()}
+                                </div>
+                                <div className="order-item-id">
+                                  Order #{order.orderId}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="order-item-actions">
+                            {order.status.toLowerCase() !== "cancelled" && (
+                              <button
+                                onClick={() => handleCancelOrder(order.orderId)}
+                                className="cancel-order-btn"
+                              >
+                                Cancel Order
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {activeNavItem === 'address' && (
+            <div className="empty-section">
+              <p>Manage Address section coming soon.</p>
+            </div>
+          )}
+
+          {activeNavItem === 'payment' && (
+            <div className="empty-section">
+              <p>Payment Method section coming soon.</p>
+            </div>
+          )}
+
+          {activeNavItem === 'password' && (
+            <div className="empty-section">
+              <p>Password Manager section coming soon.</p>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Feature Highlights */}
+      {/* <section className="account-features">
+        <div className="feature-card">
+          <div className="feature-icon">📦</div>
+          <h3 className="feature-title">Free Shipping</h3>
+          <p className="feature-description">Free shipping for order above $180</p>
+        </div>
+        <div className="feature-card">
+          <div className="feature-icon">💳</div>
+          <h3 className="feature-title">Flexible Payment</h3>
+          <p className="feature-description">Multiple secure payment options</p>
+        </div>
+        <div className="feature-card">
+          <div className="feature-icon">🎧</div>
+          <h3 className="feature-title">24x7 Support</h3>
+          <p className="feature-description">We support online all days.</p>
+        </div>
+      </section> */}
+
+      <Footer />
 
       {/* Image Upload Modal */}
       {showImageUpload && (

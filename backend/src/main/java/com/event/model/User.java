@@ -10,6 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.Table;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.PrePersist;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -24,6 +26,13 @@ public abstract class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long user_id;
 
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+    
     private String password;
 
     private String phoneNumber;
@@ -183,7 +192,8 @@ public abstract class User {
 		this.location = location;
 	}
 	
-	
-
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 	
 }

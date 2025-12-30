@@ -671,10 +671,10 @@ const VenueAddTest = () => {
                 style={inputStyle('category')}
               >
                 <option value="">Select Category</option>
-                <option value="Wedding Venues">Wedding Venues</option>
-                <option value="Corporate Events">Corporate Events</option>
-                <option value="Birthday Parties">Birthday Parties</option>
-                <option value="Conferences">Conferences</option>
+                <option value="Vintage">Vintage</option>
+                <option value="Classic">Classic</option>
+                <option value="Retro">Retro</option>
+                <option value="Brand">Brand</option>
               </select>
               {errors.category && (
                 <div style={{ color: '#e74c3c', fontSize: '14px', marginTop: '-8px', marginBottom: '12px' }}>

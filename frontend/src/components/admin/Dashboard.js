@@ -8,25 +8,23 @@ import PartnerRequests from "./PartnerRequests";
 import RecentBookings from "./RecentBookings";
 import { useNavigate } from "react-router-dom";
 import { programService } from "../../services/api";
+import { PieChart, Pie, Cell } from 'recharts';
 
-const chartableStats = new Set(["users", "partners", "venues", "bookings"]);
+const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#d0ed57"];
+const chartableStats = new Set(["users", "partners", "venues", "bookings", "revenue", "orders"]);
 
 const normalizeProgramsResponse = (payload) => {
   if (!payload) return [];
   if (Array.isArray(payload)) return payload;
   if (typeof payload !== "object") return [];
-
   const queue = [payload];
   const visited = new WeakSet();
-
   while (queue.length) {
     const current = queue.shift();
     if (!current || typeof current !== "object") continue;
     if (visited.has(current)) continue;
     visited.add(current);
-
     if (Array.isArray(current)) return current;
-
     Object.values(current).forEach((v) => {
       if (v && (Array.isArray(v) || typeof v === "object")) queue.push(v);
     });
@@ -40,14 +38,15 @@ const isProgramActive = (program) => {
 };
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState("bookings");
+  const [activeTab, setActiveTab] = useState("orders");
   const [stats, setStats] = useState([]);
   const [statsRaw, setStatsRaw] = useState(null);
   const [chartData, setChartData] = useState({
     users: [],
     partners: [],
     venues: [],
-    bookings: []
+    orders: [],
+    revenue: []
   });
   const [selectedChart, setSelectedChart] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -64,35 +63,36 @@ const Dashboard = () => {
       try {
         setLoading(true);
 
-        /* ================== STATS ================== */
+        // ================== STATS ==================
         const statsRes = await fetch("http://localhost:8080/api/stats", {
           headers: { Authorization: `Bearer ${token}` }
         });
-
         const statsData = await statsRes.json();
-
-        setStatsRaw(statsData); // ✅ FIX
+        setStatsRaw(statsData);
 
         setStats([
           { label: "Users", value: statsData.users, type: "users" },
           { label: "NGO", value: statsData.partners, type: "partners" },
           { label: "Products Added", value: statsData.venues, type: "venues" },
           { label: "Total Orders", value: statsData.orders, type: "orders" },
-          {
-            label: "Total Sale",
-            value: `NPR ${statsData.orderRevenue?.toLocaleString() || 0}`,
-            type: "revenue"
-          }
+          { label: "Total Sale", value: `NPR ${statsData.orderRevenue?.toLocaleString() || 0}`, type: "revenue" }
         ]);
 
-        /* ================== CHART DATA ================== */
+        // ================== CHART DATA ==================
         const chartRes = await fetch("http://localhost:8080/api/chart-data", {
           headers: { Authorization: `Bearer ${token}` }
         });
         const chartJson = await chartRes.json();
-        setChartData(chartJson);
 
-        /* ================== PROGRAMS ================== */
+        setChartData({
+          users: chartJson.users || [],
+          partners: chartJson.partners || [],
+          venues: chartJson.venues || [],
+          orders: chartJson.orders || [],
+          revenue: chartJson.sales || []
+        });
+
+        // ================== PROGRAMS ==================
         const programRes = await programService.listPrograms();
         const programs = normalizeProgramsResponse(programRes);
         const activeList = programs.filter(isProgramActive);
@@ -115,7 +115,41 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
+  // ===== Pie Chart for Total Orders =====
+  const renderOrdersPieChart = () => {
+    if (!statsRaw || !statsRaw.orderStatus) return null;
+
+    const data = Object.entries(statsRaw.orderStatus).map(([status, value]) => ({
+      name: status,
+      value
+    }));
+
+    return (
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            outerRadius={100}
+            label
+          >
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip />
+        </PieChart>
+      </ResponsiveContainer>
+    );
+  };
+
+  // ===== Render Chart =====
   const renderChart = (type) => {
+    if (type === "orders") return renderOrdersPieChart(); // <-- use Pie chart for orders
+
     const data = chartData[type] || [];
 
     if (type === "users") {
@@ -157,19 +191,19 @@ const Dashboard = () => {
       );
     }
 
-    if (type === "bookings") {
+    if (type === "revenue") {
       return (
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={data}>
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip />
-            <Line dataKey="bookings" stroke="#8884d8" />
+            <Tooltip formatter={(value) => `NPR ${Number(value).toLocaleString()}`} />
             <Line dataKey="revenue" stroke="#82ca9d" />
           </LineChart>
         </ResponsiveContainer>
       );
     }
+
     return null;
   };
 
