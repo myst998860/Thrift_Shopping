@@ -499,27 +499,24 @@ const ProfilePage = () => {
 
               {/* Form Fields */}
               <form className="personal-info-form">
-                {/* First / Last name side by side */}
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">First Name *</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={userData.firstName || ""}
-                      readOnly
-                    />
-                  </div>
+                <div className="form-group">
+                  <label className="form-label">First Name *</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={userData.firstName || ""}
+                    readOnly
+                  />
+                </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Last Name *</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      value={userData.lastName || ""}
-                      readOnly
-                    />
-                  </div>
+                <div className="form-group">
+                  <label className="form-label">Last Name *</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={userData.lastName || ""}
+                    readOnly
+                  />
                 </div>
 
                 <div className="form-group">
@@ -540,6 +537,15 @@ const ProfilePage = () => {
                     value={userData.phone || ""}
                     readOnly
                   />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Gender *</label>
+                  <select className="form-select" value={userData.gender || "Female"} disabled>
+                    <option value="Female">Female</option>
+                    <option value="Male">Male</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
 
                 <div className="form-group">
@@ -721,7 +727,7 @@ const ProfilePage = () => {
       </div>
 
       {/* Feature Highlights */}
-      {/* <section className="account-features">
+      <section className="account-features">
         <div className="feature-card">
           <div className="feature-icon">📦</div>
           <h3 className="feature-title">Free Shipping</h3>
@@ -737,7 +743,7 @@ const ProfilePage = () => {
           <h3 className="feature-title">24x7 Support</h3>
           <p className="feature-description">We support online all days.</p>
         </div>
-      </section> */}
+      </section>
 
       <Footer />
 

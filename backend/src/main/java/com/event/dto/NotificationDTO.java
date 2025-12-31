@@ -1,5 +1,6 @@
 package com.event.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class NotificationDTO {
@@ -12,7 +13,9 @@ public class NotificationDTO {
 	    private Long bookingId;
 	    private Long venueId;
 	    private String venueName;
+	    private BigDecimal totalAmount; 
 	    private LocalDateTime bookedTime;
+	   
 
 
 	    
@@ -99,7 +102,13 @@ public class NotificationDTO {
 			this.bookedTime = bookedTime;
 		}
 
-	    
+	    public BigDecimal getTotalAmount() {
+	        return totalAmount;
+	    }
+
+	    public void setTotalAmount(BigDecimal totalAmount) {
+	        this.totalAmount = totalAmount;
+	    }
 	    
 	    
 }

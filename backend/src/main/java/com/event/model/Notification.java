@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 
 @Entity
@@ -49,6 +50,8 @@ public class Notification {
     private Long bookingId;
     private Long venueId;
   
+    @Transient
+    private String venueName;
     
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -127,7 +130,9 @@ public class Notification {
 	public void setVenueId(Long venueId) {
 		this.venueId = venueId;
 	}
-
+	
+	   public String getVenueName() { return venueName; }
+	    public void setVenueName(String venueName) { this.venueName = venueName; }
 	
 
 	public LocalDateTime getCreatedAt() {

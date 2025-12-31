@@ -14,6 +14,7 @@ public class CheckoutRequest {
     private BigDecimal subtotal;
     private BigDecimal deliveryCost;
     private BigDecimal totalAmount;
+    private Long venueId;
 
     private List<Item> items;
 
@@ -64,6 +65,12 @@ public class CheckoutRequest {
 	}
 	public void setAddress(String address) {
 		this.address = address;
+	}
+	public Long getVenueId() {
+		return venueId;
+	}
+	public void setVenueId(Long venueId) {
+		this.venueId = venueId;
 	}
 
     

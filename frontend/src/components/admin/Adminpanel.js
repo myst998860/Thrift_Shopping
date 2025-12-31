@@ -106,7 +106,8 @@
 
 // export default AdminPanel;
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { notificationService } from "../../services/api";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   FiHome,
@@ -125,8 +126,28 @@ import { useUserSession } from "../../context/UserSessionContext";
 const AdminPanel = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user: currentUser, logout } = useUserSession();
+   const [unreadCount, setUnreadCount] = useState(0);
+  const userId = localStorage.getItem("userId");
   const location = useLocation();
   const navigate = useNavigate();
+
+ useEffect(() => {
+    if (!userId) return;
+
+    const fetchUnread = async () => {
+      try {
+        const res = await notificationService.getUnreadCount(userId);
+        setUnreadCount(res.count);
+      } catch (e) {
+        console.error("Unread count error", e);
+      }
+    };
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 10000);
+    return () => clearInterval(interval);
+  }, [userId]);
+
 
   // Sidebar navigation items
   const navItems = [
@@ -135,7 +156,19 @@ const AdminPanel = () => {
     { path: "/admin/partners", icon: <FiBriefcase />, label: "Partners" },
     { path: "/admin/venues", icon: <FiMapPin />, label: "Products" },
     { path: "/admin/bookings", icon: <FiCalendar />, label: "Orders" },
-    { path: "/admin/notifications", icon: <FiBell />, label: "Notifications" },
+    // { path: "/admin/notifications", icon: <FiBell />, label: "Notifications" },
+    {
+  path: "/admin/notifications",
+  icon: (
+    <div className="notification-icon-wrapper">
+      <FiBell />
+      {unreadCount > 0 && (
+        <span className="notification-badge">{unreadCount}</span>
+      )}
+    </div>
+  ),
+  label: "Notifications",
+},
     { path: "/admin/sellercontact", icon: <FiSettings />, label: "SellerContact" },
     { path: "/admin/productadd", icon: <FiSettings />, label: "ProductAdd" },
     currentUser && { path: "/admin/profile", icon: <FiUser />, label: "Profile" },

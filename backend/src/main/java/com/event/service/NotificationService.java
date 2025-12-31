@@ -233,10 +233,37 @@ public class NotificationService {
         notification.setType(NotificationType.valueOf(dto.getType().toUpperCase()));
         notification.setBookingId(dto.getBookingId());
         notification.setVenueId(dto.getVenueId());
+        
         notification.setStatus(NotificationStatus.UNREAD);
         
         return notification;
     }
+    
+//    private String buildMessageForRole(User recipient, User sender, NotificationDTO dto) {
+//        String role = recipient.getRole();
+//        String senderName = sender != null ? sender.getFullname() : "User";
+//        
+//        try {
+//            NotificationType type = NotificationType.valueOf(dto.getType().toUpperCase());
+//            
+//            if (type == NotificationType.ORDER) {
+//                if ("ATTENDEE".equalsIgnoreCase(role) || "USER".equalsIgnoreCase(role)) {
+//                    return "Your order has been placed successfully.";
+//                }
+//                if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
+//                    return "A new order #" + dto.getBookingId() +
+//                           " has been placed by " + senderName +
+//                           " | Total: NPR " + dto.getTotalAmount() +
+//                           " | Venue: " + dto.getVenueName();
+//                }
+//            }
+//        } catch (IllegalArgumentException e) {
+//            System.err.println("Invalid notification type: " + dto.getType());
+//        }
+//        
+//        return "You have a new notification.";
+//    }
+    
     
     private String buildMessageForRole(User recipient, User sender, NotificationDTO dto) {
         String role = recipient.getRole();
@@ -245,12 +272,43 @@ public class NotificationService {
         try {
             NotificationType type = NotificationType.valueOf(dto.getType().toUpperCase());
             
+            // Handle ORDER type notifications
             if (type == NotificationType.ORDER) {
                 if ("ATTENDEE".equalsIgnoreCase(role) || "USER".equalsIgnoreCase(role)) {
-                    return "Your order has been placed successfully.";
+                    // Customer message
+                    return "Your order #" + dto.getBookingId() + 
+                           " has been placed successfully. Total: NPR " + dto.getTotalAmount();
                 }
                 if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
-                    return "A new order has been placed by " + senderName + ".";
+                    // Admin message
+                    return "A new order OrderID" + dto.getBookingId() +
+                           " has been placed by " + senderName +
+                           " | Total: NPR " + dto.getTotalAmount() +
+                           " | Product Name: " + dto.getVenueName();
+                }
+                if ("PARTNER".equalsIgnoreCase(role)) {
+                    // Partner message
+                    return "A new order #" + dto.getBookingId() +
+                           " has been placed for your venue: " + dto.getVenueName() +
+                           " | Total: NPR " + dto.getTotalAmount();
+                }
+            }
+            
+            // Handle ORDER_STATUS type notifications (FIXED: Moved OUTSIDE the ORDER block)
+            if (type == NotificationType.ORDER_STATUS) {
+                // Get the actual message from the DTO
+                if (dto.getMessage() != null && !dto.getMessage().isEmpty()) {
+                    return dto.getMessage();
+                }
+                
+                // Fallback messages based on role
+                if ("ATTENDEE".equalsIgnoreCase(role) || "USER".equalsIgnoreCase(role)) {
+                    return "Your order #" + dto.getBookingId() + 
+                           " status has been updated.";
+                }
+                if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
+                    return "Order #" + dto.getBookingId() + 
+                           " status has been updated by " + senderName;
                 }
             }
         } catch (IllegalArgumentException e) {
@@ -297,7 +355,7 @@ public class NotificationService {
 //    }
     
     
-    public void createOrderNotification(Long userId, Long orderId, BigDecimal totalAmount) {
+    public void createOrderNotification(Long userId, Long orderId, BigDecimal totalAmount, Long venueId, String venueName) {
         try {
             System.out.println("🚀 Creating order notifications for order #" + orderId);
             
@@ -307,7 +365,7 @@ public class NotificationService {
             
             System.out.println("✅ Customer found: " + customer.getEmail());
             
-            // 2. Create notification for CUSTOMER (your existing working code)
+            // 2. Create notification for CUSTOMER
             NotificationDTO customerNotification = new NotificationDTO();
             customerNotification.setRecipientId(userId);
             customerNotification.setSenderId(userId);
@@ -315,55 +373,169 @@ public class NotificationService {
             customerNotification.setType("ORDER");
             customerNotification.setMessage("Your order #" + orderId + 
                 " has been placed successfully. Total: NPR " + totalAmount);
+            customerNotification.setBookingId(orderId); // ✅ Add this
+            customerNotification.setTotalAmount(totalAmount); // ✅ Add this
+            customerNotification.setVenueId(venueId); // ✅ Add this
+            customerNotification.setVenueName(venueName); // ✅ Add this
             
-            // This is your working method - keep it!
+            // Create notification for customer
             createNotificationsForAllRoles(customerNotification);
             
             System.out.println("✅ Customer notification created for order #" + orderId);
             
-            // 3. NEW: Create notifications for ALL ADMIN users
+            // 3. Create notifications for ALL ADMIN users
             List<User> allUsers = userRepository.findAll();
-            int adminCount = 0;
-            
             for (User user : allUsers) {
-                // Check if user is admin
-                if (user.getRole() != null && 
-                    (user.getRole().equalsIgnoreCase("ADMIN") || 
+                if (user.getRole() != null &&
+                    (user.getRole().equalsIgnoreCase("ADMIN") ||
                      user.getRole().equalsIgnoreCase("ROLE_ADMIN")) &&
                     !user.getUser_id().equals(userId)) {
+
+                    NotificationDTO adminNotification = new NotificationDTO();
+                    adminNotification.setRecipientId(user.getUser_id());
+                    adminNotification.setSenderId(userId);
+                    adminNotification.setTitle("📦 New Order Received");
+                    adminNotification.setType("ORDER");
+                    adminNotification.setBookingId(orderId); // ✅ Add this
+                    adminNotification.setTotalAmount(totalAmount); // ✅ Add this
+                    adminNotification.setVenueId(venueId); // ✅ Add this
+                    adminNotification.setVenueName(venueName); // ✅ Add this
                     
-                    try {
-                        // Create admin notification DTO
-                        NotificationDTO adminNotification = new NotificationDTO();
-                        adminNotification.setRecipientId(user.getUser_id()); // Admin's ID
-                        adminNotification.setSenderId(userId); // Customer's ID as sender
-                        adminNotification.setTitle("📦 New Order Received");
-                        adminNotification.setType("ORDER");
-                        adminNotification.setMessage("New order #" + orderId + 
-                            " placed by " + customer.getFullname() + 
-                            " (" + customer.getEmail() + ")" +
-                            ". Total: NPR " + totalAmount);
-                        
-                        // Use your existing working method for admins too
-                        createNotificationsForAllRoles(adminNotification);
-                        
-                        adminCount++;
-                        System.out.println("✅ Admin notification sent to: " + user.getEmail());
-                        
-                    } catch (Exception e) {
-                        System.err.println("⚠️ Failed to notify admin " + user.getEmail() + ": " + e.getMessage());
-                    }
+                    // Build the message with all details
+                    String adminMessage = String.format(
+                        "New order #%d placed by %s | Venue: %s | Amount: NPR %s",
+                        orderId, customer.getFullname(), venueName, totalAmount
+                    );
+                    adminNotification.setMessage(adminMessage);
+
+                    createNotificationsForAllRoles(adminNotification);
                 }
             }
             
-            System.out.println("🎯 Total notifications: 1 customer + " + adminCount + " admins");
-            
         } catch (Exception e) {
             System.err.println("❌ Error in createOrderNotification: " + e.getMessage());
-            throw e; // Re-throw to see error in OrderController
+            throw e;
         }
     }
     
     
-    
+    public void createAdminStatusNotification(Long orderId, Long customerId, String customerEmail, 
+            String oldStatus, String newStatus, String venueName) {
+try {
+// Get all admin users
+List<User> admins = userRepository.findByRole("ROLE_ADMIN");
+
+for (User admin : admins) {
+NotificationDTO adminNotification = new NotificationDTO();
+adminNotification.setRecipientId(admin.getUser_id());
+adminNotification.setSenderId(customerId);
+adminNotification.setTitle("Order Status Changed");
+adminNotification.setType("ORDER_STATUS");
+adminNotification.setMessage(
+"Order #" + orderId + 
+" status changed from '" + oldStatus + 
+"' to '" + newStatus + "'" +
+"\nCustomer: " + customerEmail +
+"\nVenue: " + venueName
+);
+adminNotification.setBookingId(orderId);
+
+createNotificationsForAllRoles(adminNotification);
+}
+
+System.out.println("✅ Admin status notifications sent for order #" + orderId);
+} catch (Exception e) {
+System.err.println("❌ Error creating admin status notification: " + e.getMessage());
+}
+}
+
+private String getStatusTitle(String status) {
+switch (status.toLowerCase()) {
+case "processing": return "Order Processing";
+case "shipped": return "Order Shipped";
+case "completed": return "Order Delivered";
+case "cancelled": 
+case "canceled": return "Order Cancelled";
+default: return "Order Status Updated";
+}
+}
+
+private String getStatusMessage(String status, Long orderId, String venueName) {
+switch (status.toLowerCase()) {
+case "processing":
+return "Your order #" + orderId + " is now being processed for " + venueName;
+case "shipped":
+return "Your order #" + orderId + " for " + venueName + " has been shipped!";
+case "completed":
+return "Your order #" + orderId + " for " + venueName + " has been delivered successfully!";
+case "cancelled":
+case "canceled":
+return "Your order #" + orderId + " for " + venueName + " has been cancelled.";
+default:
+return "Your order #" + orderId + " status has been updated to: " + status;
+}
+}
+   
+    public void createOrderStatusNotification(Long userId, Long orderId, String status, Long venueId, String venueName) {
+        try {
+            System.out.println("🚀 Creating status notification for order #" + orderId + " - Status: " + status);
+            
+            User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+            
+            NotificationDTO notificationDTO = new NotificationDTO();
+            notificationDTO.setRecipientId(userId);
+            notificationDTO.setSenderId(userId); // Or set to admin/system user ID
+            
+            // Set proper title and message based on status
+            String title = "";
+            String message = "";
+            
+            switch (status.toLowerCase()) {
+                case "processing":
+                    title = "Order Processing";
+                    message = "Your order #" + orderId + " is now being processed for " + venueName;
+                    break;
+                case "shipped":
+                    title = "Order Shipped";
+                    message = "Great news! Your order #" + orderId + " for " + venueName + " has been shipped!";
+                    break;
+                case "completed":
+                    title = "Order Delivered";
+                    message = "Your order #" + orderId + " for " + venueName + " has been delivered successfully!";
+                    break;
+                case "cancelled":
+                case "canceled":
+                    title = "Order Cancelled";
+                    message = "Your order #" + orderId + " for " + venueName + " has been cancelled.";
+                    break;
+                default:
+                    title = "Order Status Updated";
+                    message = "Your order #" + orderId + " status has been updated to: " + status;
+            }
+            
+            notificationDTO.setTitle(title);
+            notificationDTO.setType("ORDER_STATUS");
+            notificationDTO.setMessage(message); // ✅ Make sure this is set
+            notificationDTO.setBookingId(orderId);
+            notificationDTO.setVenueId(venueId);
+            notificationDTO.setVenueName(venueName);
+            
+            // Debug: Print what we're sending
+            System.out.println("📤 Sending notification with:");
+            System.out.println("   Title: " + title);
+            System.out.println("   Message: " + message);
+            System.out.println("   Type: " + notificationDTO.getType());
+            
+            // Create notification
+            List<NotificationResponseDTO> result = createNotificationsForAllRoles(notificationDTO);
+            
+            System.out.println("✅ Status notification created for order #" + orderId);
+            System.out.println("✅ Created " + result.size() + " notifications");
+        } catch (Exception e) {
+            System.err.println("❌ Error creating status notification: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+    }
 }

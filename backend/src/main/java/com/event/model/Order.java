@@ -15,6 +15,10 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderId;
+    
+    @ManyToOne
+    @JoinColumn(name = "venue_id")
+    private Venue venue;
 
     private Long userId;
     private String userEmail;
@@ -127,6 +131,9 @@ public class Order {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+    
+    public Venue getVenue() { return venue; }
+    public void setVenue(Venue venue) { this.venue = venue; }
 	
 }
 

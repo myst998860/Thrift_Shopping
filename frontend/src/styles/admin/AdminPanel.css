@@ -93,6 +93,35 @@ html, body {
   font-size: var(--font-size-xl);
 }
 
+/* Notification Icon Wrapper */
+.notification-icon-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--error-color, #ef4444);
+  color: var(--secondary-color, #ffffff);
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: var(--font-weight-bold, 700);
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  border: 2px solid var(--secondary-color, #ffffff);
+  z-index: 10;
+}
+
 .sidebar-label {
   font-size: var(--font-size-base);
 }
