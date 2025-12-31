@@ -613,7 +613,7 @@ const VenueAddTest = () => {
               fontWeight: '700',
             }}
           >
-            Add New Venue
+            Add New Product
           </h1>
           <p style={{ textAlign: 'center', color: '#7f8c8d', marginBottom: '2rem', fontSize: '1rem' }}>
             Step {page} of 2

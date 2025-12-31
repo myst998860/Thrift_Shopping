@@ -3,6 +3,15 @@ import { orderAPI } from "../../services/api";
 
 const TABS = ["All", "To Pay", "To Ship", "To Receive", "To Review"];
 
+// Tracking stages
+const TRACKING_STAGES = [
+  { id: "placed", label: "Order Placed", icon: "📦" },
+  { id: "topay", label: "Payment Pending", icon: "💳" },
+  { id: "toship", label: "Processing", icon: "🏭" },
+  { id: "toreceive", label: "Shipped", icon: "🚚" },
+  { id: "toreview", label: "Delivered", icon: "✅" },
+];
+
 // Map backend order status to high‑level tab category
 const getStatusCategory = (status = "") => {
   const s = String(status).toLowerCase();
@@ -42,6 +51,8 @@ export default function UserOrders() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
+  const [trackingOrder, setTrackingOrder] = useState(null);
+  const [viewingProduct, setViewingProduct] = useState(null);
 
   const userId = parseInt(localStorage.getItem("userId"), 10);
 
@@ -78,6 +89,40 @@ export default function UserOrders() {
       alert("Failed to cancel the order.");
     }
   };
+
+  // Calculate counts for each tab
+  const getTabCounts = () => {
+    const counts = {
+      All: orders.length,
+      "To Pay": 0,
+      "To Ship": 0,
+      "To Receive": 0,
+      "To Review": 0,
+    };
+
+    orders.forEach((order) => {
+      const category = getStatusCategory(order.status);
+      if (category !== "All" && counts.hasOwnProperty(category)) {
+        counts[category]++;
+      }
+    });
+
+    return counts;
+  };
+
+  // Get current tracking stage based on order status
+  const getCurrentTrackingStage = (status = "") => {
+    const s = String(status).toLowerCase();
+    if (s.includes("pending") || s.includes("unpaid")) return "topay";
+    if (s.includes("processing") || s.includes("confirmed") || s.includes("toship"))
+      return "toship";
+    if (s.includes("shipped") || s.includes("out for delivery") || s.includes("toreceive"))
+      return "toreceive";
+    if (s.includes("delivered") || s.includes("completed")) return "toreview";
+    return "placed";
+  };
+
+  const tabCounts = getTabCounts();
 
   if (!userId) return <p>Please login to see your orders.</p>;
   if (loading) return <p>Loading orders...</p>;
@@ -147,6 +192,21 @@ export default function UserOrders() {
             }}
           >
             {tab}
+            {tab !== "All" && (
+              <span
+                style={{
+                  marginLeft: 6,
+                  padding: "2px 6px",
+                  borderRadius: 10,
+                  backgroundColor: activeTab === tab ? "#dbeafe" : "#e5e7eb",
+                  color: activeTab === tab ? "#2563eb" : "#6b7280",
+                  fontSize: 11,
+                  fontWeight: 600,
+                }}
+              >
+                {tabCounts[tab]}
+              </span>
+            )}
             {activeTab === tab && (
               <span
                 style={{
@@ -358,21 +418,61 @@ export default function UserOrders() {
                 }}
               >
                 {order.status.toLowerCase() !== "cancelled" && (
-                  <button
-                    onClick={() => handleCancelOrder(order.orderId)}
-                    style={{
-                      padding: "8px 12px",
-                      background: "#f97373",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: 999,
-                      cursor: "pointer",
-                      fontSize: 12,
-                      fontWeight: 500,
-                    }}
-                  >
-                    Cancel Order
-                  </button>
+                  <>
+                    {!order.status.toLowerCase().includes("completed") &&
+                      !order.status.toLowerCase().includes("delivered") && (
+                        <>
+                          <button
+                            onClick={() => setTrackingOrder(order)}
+                            style={{
+                              padding: "8px 12px",
+                              background: "#2563eb",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 999,
+                              cursor: "pointer",
+                              fontSize: 12,
+                              fontWeight: 500,
+                            }}
+                          >
+                            Track My Order
+                          </button>
+                          <button
+                            onClick={() => handleCancelOrder(order.orderId)}
+                            style={{
+                              padding: "8px 12px",
+                              background: "#f97373",
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: 999,
+                              cursor: "pointer",
+                              fontSize: 12,
+                              fontWeight: 500,
+                            }}
+                          >
+                            Cancel Order
+                          </button>
+                        </>
+                      )}
+                    {(order.status.toLowerCase().includes("completed") ||
+                      order.status.toLowerCase().includes("delivered")) && (
+                        <button
+                          onClick={() => setViewingProduct(order)}
+                          style={{
+                            padding: "8px 12px",
+                            background: "#10b981",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 999,
+                            cursor: "pointer",
+                            fontSize: 12,
+                            fontWeight: 500,
+                          }}
+                        >
+                          View Product
+                        </button>
+                      )}
+                  </>
                 )}
               </div>
             </div>
@@ -385,6 +485,701 @@ export default function UserOrders() {
           </p>
         )}
       </div>
+
+      {/* Tracking Modal */}
+      {trackingOrder && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2000,
+            backdropFilter: "blur(4px)",
+          }}
+          onClick={() => setTrackingOrder(null)}
+        >
+          <div
+            style={{
+              background: "#ffffff",
+              borderRadius: 12,
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+              maxWidth: 600,
+              width: "90%",
+              maxHeight: "90vh",
+              overflow: "auto",
+              position: "relative",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: "24px 24px 16px",
+                borderBottom: "1px solid #e5e7eb",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: 20,
+                  fontWeight: 600,
+                  color: "#1f2937",
+                  margin: 0,
+                }}
+              >
+                Track Order #{trackingOrder.orderId}
+              </h3>
+              <button
+                onClick={() => setTrackingOrder(null)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: 28,
+                  color: "#6b7280",
+                  cursor: "pointer",
+                  padding: 0,
+                  width: 30,
+                  height: 30,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "50%",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#f3f4f6";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "none";
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: 24 }}>
+              {/* Order Summary */}
+              <div
+                style={{
+                  marginBottom: 24,
+                  padding: 16,
+                  background: "#f9fafb",
+                  borderRadius: 8,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "#111827",
+                    marginBottom: 12,
+                  }}
+                >
+                  Order Summary
+                </div>
+                <div style={{ fontSize: 13, color: "#6b7280", lineHeight: 1.6 }}>
+                  <div>
+                    <strong>Total Amount:</strong> NPR{" "}
+                    {trackingOrder.totalAmount?.toLocaleString()}
+                  </div>
+                  <div>
+                    <strong>Items:</strong> {trackingOrder.items?.length || 0} item(s)
+                  </div>
+                  <div>
+                    <strong>Status:</strong>{" "}
+                    <span
+                      style={{
+                        ...getStatusBadgeStyle(trackingOrder.status),
+                        padding: "2px 8px",
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        textTransform: "capitalize",
+                        display: "inline-block",
+                      }}
+                    >
+                      {trackingOrder.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tracking Progress */}
+              <div style={{ marginBottom: 24 }}>
+                <div
+                  style={{
+                    fontSize: 16,
+                    fontWeight: 600,
+                    color: "#111827",
+                    marginBottom: 20,
+                  }}
+                >
+                  Order Tracking
+                </div>
+
+                <div style={{ position: "relative", paddingLeft: 40 }}>
+                  {/* Vertical Line */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 15,
+                      top: 20,
+                      bottom: 20,
+                      width: 2,
+                      background: "#e5e7eb",
+                    }}
+                  />
+
+                  {/* Tracking Stages */}
+                  {TRACKING_STAGES.map((stage, index) => {
+                    const currentStage = getCurrentTrackingStage(trackingOrder.status);
+                    const stageIndex = TRACKING_STAGES.findIndex(
+                      (s) => s.id === currentStage
+                    );
+                    const isCompleted = index <= stageIndex;
+                    const isCurrent = index === stageIndex;
+
+                    return (
+                      <div
+                        key={stage.id}
+                        style={{
+                          position: "relative",
+                          marginBottom: index < TRACKING_STAGES.length - 1 ? 32 : 0,
+                        }}
+                      >
+                        {/* Stage Circle */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            left: -32,
+                            width: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            background: isCompleted ? "#2563eb" : "#e5e7eb",
+                            border: `3px solid ${
+                              isCompleted ? "#2563eb" : "#ffffff"
+                            }`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 16,
+                            zIndex: 1,
+                            boxShadow: isCurrent
+                              ? "0 0 0 4px rgba(37, 99, 235, 0.1)"
+                              : "none",
+                          }}
+                        >
+                          {isCompleted ? (
+                            <span style={{ fontSize: 14 }}>✓</span>
+                          ) : (
+                            <span>{stage.icon}</span>
+                          )}
+                        </div>
+
+                        {/* Stage Content */}
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 14,
+                              fontWeight: isCurrent ? 600 : 500,
+                              color: isCompleted ? "#111827" : "#9ca3af",
+                              marginBottom: 4,
+                            }}
+                          >
+                            {stage.label}
+                          </div>
+                          {isCurrent && (
+                            <div
+                              style={{
+                                fontSize: 12,
+                                color: "#2563eb",
+                                fontWeight: 500,
+                              }}
+                            >
+                              Current Status
+                            </div>
+                          )}
+                          {isCompleted && !isCurrent && (
+                            <div
+                              style={{
+                                fontSize: 12,
+                                color: "#6b7280",
+                              }}
+                            >
+                              Completed
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Estimated Delivery */}
+              {getCurrentTrackingStage(trackingOrder.status) === "toreceive" && (
+                <div
+                  style={{
+                    padding: 16,
+                    background: "#eff6ff",
+                    borderRadius: 8,
+                    border: "1px solid #bfdbfe",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#1e40af",
+                      marginBottom: 4,
+                    }}
+                  >
+                    📦 Your order is on the way!
+                  </div>
+                  <div style={{ fontSize: 12, color: "#1e40af" }}>
+                    Expected delivery: 3-5 business days
+                  </div>
+                </div>
+              )}
+
+              {getCurrentTrackingStage(trackingOrder.status) === "toreview" && (
+                <div
+                  style={{
+                    padding: 16,
+                    background: "#f0fdf4",
+                    borderRadius: 8,
+                    border: "1px solid #bbf7d0",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#166534",
+                      marginBottom: 4,
+                    }}
+                  >
+                    ✅ Your order has been delivered!
+                  </div>
+                  <div style={{ fontSize: 12, color: "#166534" }}>
+                    Please review your order and rate your experience.
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div
+              style={{
+                padding: "16px 24px",
+                borderTop: "1px solid #e5e7eb",
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                onClick={() => setTrackingOrder(null)}
+                style={{
+                  padding: "10px 24px",
+                  background: "#2563eb",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  fontSize: 14,
+                  fontWeight: 500,
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#1d4ed8";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "#2563eb";
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Product Details Modal */}
+      {viewingProduct && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2000,
+            backdropFilter: "blur(4px)",
+          }}
+          onClick={() => setViewingProduct(null)}
+        >
+          <div
+            style={{
+              background: "#ffffff",
+              borderRadius: 12,
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+              maxWidth: 600,
+              width: "90%",
+              maxHeight: "90vh",
+              overflow: "auto",
+              position: "relative",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: "24px 24px 16px",
+                borderBottom: "1px solid #e5e7eb",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: 20,
+                  fontWeight: 600,
+                  color: "#1f2937",
+                  margin: 0,
+                }}
+              >
+                Product Details
+              </h3>
+              <button
+                onClick={() => setViewingProduct(null)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  fontSize: 28,
+                  color: "#6b7280",
+                  cursor: "pointer",
+                  padding: 0,
+                  width: 30,
+                  height: 30,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "50%",
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#f3f4f6";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "none";
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: 24 }}>
+              {viewingProduct.items && viewingProduct.items.length > 0 ? (
+                viewingProduct.items.map((item, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      marginBottom: index < viewingProduct.items.length - 1 ? 24 : 0,
+                      paddingBottom: index < viewingProduct.items.length - 1 ? 24 : 0,
+                      borderBottom:
+                        index < viewingProduct.items.length - 1
+                          ? "1px solid #e5e7eb"
+                          : "none",
+                    }}
+                  >
+                    {/* Product Image */}
+                    <div
+                      style={{
+                        marginBottom: 16,
+                        display: "flex",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <img
+                        src={
+                          item.venueId
+                            ? `/proxy/image?venue_id=${item.venueId}`
+                            : "/placeholder.png"
+                        }
+                        alt={item.venueName || item.productName || "Product"}
+                        style={{
+                          width: "100%",
+                          maxWidth: 300,
+                          height: 300,
+                          objectFit: "cover",
+                          borderRadius: 8,
+                          backgroundColor: "#f3f4f6",
+                        }}
+                      />
+                    </div>
+
+                    {/* Product Details */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                      <div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: "#6b7280",
+                            marginBottom: 4,
+                            textTransform: "uppercase",
+                            letterSpacing: 0.5,
+                          }}
+                        >
+                          Product Name
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 18,
+                            fontWeight: 600,
+                            color: "#111827",
+                          }}
+                        >
+                          {item.venueName || item.productName || "N/A"}
+                        </div>
+                      </div>
+
+                      {item.brand && (
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: "#6b7280",
+                              marginBottom: 4,
+                              textTransform: "uppercase",
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            Brand
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 14,
+                              color: "#111827",
+                            }}
+                          >
+                            {item.brand}
+                          </div>
+                        </div>
+                      )}
+
+                      {(item.size || item.dimensions) && (
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: "#6b7280",
+                              marginBottom: 4,
+                              textTransform: "uppercase",
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            Size
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 14,
+                              color: "#111827",
+                            }}
+                          >
+                            {item.size || item.dimensions || "N/A"}
+                          </div>
+                        </div>
+                      )}
+
+                      {item.color && (
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: "#6b7280",
+                              marginBottom: 4,
+                              textTransform: "uppercase",
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            Color
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 14,
+                              color: "#111827",
+                            }}
+                          >
+                            {item.color}
+                          </div>
+                        </div>
+                      )}
+
+                      <div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: "#6b7280",
+                            marginBottom: 4,
+                            textTransform: "uppercase",
+                            letterSpacing: 0.5,
+                          }}
+                        >
+                          Price
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 18,
+                            fontWeight: 600,
+                            color: "#2563eb",
+                          }}
+                        >
+                          NPR {(item.price || 0).toLocaleString()}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: "#6b7280",
+                            marginBottom: 4,
+                            textTransform: "uppercase",
+                            letterSpacing: 0.5,
+                          }}
+                        >
+                          Quantity
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 14,
+                            color: "#111827",
+                          }}
+                        >
+                          {item.quantity || 1}
+                        </div>
+                      </div>
+
+                      {item.description && (
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: "#6b7280",
+                              marginBottom: 4,
+                              textTransform: "uppercase",
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            Description
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 14,
+                              color: "#374151",
+                              lineHeight: 1.6,
+                              whiteSpace: "pre-wrap",
+                            }}
+                          >
+                            {item.description}
+                          </div>
+                        </div>
+                      )}
+
+                      {!item.description && (
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 600,
+                              color: "#6b7280",
+                              marginBottom: 4,
+                              textTransform: "uppercase",
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            Description
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 14,
+                              color: "#9ca3af",
+                              fontStyle: "italic",
+                            }}
+                          >
+                            No description available
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: 40,
+                    color: "#6b7280",
+                  }}
+                >
+                  No product details available
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div
+              style={{
+                padding: "16px 24px",
+                borderTop: "1px solid #e5e7eb",
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                onClick={() => setViewingProduct(null)}
+                style={{
+                  padding: "10px 24px",
+                  background: "#10b981",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  fontSize: 14,
+                  fontWeight: 500,
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "#059669";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "#10b981";
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
