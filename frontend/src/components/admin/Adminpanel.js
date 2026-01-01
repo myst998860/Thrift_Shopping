@@ -170,8 +170,8 @@ const AdminPanel = () => {
   label: "Notifications",
 },
     { path: "/admin/sellercontact", icon: <FiSettings />, label: "SellerContact" },
-    { path: "/admin/productadd", icon: <FiSettings />, label: "ProductAdd" },
-    currentUser && { path: "/admin/profile", icon: <FiUser />, label: "Profile" },
+    // { path: "/admin/productadd", icon: <FiSettings />, label: "ProductAdd" },
+    // currentUser && { path: "/admin/profile", icon: <FiUser />, label: "Profile" },
   ].filter(Boolean);
 
   // Logout handler

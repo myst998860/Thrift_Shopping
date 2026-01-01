@@ -1,16 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { venueService,imageService } from '../../services/api';
+import '../../styles/admin/VenueManagement.css';
 
 
 const VenueManagement = () => {
   const [venues, setVenues] = useState([]);
   const [menuOpenId, setMenuOpenId] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const menuRef = useRef();
   const navigate = useNavigate();
-    const [images, setImages] = useState({});
+  const [images, setImages] = useState({});
 
   // Close menu on click outside
   React.useEffect(() => {
@@ -84,14 +86,13 @@ useEffect(() => {
         
         // Map venues and set initial state
         const mappedVenues = response.map(v => ({
-          
           venue_id: v.venue_id,
           venueName: v.venueName,
           partnerName: v.partnerName,
           location: v.location,
           category: v.category,
           price: v.price,
-             price: v.brand,
+          brand: v.brand,
           minBookingHours: v.minBookingHours,
           capacity: v.capacity,
           openingTime: v.openingTime,
@@ -99,8 +100,7 @@ useEffect(() => {
           status: v.status,
           description: v.description,
           amenities: v.amenities || [],
-         bookingCount: v.bookingCount ?? (v.bookings ? v.bookings.length : 0),
-
+          bookingCount: v.bookingCount ?? (v.bookings ? v.bookings.length : 0),
         }));
         console.log("Mapped venues with bookingCount:", mappedVenues);
 
@@ -147,169 +147,293 @@ useEffect(() => {
   }, []);
 
 
+  // Filter venues based on search term
+  const filteredVenues = venues.filter(venue => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      venue.venueName?.toLowerCase().includes(searchLower) ||
+      venue.partnerName?.toLowerCase().includes(searchLower) ||
+      venue.category?.toLowerCase().includes(searchLower) ||
+      venue.brand?.toLowerCase().includes(searchLower)
+    );
+  });
+
   const StatusBadge = ({ status }) => {
-    const statusClasses = `status-badge ${status === 'Active' ? 'status-active' : 'status-inactive'}`;
-    return <span className={statusClasses}>{status}</span>;
+    const isActive = status?.toLowerCase() === 'active';
+    return (
+      <span className={`status-badge ${isActive ? 'status-active' : 'status-inactive'}`}>
+        {isActive ? 'Active' : 'Inactive'}
+      </span>
+    );
   };
 
+  // Get category color based on category name
+  const getCategoryColor = (category) => {
+    if (!category) return { bg: '#f3f4f6', text: '#6b7280' };
+    
+    const categoryLower = category.toLowerCase();
+    
+    // Define color schemes for different categories
+    const colorMap = {
+      // Electronics
+      'electronics': { bg: '#dbeafe', text: '#1e40af' },
+      'electronic': { bg: '#dbeafe', text: '#1e40af' },
+      'phone': { bg: '#dbeafe', text: '#1e40af' },
+      'mobile': { bg: '#dbeafe', text: '#1e40af' },
+      'computer': { bg: '#dbeafe', text: '#1e40af' },
+      'laptop': { bg: '#dbeafe', text: '#1e40af' },
+      
+      // Clothing
+      'clothing': { bg: '#fce7f3', text: '#9f1239' },
+      'clothes': { bg: '#fce7f3', text: '#9f1239' },
+      'apparel': { bg: '#fce7f3', text: '#9f1239' },
+      'fashion': { bg: '#fce7f3', text: '#9f1239' },
+      'shirt': { bg: '#fce7f3', text: '#9f1239' },
+      'dress': { bg: '#fce7f3', text: '#9f1239' },
+      
+      // Furniture
+      'furniture': { bg: '#fef3c7', text: '#92400e' },
+      'furnishing': { bg: '#fef3c7', text: '#92400e' },
+      'chair': { bg: '#fef3c7', text: '#92400e' },
+      'table': { bg: '#fef3c7', text: '#92400e' },
+      'sofa': { bg: '#fef3c7', text: '#92400e' },
+      
+      // Books
+      'book': { bg: '#e9d5ff', text: '#6b21a8' },
+      'books': { bg: '#e9d5ff', text: '#6b21a8' },
+      'literature': { bg: '#e9d5ff', text: '#6b21a8' },
+      
+      // Sports
+      'sports': { bg: '#d1fae5', text: '#065f46' },
+      'sport': { bg: '#d1fae5', text: '#065f46' },
+      'fitness': { bg: '#d1fae5', text: '#065f46' },
+      'gym': { bg: '#d1fae5', text: '#065f46' },
+      
+      // Toys
+      'toy': { bg: '#fde68a', text: '#78350f' },
+      'toys': { bg: '#fde68a', text: '#78350f' },
+      'games': { bg: '#fde68a', text: '#78350f' },
+      
+      // Kitchen
+      'kitchen': { bg: '#fed7aa', text: '#9a3412' },
+      'cooking': { bg: '#fed7aa', text: '#9a3412' },
+      'utensil': { bg: '#fed7aa', text: '#9a3412' },
+      
+      // Home & Garden
+      'home': { bg: '#cffafe', text: '#164e63' },
+      'garden': { bg: '#cffafe', text: '#164e63' },
+      'decoration': { bg: '#cffafe', text: '#164e63' },
+      
+      // Vehicles
+      'vehicle': { bg: '#e0e7ff', text: '#3730a3' },
+      'car': { bg: '#e0e7ff', text: '#3730a3' },
+      'bike': { bg: '#e0e7ff', text: '#3730a3' },
+      'automobile': { bg: '#e0e7ff', text: '#3730a3' },
+    };
+
+    // Check for exact match first
+    if (colorMap[categoryLower]) {
+      return colorMap[categoryLower];
+    }
+
+    // Check for partial match
+    for (const [key, colors] of Object.entries(colorMap)) {
+      if (categoryLower.includes(key) || key.includes(categoryLower)) {
+        return colors;
+      }
+    }
+
+    // Default color based on category hash for consistent colors
+    const hash = categoryLower.split('').reduce((acc, char) => {
+      return acc + char.charCodeAt(0);
+    }, 0);
+    
+    const defaultColors = [
+      { bg: '#dbeafe', text: '#1e40af' }, // Blue
+      { bg: '#fce7f3', text: '#9f1239' }, // Pink
+      { bg: '#fef3c7', text: '#92400e' }, // Yellow
+      { bg: '#e9d5ff', text: '#6b21a8' }, // Purple
+      { bg: '#d1fae5', text: '#065f46' }, // Green
+      { bg: '#fde68a', text: '#78350f' }, // Amber
+      { bg: '#fed7aa', text: '#9a3412' }, // Orange
+      { bg: '#cffafe', text: '#164e63' }, // Cyan
+      { bg: '#e0e7ff', text: '#3730a3' }, // Indigo
+      { bg: '#f3e8ff', text: '#7c3aed' }, // Violet
+    ];
+    
+    return defaultColors[hash % defaultColors.length];
+  };
+
+  if (loading) {
+    return (
+      <div className="venue-management-container">
+        <div className="loading-message">Loading products...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="venue-management-container">
+        <div className="error-message">{error}</div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ background: '#fff', borderRadius: 12, padding: 32, boxShadow: '0 2px 8px #eee' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Product Management</h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Manage all Product on the platform</p>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 600 }}>All Products</h2>
-        <button onClick={handleAdd} style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 6, padding: '10px 22px', fontWeight: 600, fontSize: 16, cursor: 'pointer' }}>+ Add New Product</button>
-      </div>
-      <input type="text" placeholder="Search product by name, partner, or location..." style={{ width: 320, padding: 8, borderRadius: 6, border: '1px solid #ddd', marginBottom: 16 }} />
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8 }}>
-        <thead>
-          <tr style={{ background: '#f7f7f7', textAlign: 'left' }}>
-            <th style={{ padding: 10 }}>ID</th>
-            <th>Product Image</th>
-          <th style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>Product Name</th>
-          {/* <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Partner</th> */}
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Location</th>
-                 <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>category</th>
-          {/* <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Capacity</th> */}
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Price</th>
-            <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Brand</th>
-          {/* <th style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>Booking Time</th>
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Opening Time</th>
-          <th style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>Closing Time</th> */}
-          {/* <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Bookings</th> */}
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Status</th>
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Actions</th>
-          </tr>
-        </thead>
-    <tbody>
-  {venues.map((venue) => (
-    <tr key={venue.venue_id} style={{ borderBottom: '1px solid #eee' }}>
-      <td style={{ padding: 10 }}>{venue.venue_id}</td>
-      <td>
-         {images[venue.venue_id] ? (
-            <img
-              src={images[venue.venue_id]}
-              alt={venue.venueName}
-              style={{ width: 200, height: 'auto' }}
-            />
-          ) : (
-            <div>No image available</div>
-          )}
-      </td>
-     <td style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle' }}>{venue.venueName}</td>
-      <td style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>{venue.partnerName}</td>
-      <td style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>{venue.location}</td>
-                  <td style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>{venue.category}</td>
-      <td style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>{venue.capacity}</td>
-      <td style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>{venue.price}</td>
-        <td style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>{venue.minBookingHours}</td>
-      <td style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>{venue.openingTime}</td>
-      <td style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>{venue.closingTime}</td>
-      <td style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>{venue.bookingCount}</td>
-      <td style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>
-  <span style={{
-  background: venue.status?.toLowerCase() === 'active' ? '#e6ffe6' : '#ffe6e6',
-  color: venue.status?.toLowerCase() === 'active' ? '#22bb33' : '#d9534f',
-  borderRadius: 12,
-  padding: '4px 14px',
-  fontWeight: 500,
-  fontSize: 14,
-  textAlign: 'center',
-  verticalAlign: 'middle'
-}}>
-  {venue.status?.toLowerCase() === 'active' ? 'Active' : 'Inactive'}
-</span>
-</td>
-      <td style={{ padding: 10, position: 'relative',alignItems: 'center',justifyContent: 'center',display: 'flex' }}>
-        {/* The toggle button */}
-        <button
-          style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer',verticalAlign: 'middle' }}
-          onClick={() => setMenuOpenId(menuOpenId === venue.venue_id ? null : venue.venue_id)}
-          aria-label="Actions"
-        >
-          ⋮
+    <div className="venue-management-container">
+      <div className="venue-management-header">
+        <div>
+          <h1 className="venue-management-title">Product Management</h1>
+          <p className="venue-management-subtitle">Manage all Products on the platform</p>
+        </div>
+        <button onClick={handleAdd} className="add-product-btn">
+          <span>+</span> Add New Product
         </button>
+      </div>
 
-        {/* The dropdown menu */}
-        {menuOpenId === venue.venue_id && (
-          <div
-            ref={menuRef}
-            style={{
-              position: 'absolute',
-              top: 30,
-              right: 0,
-              background: '#fff',
-              border: '1px solid #eee',
-              borderRadius: 8,
-              boxShadow: '0 2px 8px #eee',
-              zIndex: 10,
-              minWidth: 180
-            }}
-          >
-            <div style={{ padding: '10px 16px', fontWeight: 600, color: '#888', borderBottom: '1px solid #f0f0f0',display: 'flex', justifyContent: 'center', alignItems: 'center', height: 40   }}>
-              Actions
-            </div>
-           <button
-              style={menuBtnStyle}
-              onClick={() => {
-                setMenuOpenId(null);
-                handleViewVenue(venue);
-                console.log("venue is: ",venue);
-              }}
-            >
-              View venue
-            </button>
-            <button
-              style={menuBtnStyle}
-              onClick={() => {
-                setMenuOpenId(null);
-                handleEditVenue(venue);
-                console.log("venue is: ",venue);
-              }}
-            >
-              Edit venue
-            </button>
-
-            
-            
-            <button style={menuBtnStyle} onClick={() => { setMenuOpenId(null); alert('View bookings'); }}>
-              View bookings
-            </button>
-            <button style={menuBtnStyle} onClick={() => { setMenuOpenId(null); handleDeactivate(venue.venue_id); }}>
-              Deactivate venue
-            </button>
-            <button
-              style={{ ...menuBtnStyle, color: '#d9534f' }}
-              onClick={() => {
-                setMenuOpenId(null);
-                handleDelete(venue.venue_id);
-              }}
-            >
-              Delete venue
-            </button>
+      <div className="venue-management-content">
+        <div className="products-count-top">
+          {filteredVenues.length} {filteredVenues.length === 1 ? 'Product' : 'Products'}
+        </div>
+        <div className="search-section">
+          <div className="search-container">
+            <span className="search-icon">🔍</span>
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Search product by name, partner, category, or brand..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-        )}
-      </td>
-    </tr>
-  ))}
-</tbody>
-      </table>
+        </div>
+        <div className="products-table-container">
+          {filteredVenues.length === 0 ? (
+            <div className="no-products">
+              {searchTerm ? 'No products found matching your search.' : 'No products available.'}
+            </div>
+          ) : (
+            <table className="products-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Product Image</th>
+                  <th>Product Name</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Brand</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredVenues.map((venue) => (
+                  <tr key={venue.venue_id}>
+                    <td className="venue-id-cell">{venue.venue_id}</td>
+                    <td className="venue-image-cell">
+                      {images[venue.venue_id] ? (
+                        <img
+                          src={images[venue.venue_id]}
+                          alt={venue.venueName}
+                          className="venue-image"
+                        />
+                      ) : (
+                        <div className="no-image-placeholder">
+                          <span>📷</span>
+                          <span>No image</span>
+                        </div>
+                      )}
+                    </td>
+                    <td className="venue-name-cell">{venue.venueName || 'N/A'}</td>
+                    <td>
+                      <span 
+                        className="category-badge" 
+                        style={{
+                          backgroundColor: getCategoryColor(venue.category).bg,
+                          color: getCategoryColor(venue.category).text
+                        }}
+                      >
+                        {venue.category || 'N/A'}
+                      </span>
+                    </td>
+                    <td className="price-cell">NPR {venue.price?.toLocaleString() || '0'}</td>
+                    <td>{venue.brand || 'N/A'}</td>
+                    <td className="status-cell">
+                      <StatusBadge status={venue.status} />
+                    </td>
+                    <td className="actions-cell">
+                      <button
+                        className="actions-toggle-btn"
+                        onClick={() => setMenuOpenId(menuOpenId === venue.venue_id ? null : venue.venue_id)}
+                        aria-label="Actions"
+                      >
+                        ⋮
+                      </button>
+
+                      {menuOpenId === venue.venue_id && (
+                        <div ref={menuRef} className="actions-menu">
+                          <div className="actions-menu-header">Actions</div>
+                          <button
+                            className="action-menu-item"
+                            onClick={() => {
+                              setMenuOpenId(null);
+                              handleViewVenue(venue);
+                            }}
+                          >
+                            View Product
+                          </button>
+                          <button
+                            className="action-menu-item"
+                            onClick={() => {
+                              setMenuOpenId(null);
+                              handleEditVenue(venue);
+                            }}
+                          >
+                            Edit Product
+                          </button>
+                          <button
+                            className="action-menu-item"
+                            onClick={() => {
+                              setMenuOpenId(null);
+                              alert('View bookings feature coming soon');
+                            }}
+                          >
+                            View Bookings
+                          </button>
+                          <button
+                            className="action-menu-item"
+                            onClick={() => {
+                              setMenuOpenId(null);
+                              handleDeactivate(venue.venue_id);
+                            }}
+                          >
+                            Deactivate Product
+                          </button>
+                          <button
+                            className="action-menu-item delete-action"
+                            onClick={() => {
+                              if (window.confirm('Are you sure you want to delete this product?')) {
+                                setMenuOpenId(null);
+                                handleDelete(venue.venue_id);
+                              }
+                            }}
+                          >
+                            Delete Product
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
     </div>
   );
-};
-
-const menuBtnStyle = {
-  display: 'block',
-  width: '100%',
-  padding: '10px 16px',
-  background: 'none',
-  border: 'none',
-  textAlign: 'left',
-  fontSize: 15,
-  cursor: 'pointer',
-  color: '#222',
-  borderBottom: '1px solid #f0f0f0',
 };
 
 export default VenueManagement;
