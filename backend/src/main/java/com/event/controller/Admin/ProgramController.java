@@ -74,7 +74,6 @@ public class ProgramController {
         }
     }
 
-
     // ---------------- GET PROGRAM BY ID WITH DONATION COUNT ----------------
     @GetMapping("/{id}")
     public ResponseEntity<?> getProgramById(@PathVariable Long id) {
@@ -89,7 +88,7 @@ public class ProgramController {
                 "program", program,
                 "totalDonations", totalDonations));
     }
-    
+
     @GetMapping("/partner/{partnerId}/count")
     public ResponseEntity<?> getProgramCount(@PathVariable Long partnerId) {
         Partner partner = partnerRepo.findById(partnerId)
@@ -100,13 +99,12 @@ public class ProgramController {
         return ResponseEntity.ok(Map.of("count", count));
     }
 
-
     // ---------------- CREATE NEW PROGRAM ----------------
     @PostMapping("/add")
     @PreAuthorize("hasRole('PARTNER')")
     public ResponseEntity<?> createProgram(
             @ModelAttribute Program program,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam(value = "file", required = false) MultipartFile file) {
 
         // 1️⃣ Partner validation
         if (program.getPartner() == null || program.getPartner().getUser_id() == null) {
@@ -177,14 +175,17 @@ public class ProgramController {
     // ---------------- UPDATE PROGRAM ----------------
     @PutMapping("/edit/{id}")
     @PreAuthorize("hasRole('PARTNER')")
-    public ResponseEntity<Program> updateProgram(@PathVariable Long id,
-            @RequestBody Program updatedProgram) {
+    public ResponseEntity<?> updateProgram(
+            @PathVariable Long id,
+            @ModelAttribute Program updatedProgram,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
+
         return programRepo.findById(id)
                 .map(existing -> {
+                    // Update basic fields
                     existing.setProgramTitle(updatedProgram.getProgramTitle());
                     existing.setDescription(updatedProgram.getDescription());
                     existing.setCategory(updatedProgram.getCategory());
-                    existing.setProgramImage(updatedProgram.getProgramImage());
                     existing.setStartDate(updatedProgram.getStartDate());
                     existing.setEndDate(updatedProgram.getEndDate());
                     existing.setProgramLocation(updatedProgram.getProgramLocation());
@@ -194,6 +195,18 @@ public class ProgramController {
                     existing.setName(updatedProgram.getName());
                     existing.setRole(updatedProgram.getRole());
                     existing.setObjective(updatedProgram.getObjective());
+
+                    // Handle file upload if provided
+                    if (file != null && !file.isEmpty()) {
+                        try {
+                            String uploadedUrl = cloudinaryService.uploadFile(file, "programs");
+                            existing.setProgram_image(uploadedUrl);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                    .body(Map.of("error", "Failed to upload file: " + e.getMessage()));
+                        }
+                    }
 
                     Program saved = programRepo.save(existing);
                     return ResponseEntity.ok(saved);

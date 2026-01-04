@@ -7,12 +7,12 @@ import {
 import PartnerRequests from "./PartnerRequests";
 import RecentBookings from "./RecentBookings";
 import { useNavigate } from "react-router-dom";
-import { programService, orderAPI } from "../../services/api";
+import { programService, orderAPI, donationAPI } from "../../services/api";
 import { PieChart, Pie, Cell } from 'recharts';
 import './Dashboard.css';
 
 const COLORS = ["#ef4444", "#3b82f6", "#fbbf24", "#10b981", "#8b5cf6", "#f97316"];
-const chartableStats = new Set(["users", "partners", "venues", "orders", "revenue"]);
+const chartableStats = new Set(["users", "partners", "venues", "orders", "revenue", "pickupRevenue"]);
 
 const normalizeProgramsResponse = (payload) => {
   if (!payload) return [];
@@ -62,6 +62,7 @@ const Dashboard = () => {
     pending: 0,
     cancelled: 0
   });
+  const [pickupStats, setPickupStats] = useState({ totalRevenue: 0, chartData: [] });
 
   const navigate = useNavigate();
 
@@ -123,7 +124,7 @@ const Dashboard = () => {
             .sort((a, b) => new Date(b.createdAt || b.orderDate) - new Date(a.createdAt || a.orderDate))
             .slice(0, 5);
           setOrderActivity(sortedOrders);
-          
+
           // Calculate order status statistics
           const statusCounts = {
             shipped: 0,
@@ -132,7 +133,7 @@ const Dashboard = () => {
             pending: 0,
             cancelled: 0
           };
-          
+
           orders.forEach(order => {
             const status = (order.status || '').toLowerCase();
             if (status.includes('ship')) statusCounts.shipped++;
@@ -141,10 +142,35 @@ const Dashboard = () => {
             else if (status.includes('pending')) statusCounts.pending++;
             else if (status.includes('cancel')) statusCounts.cancelled++;
           });
-          
+
           setOrderStats(statusCounts);
         } catch (err) {
           console.error("Failed to fetch order activity:", err);
+        }
+
+        // ================== PICKUP DONATIONS REVENUE ==================
+        try {
+          const donations = await donationAPI.listDonations();
+          const totalPickupRevenue = donations.reduce((sum, d) => sum + (d.pickupFee || 0), 0);
+
+          // Group by month
+          const revenueByMonth = {};
+          donations.forEach(d => {
+            if (d.pickupFee > 0 && d.createdAt) {
+              const date = new Date(d.createdAt);
+              const month = date.toLocaleString('default', { month: 'short' });
+              revenueByMonth[month] = (revenueByMonth[month] || 0) + d.pickupFee;
+            }
+          });
+
+          const donationChartData = Object.entries(revenueByMonth).map(([month, amount]) => ({
+            month,
+            revenue: amount
+          }));
+
+          setPickupStats({ totalRevenue: totalPickupRevenue, chartData: donationChartData });
+        } catch (err) {
+          console.error("Failed to fetch donations for stats:", err);
         }
 
       } catch (err) {
@@ -175,28 +201,28 @@ const Dashboard = () => {
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="month" 
+              <XAxis
+                dataKey="month"
                 tick={{ fill: '#666', fontSize: 12 }}
                 axisLine={{ stroke: '#e0e0e0' }}
               />
-              <YAxis 
+              <YAxis
                 tick={{ fill: '#666', fontSize: 12 }}
                 axisLine={{ stroke: '#e0e0e0' }}
               />
               <Tooltip />
-              <Area 
-                type="monotone" 
-                dataKey="users" 
-                stroke="#10b981" 
-                fill="url(#colorUsers)" 
+              <Area
+                type="monotone"
+                dataKey="users"
+                stroke="#10b981"
+                fill="url(#colorUsers)"
                 fillOpacity={0.3}
                 strokeWidth={2}
               />
               <defs>
                 <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                 </linearGradient>
               </defs>
             </AreaChart>
@@ -208,19 +234,19 @@ const Dashboard = () => {
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="month" 
+              <XAxis
+                dataKey="month"
                 tick={{ fill: '#666', fontSize: 12 }}
                 axisLine={{ stroke: '#e0e0e0' }}
               />
-              <YAxis 
+              <YAxis
                 tick={{ fill: '#666', fontSize: 12 }}
                 axisLine={{ stroke: '#e0e0e0' }}
               />
               <Tooltip />
-              <Bar 
-                dataKey="partners" 
-                fill="#3b82f6" 
+              <Bar
+                dataKey="partners"
+                fill="#3b82f6"
                 radius={[4, 4, 0, 0]}
                 fillOpacity={0.8}
               />
@@ -233,20 +259,20 @@ const Dashboard = () => {
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="month" 
+              <XAxis
+                dataKey="month"
                 tick={{ fill: '#666', fontSize: 12 }}
                 axisLine={{ stroke: '#e0e0e0' }}
               />
-              <YAxis 
+              <YAxis
                 tick={{ fill: '#666', fontSize: 12 }}
                 axisLine={{ stroke: '#e0e0e0' }}
               />
               <Tooltip />
-              <Line 
-                type="monotone" 
-                dataKey="venues" 
-                stroke="#8b5cf6" 
+              <Line
+                type="monotone"
+                dataKey="venues"
+                stroke="#8b5cf6"
                 strokeWidth={3}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
@@ -263,35 +289,48 @@ const Dashboard = () => {
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={data}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="month" 
+              <XAxis
+                dataKey="month"
                 tick={{ fill: '#666', fontSize: 12 }}
                 axisLine={{ stroke: '#e0e0e0' }}
               />
-              <YAxis 
+              <YAxis
                 tickFormatter={(value) => `NPR ${value.toLocaleString()}`}
                 tick={{ fill: '#666', fontSize: 12 }}
                 axisLine={{ stroke: '#e0e0e0' }}
               />
-              <Tooltip 
+              <Tooltip
                 formatter={(value) => [`NPR ${Number(value).toLocaleString()}`, 'Revenue']}
                 labelFormatter={(label) => `Month: ${label}`}
               />
-              <Area 
-                type="monotone" 
-                dataKey="revenue" 
-                stroke="#06b6d4" 
-                fill="url(#colorRevenue)" 
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="#06b6d4"
+                fill="url(#colorRevenue)"
                 fillOpacity={0.3}
                 strokeWidth={2}
               />
               <defs>
                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
                 </linearGradient>
               </defs>
             </AreaChart>
+          </ResponsiveContainer>
+        );
+
+      case "pickupRevenue":
+        return (
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={pickupStats.chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip formatter={(value) => [`NPR ${value}`, 'Fees']} />
+              <Bar dataKey="revenue" fill="#ff9800" name="Pickup Revenue" />
+            </BarChart>
           </ResponsiveContainer>
         );
 
@@ -349,9 +388,9 @@ const Dashboard = () => {
                   <span className="status-percentage">{percentage}%</span>
                 </div>
                 <div className="progress-bar">
-                  <div 
-                    className="progress-fill" 
-                    style={{ 
+                  <div
+                    className="progress-fill"
+                    style={{
                       width: `${percentage}%`,
                       backgroundColor: COLORS[index % COLORS.length]
                     }}
@@ -368,7 +407,7 @@ const Dashboard = () => {
   // ===== Total Sale Graph =====
   const renderTotalSaleGraph = () => {
     const data = chartData.revenue || [];
-    
+
     if (data.length === 0) {
       return (
         <div className="no-data-message">
@@ -382,38 +421,38 @@ const Dashboard = () => {
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis 
-              dataKey="month" 
+            <XAxis
+              dataKey="month"
               tick={{ fill: '#666', fontSize: 12 }}
               axisLine={{ stroke: '#e0e0e0' }}
             />
-            <YAxis 
+            <YAxis
               tickFormatter={(value) => `NPR ${value.toLocaleString()}`}
               tick={{ fill: '#666', fontSize: 12 }}
               axisLine={{ stroke: '#e0e0e0' }}
             />
-            <Tooltip 
+            <Tooltip
               formatter={(value) => [`NPR ${Number(value).toLocaleString()}`, 'Revenue']}
               labelFormatter={(label) => `Month: ${label}`}
-              contentStyle={{ 
-                backgroundColor: 'white', 
+              contentStyle={{
+                backgroundColor: 'white',
                 border: '1px solid #e0e0e0',
                 borderRadius: '8px',
                 boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
               }}
             />
-            <Area 
-              type="monotone" 
-              dataKey="revenue" 
-              stroke="#10b981" 
-              fill="url(#colorRevenue)" 
+            <Area
+              type="monotone"
+              dataKey="revenue"
+              stroke="#10b981"
+              fill="url(#colorRevenue)"
               fillOpacity={0.3}
               strokeWidth={2}
             />
             <defs>
               <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
               </linearGradient>
             </defs>
           </AreaChart>
@@ -425,33 +464,33 @@ const Dashboard = () => {
   // ===== Order Status Statistics =====
   const renderOrderStatusStats = () => {
     const statusConfig = {
-      shipped: { 
-        label: "Shipped", 
-        color: "#3b82f6", 
+      shipped: {
+        label: "Shipped",
+        color: "#3b82f6",
         bgColor: "#dbeafe",
         icon: "🚚"
       },
-      processing: { 
-        label: "Processing", 
-        color: "#f59e0b", 
+      processing: {
+        label: "Processing",
+        color: "#f59e0b",
         bgColor: "#fef3c7",
         icon: "⏳"
       },
-      completed: { 
-        label: "Completed", 
-        color: "#10b981", 
+      completed: {
+        label: "Completed",
+        color: "#10b981",
         bgColor: "#d1fae5",
         icon: "✅"
       },
-      pending: { 
-        label: "Pending", 
-        color: "#f97316", 
+      pending: {
+        label: "Pending",
+        color: "#f97316",
         bgColor: "#ffedd5",
         icon: "⏱️"
       },
-      cancelled: { 
-        label: "Cancelled", 
-        color: "#ef4444", 
+      cancelled: {
+        label: "Cancelled",
+        color: "#ef4444",
         bgColor: "#fee2e2",
         icon: "❌"
       }
@@ -482,53 +521,61 @@ const Dashboard = () => {
   if (loading) return <div className="dashboard-loading">Loading dashboard...</div>;
 
   const metricCards = [
-    { 
-      label: "Users", 
-      value: statsRaw?.users || 0, 
-      type: "users", 
-      icon: "👥", 
+    {
+      label: "Users",
+      value: statsRaw?.users || 0,
+      type: "users",
+      icon: "👥",
       color: "#d1fae5",
       borderColor: "#10b981"
     },
-    { 
-      label: "NGO", 
-      value: statsRaw?.partners || 0, 
-      type: "partners", 
-      icon: "🏢", 
+    {
+      label: "NGO",
+      value: statsRaw?.partners || 0,
+      type: "partners",
+      icon: "🏢",
       color: "#dbeafe",
       borderColor: "#3b82f6"
     },
-    { 
-      label: "Products Added", 
-      value: statsRaw?.venues || 0, 
-      type: "venues", 
-      icon: "📦", 
+    {
+      label: "Products Added",
+      value: statsRaw?.venues || 0,
+      type: "venues",
+      icon: "📦",
       color: "#e9d5ff",
       borderColor: "#8b5cf6"
     },
-    { 
-      label: "Total Orders", 
-      value: statsRaw?.orders || 0, 
-      type: "orders", 
-      icon: "🛒", 
+    {
+      label: "Total Orders",
+      value: statsRaw?.orders || 0,
+      type: "orders",
+      icon: "🛒",
       color: "#fce7f3",
       borderColor: "#ec4899"
     },
-    { 
-      label: "Total Sale", 
-      value: `NPR ${(statsRaw?.orderRevenue || 0).toLocaleString()}`, 
-      type: "revenue", 
-      icon: "💰", 
+    {
+      label: "Total Sale",
+      value: `NPR ${(statsRaw?.orderRevenue || 0).toLocaleString()}`,
+      type: "revenue",
+      icon: "💰",
       color: "#cffafe",
       borderColor: "#06b6d4"
     },
-    { 
-      label: "Active Programs", 
-      value: activeProgramsCount, 
-      type: "activePrograms", 
-      icon: "📋", 
+    {
+      label: "Active Programs",
+      value: activeProgramsCount,
+      type: "activePrograms",
+      icon: "📋",
       color: "#fef3c7",
       borderColor: "#f59e0b"
+    },
+    {
+      label: "Pickup Fees",
+      value: `NPR ${pickupStats.totalRevenue.toLocaleString()}`,
+      type: "pickupRevenue",
+      icon: "🚛",
+      color: "#ffedd5",
+      borderColor: "#ff9800"
     }
   ];
 
@@ -545,7 +592,7 @@ const Dashboard = () => {
           <div
             key={card.label}
             className={`metric-card ${expandedCard === card.type ? 'expanded' : ''}`}
-            style={{ 
+            style={{
               borderLeft: `4px solid ${card.borderColor}`,
               backgroundColor: card.color
             }}
@@ -611,13 +658,13 @@ const Dashboard = () => {
       {/* Tabs Section */}
       <div className="dashboard-tabs-section">
         <div className="tabs">
-          <button 
+          <button
             className={activeTab === "pending" ? "active" : ""}
             onClick={() => setActiveTab("pending")}
           >
             Pending Partners
           </button>
-          <button 
+          <button
             className={activeTab === "bookings" ? "active" : ""}
             onClick={() => setActiveTab("bookings")}
           >

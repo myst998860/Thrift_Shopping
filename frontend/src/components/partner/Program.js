@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { programService } from '../../services/api';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -40,6 +40,7 @@ const Tabs = ({ page, onTabClick }) => (
 );
 
 const ProgramAdd = () => {
+  const { id } = useParams(); // Get program ID from URL
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [formData, setFormData] = useState({
@@ -57,12 +58,55 @@ const ProgramAdd = () => {
     role: '',
     objective: '',
     agree: false,
-    status: 'active',
+    status: 'ACTIVE',
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState('');
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      setIsEditMode(true);
+      fetchProgramDetails(id);
+    }
+  }, [id]);
+
+  const fetchProgramDetails = async (programId) => {
+    try {
+      const data = await programService.getProgram(programId);
+      // Map backend data to form structure
+      // Note: programImageFile cannot be set from URL, handled separately if needed
+      // Ensure dates are in YYYY-MM-DD format for input type="date"
+      const formatDate = (dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+      };
+
+      setFormData({
+        programTitle: data.programTitle || '',
+        description: data.description || '',
+        category: data.category || '',
+        programImageFile: '', // Keep empty, only update if user selects new
+        startDate: formatDate(data.startDate),
+        endDate: formatDate(data.endDate),
+        programLocation: data.programLocation || '',
+        targetItemsToCollect: data.targetItemsToCollect || '',
+        estimatedBeneficiaries: data.estimatedBeneficiaries || '',
+        programGoal: data.programGoal || '',
+        name: data.name || '',
+        role: data.role || '',
+        objective: data.objective || '',
+        agree: true, // Assume agreed if editing
+        status: data.status || 'ACTIVE',
+      });
+    } catch (err) {
+      console.error("Failed to fetch program:", err);
+      toast.error("Failed to load program details");
+    }
+  };
 
   const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
@@ -72,11 +116,11 @@ const ProgramAdd = () => {
         [name]: e.target.files[0],
       }));
     } else {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  }
+      setFormData((prev) => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      }));
+    }
   }, []);
 
   const fieldsPage1 = [
@@ -95,7 +139,7 @@ const ProgramAdd = () => {
     const newErrors = {};
     const fields = fieldsToValidate || Object.keys(formData);
     // Fields that are optional and should not be validated
-    const optionalFields = ['programImage', 'estimatedBeneficiaries', 'programGoal', 'name', 'role', 'objective', 'agree', 'status'];
+    const optionalFields = ['programImage', 'estimatedBeneficiaries', 'programGoal', 'name', 'role', 'objective', 'agree', 'status', 'programImageFile'];
 
     fields.forEach((key) => {
       // Skip optional fields
@@ -166,25 +210,31 @@ const ProgramAdd = () => {
       data.append("name", formData.name.trim());
       data.append("role", formData.role.trim());
       data.append("objective", formData.objective.trim());
-      data.append("status", 'ACTIVE');
+      data.append("status", formData.status || 'ACTIVE');
 
       // Partner info (nested object)
       data.append("partner.user_id", localStorage.getItem("userId")); // make sure backend can parse nested field
 
 
-      await programService.addProgram(data);
-      toast.success('Program added successfully!');
+      if (isEditMode && id) {
+        await programService.updateProgram(id, data);
+        toast.success('Program updated successfully!');
+      } else {
+        await programService.addProgram(data);
+        toast.success('Program added successfully!');
+      }
+
       setTimeout(() => navigate('/partner/programs'), 1500);
 
 
     } catch (err) {
-      console.error('Program add failed:', err);
+      console.error('Program save failed:', err);
       if (err.response?.status === 409) {
         setApiError('Program with this title already exists.');
       } else if (err.response?.data?.message) {
         setApiError(err.response.data.message);
       } else {
-        setApiError('Program add failed. Please try again later.');
+        setApiError('Program save failed. Please try again later.');
       }
     } finally {
       setIsSubmitting(false);

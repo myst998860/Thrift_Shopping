@@ -9,6 +9,7 @@ const StatusBadge = ({ status }) => {
     pickedup: "#2196f3",
     delivered: "#9c27b0",
     cancelled: "#f44336",
+    assigned_to_admin: "#ff9800",
     pending: "#999"
   }[status?.toLowerCase()] || "#999";
 
@@ -125,6 +126,18 @@ const DonationManagement = () => {
     } catch (err) {
       console.error("Status update failed:", err);
       alert("Failed to update status.");
+    }
+  };
+
+  const handleAssignToAdmin = async (id) => {
+    if (!window.confirm("Assign this donation pickup to Admin?")) return;
+    try {
+      await donationAPI.assignToAdmin(id);
+      setDonations(prev => prev.map(d => d.donationId === id ? { ...d, status: 'assigned_to_admin' } : d));
+      alert("Assigned to Admin successfully!");
+    } catch (err) {
+      console.error("Assign failed:", err);
+      alert("Failed to assign.");
     }
   };
 
@@ -282,6 +295,16 @@ const DonationManagement = () => {
                         }}
                       >
                         Delete Donation
+                      </button>
+
+                      <button
+                        style={{ ...menuBtnStyle, color: '#ff9800', borderBottom: 'none' }}
+                        onClick={() => {
+                          setMenuOpenId(null);
+                          handleAssignToAdmin(donation.donationId);
+                        }}
+                      >
+                        Assign to Admin
                       </button>
                     </div>
                   )}

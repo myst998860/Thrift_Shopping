@@ -943,6 +943,17 @@ const donationAPI = {
       throw error;
     }
   },
+
+  assignToAdmin: async (donationId) => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const headers = { Authorization: `Bearer ${token}` };
+      const response = await api.put(`/donations/${donationId}/assign-admin`, {}, { headers });
+      return response.data;
+    } catch (error) {
+       throw error;
+    }
+  },
 };
 
 

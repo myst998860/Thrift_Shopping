@@ -108,7 +108,13 @@ export default function Donation() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await donationAPI.addDonation(form);
+        const payload = {
+            ...form,
+            ...form.types, // Flatten nested types object
+        };
+        delete payload.types; // Remove the nested object
+
+      await donationAPI.addDonation(payload);
       alert("Donation request submitted successfully. Our NGO partner will contact you within 24 hours.");
       setForm({
         fullName: "",

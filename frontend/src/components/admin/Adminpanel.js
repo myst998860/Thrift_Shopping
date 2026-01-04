@@ -39,7 +39,7 @@
 //   label: 'Profile',
 // }
 //   ].filter(Boolean);
-  
+
 
 //   const handleLogout = () => {
 //     authService.logout(); 
@@ -119,6 +119,7 @@ import {
   FiSettings,
   FiUser,
   FiLogOut,
+  FiTruck,
 } from "react-icons/fi";
 import "../../styles/admin/AdminPanel.css";
 import { useUserSession } from "../../context/UserSessionContext";
@@ -126,12 +127,12 @@ import { useUserSession } from "../../context/UserSessionContext";
 const AdminPanel = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user: currentUser, logout } = useUserSession();
-   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
   const userId = localStorage.getItem("userId");
   const location = useLocation();
   const navigate = useNavigate();
 
- useEffect(() => {
+  useEffect(() => {
     if (!userId) return;
 
     const fetchUnread = async () => {
@@ -156,19 +157,20 @@ const AdminPanel = () => {
     { path: "/admin/partners", icon: <FiBriefcase />, label: "Partners" },
     { path: "/admin/venues", icon: <FiMapPin />, label: "Products" },
     { path: "/admin/bookings", icon: <FiCalendar />, label: "Orders" },
+    { path: "/admin/assigned-donations", icon: <FiTruck />, label: "Assigned Donations" },
     // { path: "/admin/notifications", icon: <FiBell />, label: "Notifications" },
     {
-  path: "/admin/notifications",
-  icon: (
-    <div className="notification-icon-wrapper">
-      <FiBell />
-      {unreadCount > 0 && (
-        <span className="notification-badge">{unreadCount}</span>
-      )}
-    </div>
-  ),
-  label: "Notifications",
-},
+      path: "/admin/notifications",
+      icon: (
+        <div className="notification-icon-wrapper">
+          <FiBell />
+          {unreadCount > 0 && (
+            <span className="notification-badge">{unreadCount}</span>
+          )}
+        </div>
+      ),
+      label: "Notifications",
+    },
     { path: "/admin/sellercontact", icon: <FiSettings />, label: "SellerContact" },
     // { path: "/admin/productadd", icon: <FiSettings />, label: "ProductAdd" },
     // currentUser && { path: "/admin/profile", icon: <FiUser />, label: "Profile" },
@@ -199,9 +201,8 @@ const AdminPanel = () => {
             <Link
               to={item.path}
               key={item.path}
-              className={`sidebar-item ${
-                location.pathname === item.path ? "active" : ""
-              }`}
+              className={`sidebar-item ${location.pathname === item.path ? "active" : ""
+                }`}
               onClick={() => setMobileMenuOpen(false)}
             >
               <span className="sidebar-icon">{item.icon}</span>

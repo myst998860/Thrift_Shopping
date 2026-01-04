@@ -23,44 +23,44 @@ import jakarta.persistence.OneToMany;
 
 @Entity
 public class Program {
-	
-	
-	public enum ProgramStatus {
-	    PENDING,
-	    ACTIVE,
-	    COMPLETED,
-	    CANCELLED
-	}
+
+    public enum ProgramStatus {
+        PENDING,
+        ACTIVE,
+        COMPLETED,
+        CANCELLED
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long programId;
 
-    
-    
     private String programTitle;
 
     @Column(length = 2000)
     private String description;
 
-    private String category; 
-    // Example: "Clothing", "Emergency Relief", "Education", "Seasonal", "Community", "Other"
+    private String category;
+    // Example: "Clothing", "Emergency Relief", "Education", "Seasonal",
+    // "Community", "Other"
 
     @Lob
     @Column(columnDefinition = "TEXT")
-    private String programImage;  // URL or Base64 image
-   
-    
+    private String programImage; // URL or Base64 image
+
     private String mapLocationUrl;
     private LocalDate startDate;
     private LocalDate endDate;
 
     private String programLocation;
 
-    private String targetItemsToCollect;   // e.g., “Winter coats, blankets”
+    private String targetItemsToCollect; // e.g., “Winter coats, blankets”
     private Integer estimatedBeneficiaries; // e.g., number of people expected to benefit
 
-    private String programGoal;  // e.g., “Collect 500 clothing items for winter drive”
+    private Integer itemsCollected = 0; // Dynamic count of items collected
+    private Integer peopleHelped = 0; // Dynamic count of people helped
+
+    private String programGoal; // e.g., “Collect 500 clothing items for winter drive”
 
     private String name; // program creator’s name or representative
     private String role; // e.g., “Coordinator”, “Partner”, “Volunteer”
@@ -72,21 +72,19 @@ public class Program {
     @JoinColumn(name = "partner_id")
     @JsonBackReference
     private Partner partner;
-    
+
     @OneToMany(mappedBy = "program", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference // research on this line
     private List<Donation> donations; // Optional, if you want to track donations
 
     @ElementCollection
     private List<String> tags; // optional: to store small tags like "relief", "education", etc.
-    
 
     @Enumerated(EnumType.STRING)
-    private ProgramStatus status; 
+    private ProgramStatus status;
 
     // ------------------ Getters and Setters ------------------
-    
-    
+
     public ProgramStatus getStatus() {
         return status;
     }
@@ -100,8 +98,8 @@ public class Program {
     }
 
     public void setProgram_image(String program_image) {
-    this.programImage = program_image;
-}
+        this.programImage = program_image;
+    }
 
     public void setProgramId(Long programId) {
         this.programId = programId;
@@ -114,7 +112,7 @@ public class Program {
     public void setProgramTitle(String programTitle) {
         this.programTitle = programTitle;
     }
-    
+
     public Partner getPartner() {
         return partner;
     }
@@ -130,7 +128,6 @@ public class Program {
     public void setDonations(List<Donation> donations) {
         this.donations = donations;
     }
-
 
     public String getDescription() {
         return description;
@@ -228,7 +225,6 @@ public class Program {
         this.objective = objective;
     }
 
-
     public List<String> getTags() {
         return tags;
     }
@@ -236,13 +232,28 @@ public class Program {
     public void setTags(List<String> tags) {
         this.tags = tags;
     }
-    
-	public String getMapLocationUrl() {
-		return mapLocationUrl;
-	}
 
-	public void setMapLocationUrl(String mapLocationUrl) {
-		this.mapLocationUrl = mapLocationUrl;
-	}
+    public String getMapLocationUrl() {
+        return mapLocationUrl;
+    }
 
+    public void setMapLocationUrl(String mapLocationUrl) {
+        this.mapLocationUrl = mapLocationUrl;
+    }
+
+    public Integer getItemsCollected() {
+        return itemsCollected;
+    }
+
+    public void setItemsCollected(Integer itemsCollected) {
+        this.itemsCollected = itemsCollected;
+    }
+
+    public Integer getPeopleHelped() {
+        return peopleHelped;
+    }
+
+    public void setPeopleHelped(Integer peopleHelped) {
+        this.peopleHelped = peopleHelped;
+    }
 }

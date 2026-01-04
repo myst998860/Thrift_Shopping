@@ -9,7 +9,7 @@ const tabList = [
 ];
 
 const Notification = () => {
- const [tab, setTab] = React.useState('all');
+  const [tab, setTab] = React.useState('all');
   const [notifications, setNotifications] = React.useState([]);
 
   // Assume userId is available here
@@ -20,19 +20,23 @@ const Notification = () => {
     try {
       if (!userId) throw new Error("User not authenticated");
       const data = await notificationService.getUserNotifications(userId);
-      setNotifications(data);
-      console.log("notifications:",notifications)
+
+      // Transform backend data to match component expectations
+      const formattedData = Array.isArray(data) ? data.map(n => ({
+        ...n,
+        // Ensure keys match what the UI expects
+        message: n.message || n.title, // Fallback if message is empty
+        time: n.createdAt ? new Date(n.createdAt).toLocaleString() : 'Just now',
+        read: n.status === 'READ',
+        type: n.type ? n.type.toLowerCase() : 'info'
+      })) : [];
+
+      setNotifications(formattedData);
+      console.log("notifications:", formattedData)
     } catch (e) {
       // fallback mock data
-      setNotifications([
-        { id: 1, type: 'booking', message: 'Your booking for grand ballroom has been confirmed', time: 'Just now', read: false },
-        { id: 2, type: 'payment', message: 'Payment of NPR 30,000 has been processed successfully', time: '1 min ago', read: false },
-        { id: 3, type: 'reminder', message: 'Reminder: your event at Grand Ballroom is scheduled for May 25, 2025.', time: '2 min ago', read: false },
-        { id: 4, type: 'profile', message: 'Please complete your profile information to improve your recommendations.', time: '3 days ago', read: true },
-        { id: 5, type: 'venue', message: 'New venue added in kathmandu. Check them out!', time: '1 week ago', read: true },
-        { id: 6, type: 'user', message: 'A new user has registered.', time: '2 weeks ago', read: true },
-        { id: 7, type: 'partner', message: 'A new partner has registered.', time: '2 weeks ago', read: true },
-      ]);
+      console.error("Error fetching notifications:", e);
+      // Keep existing mock data as fallback if needed, or set empty
     }
   }, [userId]);
 
@@ -51,7 +55,8 @@ const Notification = () => {
 
   const markAllAsRead = async () => {
     try {
-      await fetch('/api/notifications/markAllRead', { method: 'POST' });
+      if (!userId) return;
+      await notificationService.markAllAsRead(userId);
       fetchNotifications();
     } catch {
       setNotifications(notifications.map(n => ({ ...n, read: true })));
@@ -60,7 +65,8 @@ const Notification = () => {
 
   const clearAll = async () => {
     try {
-      await fetch('/api/notifications/clearAll', { method: 'POST' });
+      if (!userId) return;
+      await notificationService.clearAllNotifications(userId);
       fetchNotifications();
     } catch {
       setNotifications([]);

@@ -106,7 +106,7 @@ const PartnerPanel = () => {
   const navItems = [
     { path: "/partner/dashboard", icon: <FiHome />, label: "Dashboard" },
     { path: "/partner/bookings", icon: <FiCalendar />, label: "Pickups" },
-    { path: "/partner/program", icon: <FiMapPin />, label: "Programs" },
+    { path: "/partner/programs", icon: <FiMapPin />, label: "Programs" },
     { path: "/partner/donations", icon: <FiGift />, label: "Donations" },
     { path: "/partner/notifications", icon: <FiBell />, label: "Notifications" },
     { path: "/partner/profile", icon: <FiUser />, label: "Profile" },
@@ -136,9 +136,8 @@ const PartnerPanel = () => {
             <Link
               to={item.path}
               key={item.path}
-              className={`sidebar-item ${
-                location.pathname === item.path ? "active" : ""
-              }`}
+              className={`sidebar-item ${location.pathname === item.path ? "active" : ""
+                }`}
               onClick={() => setMobileMenuOpen(false)}
             >
               <span className="sidebar-icon">{item.icon}</span>

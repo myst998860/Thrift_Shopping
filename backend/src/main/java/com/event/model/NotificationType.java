@@ -13,20 +13,20 @@ public enum NotificationType {
     SYSTEM_ANNOUNCEMENT("SYSTEM"),
     PROFILE_UPDATE_REQUIRED("PROFILE_UPDATE"),
     ORDER("ORDER"),
-	 ORDER_STATUS("ORDER_STATUS"),
-	 PAYMENT("PAYMENT"),
-	  SYSTEM("SYSTEM"),
+    ORDER_STATUS("ORDER_STATUS"),
+    PAYMENT("PAYMENT"),
+    SYSTEM("SYSTEM"),
     ORDER_COMPLETED("ORDER_DONE"),
     ORDER_CANCELLED("ORDER_CANCEL"),
-    DONATION_COMPLETED("DONATION_DONE");
+    DONATION_COMPLETED("DONATION_DONE"),
+    PICKUP_ASSIGNED("PICKUP_ASSIGNED");
 
-    
     private final String value;
-    
+
     NotificationType(String value) {
         this.value = value;
     }
-    
+
     public String getValue() {
         return value;
     }

@@ -222,11 +222,6 @@ const isUpcomingPickup = (donation) => {
 const Dashboard = () => {
   const [programs, setPrograms] = useState([]);
   const [donations, setDonations] = useState([]);
-  const [chartData, setChartData] = useState({
-    venues: [],
-    bookings: []
-  });
-  const [selectedChart, setSelectedChart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [programCountAdded, setProgramCountAdded] = useState(null); // new: partner's program count
   const navigate = useNavigate();
@@ -263,20 +258,7 @@ const Dashboard = () => {
         setPrograms(fetchedPrograms);
         setDonations(fetchedDonations);
 
-        try {
-          const chartResponse = await fetch("http://localhost:8080/api/chart-data", {
-            headers: {
-              "Authorization": `Bearer ${token}`
-            }
-          });
 
-          if (chartResponse.ok) {
-            const chartJson = await chartResponse.json();
-            setChartData(chartJson);
-          }
-        } catch (error) {
-          console.error("Error fetching chart data:", error);
-        }
 
         // NEW: fetch partner-specific program count for logged-in partner (if we can extract id)
         try {
@@ -375,6 +357,7 @@ const Dashboard = () => {
     return [programsAddedCard, ...baseStats];
   }, [programs, donations, programCountAdded]);
 
+  // ------------------- Data Aggregation for Charts -------------------
   const upcomingPickups = useMemo(() => {
     const sorted = [...donations].sort((a, b) => {
       const dateA = safeDate(a?.preferredPickupDate || a?.pickupDate || a?.createdAt) || new Date(8640000000000000);
@@ -385,8 +368,8 @@ const Dashboard = () => {
   }, [donations]);
 
   const activeProgramList = useMemo(() => {
-    // Show top active programs across ALL programs (since partner filtering removed)
-    const owned = programs; // previously filtered by owner, now it's all programs
+    // Show top active programs across ALL programs
+    const owned = programs;
     const filtered = owned.filter(isProgramActive);
     const sorted = filtered.sort((a, b) => {
       const percentA = (() => {
@@ -404,58 +387,152 @@ const Dashboard = () => {
     return sorted.slice(0, 3);
   }, [programs]);
 
-  const handleStatClick = (statType) => {
-    if (!statType) return;
-    setSelectedChart(statType);
-  };
+  const chartData = useMemo(() => {
+    // Helper to get month key (e.g. "Jan 2024")
+    const getMonthKey = (date) => {
+      if (!date) return 'Unknown';
+      return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    };
 
-  const handleCloseChart = () => {
-    setSelectedChart(null);
-  };
+    // 1. Programs Added Over Time (using startDate)
+    const programsByMonth = {};
+    programs.forEach(p => {
+      const date = safeDate(p.startDate); // use startDate as creation proxy
+      if (date) {
+        const key = getMonthKey(date);
+        programsByMonth[key] = (programsByMonth[key] || 0) + 1;
+      }
+    });
 
-  const renderChart = (type) => {
-    const data = chartData[type] || [];
-    
-    switch (type) {
-      case 'venues':
-        return (
-          <div className="chart-container">
-            <h3>Venue Growth Trend</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
+    // 2. Donations Over Time (using createdAt)
+    const donationsByMonth = {};
+    const impactByMonth = {}; // items collected & people helped
+
+    donations.forEach(d => {
+      const date = safeDate(d.createdAt || d.preferredPickupDate);
+      if (date) {
+        const key = getMonthKey(date);
+        donationsByMonth[key] = (donationsByMonth[key] || 0) + 1;
+
+        // Impact
+        if (!impactByMonth[key]) impactByMonth[key] = { items: 0, people: 0 };
+        const qty = parseQuantityToNumber(d.estimatedQuantity);
+        impactByMonth[key].items += qty;
+        // logic: 5 items = 1 person
+        impactByMonth[key].people += Math.floor(qty / 5);
+      }
+    });
+
+    // Merge all keys
+    const allMonths = new Set([
+      ...Object.keys(programsByMonth),
+      ...Object.keys(donationsByMonth)
+    ]);
+
+    // Sort months chronologically
+    const sortedMonths = Array.from(allMonths).sort((a, b) => {
+      return new Date(a) - new Date(b);
+    });
+
+    const progressData = sortedMonths.map(month => ({
+      month,
+      programsAdded: programsByMonth[month] || 0,
+      donations: donationsByMonth[month] || 0,
+      itemsCollected: impactByMonth[month]?.items || 0,
+      peopleHelped: impactByMonth[month]?.people || 0,
+    }));
+
+    // 3. Active vs Inactive Programs (Pie Data)
+    const activeCount = programs.filter(isProgramActive).length;
+    const inactiveCount = programs.length - activeCount;
+    const piData = [
+      { name: 'Active', value: activeCount, color: '#16a34a' },
+      { name: 'Inactive', value: inactiveCount, color: '#cbd5e1' },
+    ];
+
+    return { progressData, piData };
+  }, [programs, donations]);
+
+
+  const renderCharts = () => {
+    if (!programs.length && !donations.length) return null;
+
+    return (
+      <div className="charts-grid-section" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px', marginTop: '32px' }}>
+
+        {/* Chart 1: Programs Added Progress */}
+        <div className="dashboard-card" style={{ padding: '20px' }}>
+          <h3>Programs Added Progress</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={chartData.progressData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="month" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Area type="monotone" dataKey="programsAdded" stroke="#2563eb" fill="#3b82f6" fillOpacity={0.2} name="Programs Added" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Chart 2: Assigned Donations Progress */}
+        <div className="dashboard-card" style={{ padding: '20px' }}>
+          <h3>Assigned Donations Progress</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartData.progressData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="month" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Bar dataKey="donations" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Donations" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Chart 3: Active vs Inactive Programs */}
+        <div className="dashboard-card" style={{ padding: '20px' }}>
+          <h3>Program Status Distribution</h3>
+          <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData.piData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {chartData.piData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="venues" stroke="#ff7300" strokeWidth={2} />
-              </LineChart>
+              </PieChart>
             </ResponsiveContainer>
           </div>
-        );
-      
-      case 'bookings':
-        return (
-          <div className="chart-container">
-            <h3>Booking & Revenue Trend</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip />
-                <Legend />
-                <Line yAxisId="left" type="monotone" dataKey="bookings" stroke="#8884d8" strokeWidth={2} />
-                <Line yAxisId="right" type="monotone" dataKey="revenue" stroke="#82ca9d" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        );
-      
-      default:
-        return null;
-    }
+        </div>
+
+        {/* Chart 4: Impact Progress (People Helped & Items Collected) */}
+        <div className="dashboard-card" style={{ padding: '20px' }}>
+          <h3>Impact Progress</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={chartData.progressData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis dataKey="month" />
+              <YAxis yAxisId="left" />
+              <YAxis yAxisId="right" orientation="right" />
+              <Tooltip />
+              <Legend />
+              <Line yAxisId="left" type="monotone" dataKey="itemsCollected" stroke="#ea580c" strokeWidth={2} name="Items Collected" />
+              <Line yAxisId="right" type="monotone" dataKey="peopleHelped" stroke="#10b981" strokeWidth={2} name="People Helped" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+      </div>
+    );
   };
 
   if (loading) {
@@ -491,16 +568,15 @@ const Dashboard = () => {
           </button>
         </div>
       </div>
-      
+
       <div className="stats-row">
         {stats.map((stat, index) => {
-          const isClickable = Boolean(stat.clickable && stat.type);
+          // Remove click handler logic since modals are replaced by on-page charts
           return (
-            <div 
-              className={`stat-card ${isClickable ? 'clickable' : ''}`} 
+            <div
+              className={`stat-card`}
               key={stat.label || index}
-              onClick={() => isClickable && handleStatClick(stat.type)}
-              style={{ cursor: isClickable ? 'pointer' : 'default' }}
+              style={{ cursor: 'default' }}
             >
               <div className="stat-label">{stat.label}</div>
               <div className="stat-value">{stat.value}</div>
@@ -510,21 +586,11 @@ const Dashboard = () => {
         })}
       </div>
 
-      {selectedChart && (
-        <div className="chart-modal-overlay" onClick={handleCloseChart}>
-          <div className="chart-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="chart-modal-header">
-              <h2>{selectedChart.charAt(0).toUpperCase() + selectedChart.slice(1)} Analytics</h2>
-              <button className="chart-close-btn" onClick={handleCloseChart}>×</button>
-            </div>
-            <div className="chart-modal-body">
-              {renderChart(selectedChart)}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* RENDER NEW DYNAMIC CHARTS */}
+      {renderCharts()}
 
-      <div className="dashboard-grid">
+      {/* Keep existing dashboard components below */}
+      <div className="dashboard-grid" style={{ marginTop: '32px' }}>
         <div className="dashboard-column">
           <section className="dashboard-card">
             <div className="dashboard-card-header">

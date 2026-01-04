@@ -94,7 +94,7 @@ const getCollectedItems = (program) =>
   );
 
 const getPeopleHelped = (program, fallback = 0) =>
-  toPositiveNumber(pickFirstAvailable(program, ["estimatedBeneficiaries", "beneficiaries", "peopleHelped"], fallback));
+  toPositiveNumber(pickFirstAvailable(program, ["peopleHelped", "estimatedBeneficiaries", "beneficiaries"], fallback));
 
 const getDonationProgramId = (program) => pickFirstAvailable(program, ["donationProgramId", "programId", "id"]);
 

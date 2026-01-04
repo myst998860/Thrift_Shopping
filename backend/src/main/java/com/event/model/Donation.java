@@ -20,14 +20,14 @@ public class Donation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long donationId;
-    
+
     private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
         this.setCreatedAt(LocalDateTime.now());
     }
-    
+
     private String status;
 
     // Personal Information
@@ -50,8 +50,8 @@ public class Donation {
     private boolean childrensClothing;
     private boolean undergarments;
 
-    private String estimatedQuantity;  // e.g. "1-5 items", "6-15 items"
-    private String overallCondition;   // e.g. "New", "Good", "Fair"
+    private String estimatedQuantity; // e.g. "1-5 items", "6-15 items"
+    private String overallCondition; // e.g. "New", "Good", "Fair"
     private String description;
 
     // Pickup Details
@@ -220,11 +220,11 @@ public class Donation {
     public void setPickupInstructions(String pickupInstructions) {
         this.pickupInstructions = pickupInstructions;
     }
-    
+
     @ManyToOne
     @JoinColumn(name = "program_id")
     @JsonBackReference
-    private Program program;  // The program this donation is for
+    private Program program; // The program this donation is for
 
     // Getters and setters for program
     public Program getProgram() {
@@ -235,19 +235,41 @@ public class Donation {
         this.program = program;
     }
 
-	public String getStatus() {
-		return status;
-	}
+    public String getStatus() {
+        return status;
+    }
 
-	public void setStatus(String status) {
-		this.status = status;
-	}
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
-	public LocalDateTime getCreatedAt() {
-		return createdAt;
-	}
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
-	}
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    @ManyToOne
+    @JoinColumn(name = "assigned_admin_id")
+    private User assignedAdmin;
+
+    private Double pickupFee;
+
+    public User getAssignedAdmin() {
+        return assignedAdmin;
+    }
+
+    public void setAssignedAdmin(User assignedAdmin) {
+        this.assignedAdmin = assignedAdmin;
+    }
+
+    public Double getPickupFee() {
+        return pickupFee;
+    }
+
+    public void setPickupFee(Double pickupFee) {
+        this.pickupFee = pickupFee;
+    }
 }

@@ -112,19 +112,26 @@ const NotificationsPage = () => {
 
   const markAllAsRead = async () => {
     try {
-      await notificationService.markAllAsRead()
+      const userId = getUserIdFromToken()
+      if (!userId) return
+
+      await notificationService.markAllAsRead(userId) // Pass userId
       console.log("All notifications marked as read")
 
       setNotifications((prev) => prev.map((notification) => ({ ...notification, read: true })))
     } catch (error) {
       console.error("Error marking all as read:", error)
+      // Optimistically update
       setNotifications((prev) => prev.map((notification) => ({ ...notification, read: true })))
     }
   }
 
   const markAsRead = async (id) => {
     try {
-      await notificationService.markAsRead(id)
+      const userId = getUserIdFromToken()
+      if (!userId) return
+
+      await notificationService.markAsRead(id, userId) // Pass notificationId and userId
       console.log("Notification marked as read:", id)
 
       setNotifications((prev) =>
@@ -132,14 +139,24 @@ const NotificationsPage = () => {
       )
     } catch (error) {
       console.error("Error marking notification as read:", error)
+      // Optimistically update
       setNotifications((prev) =>
         prev.map((notification) => (notification.id === id ? { ...notification, read: true } : notification)),
       )
     }
   }
 
-  const clearAll = () => {
-    setNotifications([])
+  const clearAll = async () => {
+    try {
+      const userId = getUserIdFromToken()
+      if (!userId) return
+
+      await notificationService.clearAllNotifications(userId) // Call backend
+      setNotifications([])
+    } catch (error) {
+      console.error("Error clearing notifications:", error)
+      setNotifications([]) // Optimistically clear
+    }
   }
 
   const filteredNotifications = notifications.filter((notification) => {
