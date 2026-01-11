@@ -143,9 +143,10 @@ const DonationManagement = () => {
   );
 
   const stats = {
-    total: donations.length,
+    total: donations.filter(d => ['pending', 'confirmed'].includes(d.status?.toLowerCase())).length,
     pending: donations.filter(d => d.status === 'pending').length,
     confirmed: donations.filter(d => d.status === 'confirmed').length,
+    pickedup: donations.filter(d => d.status === 'pickedup').length,
     delivered: donations.filter(d => d.status === 'delivered').length,
   };
 
@@ -158,7 +159,7 @@ const DonationManagement = () => {
         </div>
         <div className="donation-stats">
           <div className="stat-item">
-            <span className="stat-label">Total</span>
+            <span className="stat-label">Active</span>
             <span className="stat-value">{stats.total}</span>
           </div>
           <div className="stat-item">
@@ -168,6 +169,10 @@ const DonationManagement = () => {
           <div className="stat-item">
             <span className="stat-label">Confirmed</span>
             <span className="stat-value" style={{ color: '#15803d' }}>{stats.confirmed}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Picked Up</span>
+            <span className="stat-value" style={{ color: '#1d4ed8' }}>{stats.pickedup}</span>
           </div>
           <div className="stat-item">
             <span className="stat-label">Delivered</span>
@@ -270,10 +275,10 @@ const DonationManagement = () => {
 
                     {menuOpenId === donation.donationId && (
                       <div className="dropdown-menu" ref={menuRef}>
-                        <button className="menu-item" onClick={() => navigate(`/admin/donations/${donation.donationId}`)}>
+                        <button className="menu-item" onClick={() => navigate(`/partner/donations/${donation.donationId}`)}>
                           <FiEye /> View Details
                         </button>
-                        <button className="menu-item" onClick={() => navigate(`/admin/donations/edit/${donation.donationId}`)}>
+                        <button className="menu-item" onClick={() => navigate(`/partner/donations/edit/${donation.donationId}`)}>
                           <FiEdit2 /> Edit
                         </button>
                         <button className="menu-item" onClick={() => handleAssignToAdmin(donation.donationId)}>

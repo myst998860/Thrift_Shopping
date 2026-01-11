@@ -377,57 +377,162 @@
   }
 
   .no-chart-data {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 250px;
-  color: var(--gray-500);
-  font-size: var(--font-size-sm);
-  background-color: var(--gray-50);
-  border-radius: var(--radius-lg);
-  margin: 20px 0;
-}
-
-/* Metric Card Expanded Styles */
-.metric-card.expanded .metric-chart-expanded {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 250px;
+    color: var(--gray-500);
+    font-size: var(--font-size-sm);
+    background-color: var(--gray-50);
+    border-radius: var(--radius-lg);
+    margin: 20px 0;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  /* Metric Card Expanded Styles */
+  .metric-card.expanded .metric-chart-expanded {
+    animation: fadeIn 0.3s ease-in-out;
   }
-}
 
-/* Chart Styling */
-.recharts-cartesian-grid-horizontal line,
-.recharts-cartesian-grid-vertical line {
-  stroke: #f0f0f0;
-}
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
 
-.recharts-tooltip-wrapper {
-  font-family: var(--font-family-primary);
-}
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 
-.recharts-default-tooltip {
-  border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-  border: 1px solid #e0e0e0 !important;
-}
+  /* Chart Styling */
+  .recharts-cartesian-grid-horizontal line,
+  .recharts-cartesian-grid-vertical line {
+    stroke: #f0f0f0;
+  }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .metric-chart-expanded {
+  .recharts-tooltip-wrapper {
+    font-family: var(--font-family-primary);
+  }
+
+  .recharts-default-tooltip {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #e0e0e0 !important;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .metric-chart-expanded {
+      padding: 16px;
+    }
+
+    .recharts-wrapper {
+      font-size: 12px;
+    }
+  }
+
+  /* Pickup Fee Management Styles */
+  .fee-management-container {
+    padding: 24px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    margin-top: 24px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .fee-table-wrapper {
+    overflow-x: auto;
+    margin-top: 20px;
+  }
+
+  .fee-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  .fee-table th,
+  .fee-table td {
     padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
   }
-  
-  .recharts-wrapper {
-    font-size: 12px;
+
+  .fee-table th {
+    background-color: #f8fafc;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
-}
+
+  .fee-table tr:hover {
+    background-color: #f8fafc;
+  }
+
+  .fee-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-request,
+  .btn-accept,
+  .btn-reject {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    white-space: nowrap;
+  }
+
+  .btn-request {
+    background-color: #3b82f6;
+    color: white;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+  }
+
+  .btn-request:hover {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+  }
+
+  .btn-accept {
+    background-color: #10b981;
+    color: white;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+  }
+
+  .btn-accept:hover {
+    background-color: #059669;
+    transform: translateY(-1px);
+  }
+
+  .btn-reject {
+    background-color: #ef4444;
+    color: white;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+  }
+
+  .btn-reject:hover {
+    background-color: #dc2626;
+    transform: translateY(-1px);
+  }
+
+  .text-success {
+    color: #10b981 !important;
+  }
+
+  .font-bold {
+    font-weight: 700;
+  }
+
+  .text-muted {
+    color: #94a3b8;
+    font-size: 0.85rem;
+  }
 }

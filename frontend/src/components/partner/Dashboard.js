@@ -5,7 +5,7 @@ import {
   AreaChart, Area
 } from 'recharts';
 import RecentBookings from "./RecentBookings";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { programService, donationAPI } from "../../services/api";
 
 const numberFormatter = new Intl.NumberFormat();
@@ -224,7 +224,10 @@ const Dashboard = () => {
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [programCountAdded, setProgramCountAdded] = useState(null); // new: partner's program count
+  const [actionLoading, setActionLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "fees"
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const token = sessionStorage.getItem("jwtToken");
@@ -294,7 +297,38 @@ const Dashboard = () => {
     };
 
     fetchDashboardData();
-  }, []);
+
+    // Check for tab parameter in URL
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab === 'fees') {
+      setActiveTab("fees");
+    } else {
+      setActiveTab("overview");
+    }
+  }, [location.search]);
+
+  const fetchUpdatedDonations = async () => {
+    try {
+      const response = await donationAPI.listDonations();
+      setDonations(Array.isArray(response) ? response : []);
+    } catch (err) {
+      console.error("Error refreshing donations:", err);
+    }
+  };
+
+  const handleMarkAsPaid = async () => {
+    try {
+      setActionLoading(true);
+      await donationAPI.markAsPaid();
+      alert("Payment notification sent to admin! Fees will reset once verified.");
+      fetchUpdatedDonations();
+    } catch (err) {
+      alert("Failed to notify admin: " + err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const stats = useMemo(() => {
     // Removed partner-only filtering: use ALL programs for stats
@@ -311,6 +345,8 @@ const Dashboard = () => {
     }, 0);
 
     const itemsCollected = donations.reduce((sum, donation) => sum + parseQuantityToNumber(donation?.estimatedQuantity), 0);
+    const assignedToAdminCount = donations.filter(d => (d.pickupFee && d.pickupFee > 0) || d.status === 'assigned_to_admin').length;
+    const adminFees = donations.reduce((sum, d) => sum + (d.pickupFee || 0), 0) || (assignedToAdminCount * 150);
 
     // Build base stats array
     const baseStats = [
@@ -320,6 +356,12 @@ const Dashboard = () => {
         subtitle: totalDonations
           ? `${upcomingPickupCount || '0'} pickups scheduled`
           : "No donations yet",
+        clickable: false,
+      },
+      {
+        label: "Admin Pickup Fees",
+        value: `NPR ${formatNumber(adminFees)}`,
+        subtitle: `${assignedToAdminCount} assigned donations`,
         clickable: false,
       },
       {
@@ -346,7 +388,6 @@ const Dashboard = () => {
       },
     ];
 
-    // Insert Programs Added stat (partner-specific) as the first card
     const programsAddedCard = {
       label: "Programs Added",
       value: programCountAdded == null ? "—" : formatNumber(programCountAdded),
@@ -354,8 +395,22 @@ const Dashboard = () => {
       clickable: false,
     };
 
-    return [programsAddedCard, ...baseStats];
-  }, [programs, donations, programCountAdded]);
+    const hasRequestedFees = donations.some(d => String(d.pickupPaymentStatus || '').toUpperCase() === 'REQUESTED');
+    const requestedAmount = donations
+      .filter(d => String(d.pickupPaymentStatus || '').toUpperCase() === 'REQUESTED')
+      .reduce((sum, d) => sum + (d.pickupFee || 150), 0);
+
+    const feeCard = {
+      label: "Admin Pickup Fees",
+      value: `NPR ${formatNumber(adminFees)}`,
+      subtitle: hasRequestedFees ? `Payment Requested: NPR ${formatNumber(requestedAmount)}` : `${assignedToAdminCount} assigned donations`,
+      clickable: hasRequestedFees,
+      action: hasRequestedFees ? handleMarkAsPaid : null,
+      actionLabel: "Mark as Paid"
+    };
+
+    return [programsAddedCard, feeCard, ...baseStats.filter(s => s.label !== "Admin Pickup Fees")];
+  }, [donations, programs, programCountAdded]);
 
   // ------------------- Data Aggregation for Charts -------------------
   const upcomingPickups = useMemo(() => {
@@ -560,150 +615,286 @@ const Dashboard = () => {
           >
             Create Program
           </button>
-          <button
-            className="dashboard-secondary-btn"
-            onClick={() => alert('Upload media feature coming soon!')}
-          >
-            Upload Media
-          </button>
         </div>
       </div>
 
-      <div className="stats-row">
-        {stats.map((stat, index) => {
-          // Remove click handler logic since modals are replaced by on-page charts
-          return (
-            <div
-              className={`stat-card`}
-              key={stat.label || index}
-              style={{ cursor: 'default' }}
-            >
-              <div className="stat-label">{stat.label}</div>
-              <div className="stat-value">{stat.value}</div>
-              {stat.subtitle && <div className="stat-subtitle">{stat.subtitle}</div>}
-            </div>
-          );
-        })}
+      {/* TABS */}
+      <div className="dashboard-tabs" style={{ display: "flex", gap: "20px", borderBottom: "1px solid #e5e7eb", marginBottom: "32px" }}>
+        <button
+          onClick={() => setActiveTab("overview")}
+          style={{
+            padding: "12px 4px",
+            background: "none",
+            border: "none",
+            borderBottom: activeTab === "overview" ? "2px solid #16a34a" : "2px solid transparent",
+            color: activeTab === "overview" ? "#16a34a" : "#6b7280",
+            fontWeight: activeTab === "overview" ? "600" : "500",
+            cursor: "pointer",
+            fontSize: "15px"
+          }}
+        >
+          Overview
+        </button>
+        <button
+          onClick={() => setActiveTab("fees")}
+          style={{
+            padding: "12px 4px",
+            background: "none",
+            border: "none",
+            borderBottom: activeTab === "fees" ? "2px solid #16a34a" : "2px solid transparent",
+            color: activeTab === "fees" ? "#16a34a" : "#6b7280",
+            fontWeight: activeTab === "fees" ? "600" : "500",
+            cursor: "pointer",
+            fontSize: "15px"
+          }}
+        >
+          Pickup Fees
+        </button>
       </div>
 
-      {/* RENDER NEW DYNAMIC CHARTS */}
-      {renderCharts()}
+      {activeTab === "overview" ? (
+        <>
 
-      {/* Keep existing dashboard components below */}
-      <div className="dashboard-grid" style={{ marginTop: '32px' }}>
-        <div className="dashboard-column">
-          <section className="dashboard-card">
-            <div className="dashboard-card-header">
-              <div>
-                <h2>Upcoming Pickups</h2>
-                <p className="dashboard-card-subtitle">Scheduled donation collections</p>
-              </div>
-              <button className="panel-link" onClick={() => navigate('/partner/donations')}>
-                View All
-              </button>
-            </div>
-            <div className="pickup-list">
-              {upcomingPickups.length ? (
-                upcomingPickups.map((donation) => {
-                  const quantity = parseQuantityToNumber(donation?.estimatedQuantity);
-                  const status = String(donation?.status || 'scheduled').toLowerCase();
-                  const statusClass = ['pending', 'scheduled', 'completed'].includes(status) ? status : 'scheduled';
-                  return (
-                    <div className="pickup-item" key={donation?.donationId || donation?.id || donation?.fullName}>
-                      <div className="pickup-item-left">
-                        <div className="pickup-header">
-                          <span className="pickup-name">{donation?.fullName || 'Donor'}</span>
-                          <span className={`status-pill ${statusClass}`}>{statusClass}</span>
+          <div className="stats-row">
+            {stats.map((stat, index) => {
+              // Remove click handler logic since modals are replaced by on-page charts
+              return (
+                <div
+                  className={`stat-card`}
+                  key={stat.label || index}
+                  style={{ cursor: 'default' }}
+                >
+                  <div className="stat-label">{stat.label}</div>
+                  <div className="stat-value">{stat.value}</div>
+                  {stat.subtitle && <div className="stat-subtitle">{stat.subtitle}</div>}
+                  {stat.clickable && stat.action && (
+                    <button
+                      className="stat-action-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        stat.action();
+                      }}
+                      disabled={actionLoading}
+                      style={{
+                        marginTop: '10px',
+                        padding: '6px 12px',
+                        backgroundColor: '#10b981',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {stat.actionLabel}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* RENDER NEW DYNAMIC CHARTS */}
+          {renderCharts()}
+
+          {/* Keep existing dashboard components below */}
+          <div className="dashboard-grid" style={{ marginTop: '32px' }}>
+            <div className="dashboard-column">
+              <section className="dashboard-card">
+                <div className="dashboard-card-header">
+                  <div>
+                    <h2>Upcoming Pickups</h2>
+                    <p className="dashboard-card-subtitle">Scheduled donation collections</p>
+                  </div>
+                  <button className="panel-link" onClick={() => navigate('/partner/donations')}>
+                    View All
+                  </button>
+                </div>
+                <div className="pickup-list">
+                  {upcomingPickups.length ? (
+                    upcomingPickups.map((donation) => {
+                      const quantity = parseQuantityToNumber(donation?.estimatedQuantity);
+                      const status = String(donation?.status || 'scheduled').toLowerCase();
+                      const statusClass = ['pending', 'scheduled', 'completed'].includes(status) ? status : 'scheduled';
+                      return (
+                        <div className="pickup-item" key={donation?.donationId || donation?.id || donation?.fullName}>
+                          <div className="pickup-item-left">
+                            <div className="pickup-header">
+                              <span className="pickup-name">{donation?.fullName || 'Donor'}</span>
+                              <span className={`status-pill ${statusClass}`}>{statusClass}</span>
+                            </div>
+                            <p className="pickup-meta">{[donation?.streetAddress || donation?.street, donation?.city].filter(Boolean).join(', ') || 'Address pending'}</p>
+                            <p className="pickup-meta">{quantity ? `${quantity} items` : 'Quantity pending'}</p>
+                          </div>
+                          <div className="pickup-item-right">
+                            <div className="pickup-date">{formatDate(donation?.preferredPickupDate || donation?.pickupDate || donation?.createdAt)}</div>
+                            <button className="link-button" onClick={() => navigate('/partner/donations')}>
+                              Update
+                            </button>
+                          </div>
                         </div>
-                        <p className="pickup-meta">{[donation?.streetAddress || donation?.street, donation?.city].filter(Boolean).join(', ') || 'Address pending'}</p>
-                        <p className="pickup-meta">{quantity ? `${quantity} items` : 'Quantity pending'}</p>
-                      </div>
-                      <div className="pickup-item-right">
-                        <div className="pickup-date">{formatDate(donation?.preferredPickupDate || donation?.pickupDate || donation?.createdAt)}</div>
-                        <button className="link-button" onClick={() => navigate('/partner/donations')}>
-                          Update
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="dashboard-card-empty">No upcoming pickups scheduled.</p>
-              )}
-            </div>
-          </section>
+                      );
+                    })
+                  ) : (
+                    <p className="dashboard-card-empty">No upcoming pickups scheduled.</p>
+                  )}
+                </div>
+              </section>
 
-          <section className="dashboard-card">
-            <RecentBookings />
-          </section>
+              <section className="dashboard-card">
+                <RecentBookings />
+              </section>
 
-          <section className="dashboard-card">
-            <div className="dashboard-card-header">
-              <div>
-                <h2>Quick Actions</h2>
-                <p className="dashboard-card-subtitle">Common NGO tasks and operations</p>
-              </div>
+              <section className="dashboard-card">
+                <div className="dashboard-card-header">
+                  <div>
+                    <h2>Quick Actions</h2>
+                    <p className="dashboard-card-subtitle">Common NGO tasks and operations</p>
+                  </div>
+                </div>
+                <div className="quick-actions-grid">
+                  <button className="quick-action-btn" onClick={() => navigate('/partner/donations')}>
+                    Manage Pickups
+                  </button>
+                  <button className="quick-action-btn" onClick={() => navigate('/partner/programs')}>
+                    View Programs
+                  </button>
+                  <button className="quick-action-btn" onClick={() => alert('Upload media feature coming soon!')}>
+                    Upload Media
+                  </button>
+                  <button className="quick-action-btn" onClick={() => alert('Report generation coming soon!')}>
+                    Generate Report
+                  </button>
+                </div>
+              </section>
             </div>
-            <div className="quick-actions-grid">
-              <button className="quick-action-btn" onClick={() => navigate('/partner/donations')}>
-                Manage Pickups
-              </button>
-              <button className="quick-action-btn" onClick={() => navigate('/partner/programs')}>
-                View Programs
-              </button>
-              <button className="quick-action-btn" onClick={() => alert('Upload media feature coming soon!')}>
-                Upload Media
-              </button>
-              <button className="quick-action-btn" onClick={() => alert('Report generation coming soon!')}>
-                Generate Report
-              </button>
-            </div>
-          </section>
-        </div>
 
-        <div className="dashboard-column">
-          <section className="dashboard-card">
-            <div className="dashboard-card-header">
-              <div>
-                <h2>Active Programs</h2>
-                <p className="dashboard-card-subtitle">Current donation programs</p>
-              </div>
-              <button className="panel-link" onClick={() => navigate('/partner/programs')}>
-                View All
-              </button>
-            </div>
-            <div className="program-list">
-              {activeProgramList.length ? (
-                activeProgramList.map((program) => {
-                  const targetItems = Number(program?.targetItems ?? program?.targetItemsToCollect ?? 0) || 0;
-                  const collectedItems = Number(program?.itemsCollected ?? program?.collectedItems ?? program?.estimatedBeneficiaries ?? 0) || 0;
-                  const progress = targetItems > 0 ? Math.min(100, Math.round((collectedItems / targetItems) * 100)) : 0;
-                  return (
-                    <div className="program-list-item" key={program?.programId || program?.id || program?.programTitle}>
-                      <div className="program-list-header">
-                        <div>
-                          <h3>{program?.programTitle || 'Program'}</h3>
-                          <p>{program?.description || 'No description provided.'}</p>
+            <div className="dashboard-column">
+              <section className="dashboard-card">
+                <div className="dashboard-card-header">
+                  <div>
+                    <h2>Active Programs</h2>
+                    <p className="dashboard-card-subtitle">Current donation programs</p>
+                  </div>
+                  <button className="panel-link" onClick={() => navigate('/partner/programs')}>
+                    View All
+                  </button>
+                </div>
+                <div className="program-list">
+                  {activeProgramList.length ? (
+                    activeProgramList.map((program) => {
+                      const targetItems = Number(program?.targetItems ?? program?.targetItemsToCollect ?? 0) || 0;
+                      const collectedItems = Number(program?.itemsCollected ?? program?.collectedItems ?? program?.estimatedBeneficiaries ?? 0) || 0;
+                      const progress = targetItems > 0 ? Math.min(100, Math.round((collectedItems / targetItems) * 100)) : 0;
+                      return (
+                        <div className="program-list-item" key={program?.programId || program?.id || program?.programTitle}>
+                          <div className="program-list-header">
+                            <div>
+                              <h3>{program?.programTitle || 'Program'}</h3>
+                              <p>{program?.description || 'No description provided.'}</p>
+                            </div>
+                            <span className={`status-pill ${String(program?.status || 'active').toLowerCase()}`}>{program?.status || 'Active'}</span>
+                          </div>
+                          <div className="progress-track">
+                            <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                          </div>
+                          <div className="program-meta-row">
+                            <span>{formatNumber(collectedItems)} of {targetItems ? formatNumber(targetItems) : '—'} items collected</span>
+                            <span>{formatNumber(program?.estimatedBeneficiaries || 0)} beneficiaries</span>
+                          </div>
                         </div>
-                        <span className={`status-pill ${String(program?.status || 'active').toLowerCase()}`}>{program?.status || 'Active'}</span>
-                      </div>
-                      <div className="progress-track">
-                        <div className="progress-fill" style={{ width: `${progress}%` }}></div>
-                      </div>
-                      <div className="program-meta-row">
-                        <span>{formatNumber(collectedItems)} of {targetItems ? formatNumber(targetItems) : '—'} items collected</span>
-                        <span>{formatNumber(program?.estimatedBeneficiaries || 0)} beneficiaries</span>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="dashboard-card-empty">No active programs yet. Create one to get started.</p>
-              )}
+                      );
+                    })
+                  ) : (
+                    <p className="dashboard-card-empty">No active programs yet. Create one to get started.</p>
+                  )}
+                </div>
+              </section>
             </div>
-          </section>
+          </div>
+        </>
+      ) : (
+        /* PICKUP FEES TAB CONTENT */
+        <div className="fees-tab-content">
+          <div className="dashboard-card" style={{ padding: '24px', marginBottom: '32px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <h2 style={{ fontSize: '18px', marginBottom: '8px' }}>Fee Status</h2>
+                <p style={{ color: '#64748b' }}>Overview of your pickup fee payments to Admin.</p>
+              </div>
+              {/* Fee Summary Card */}
+              <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '12px', minWidth: '250px', textAlign: 'right' }}>
+                <div style={{ color: '#64748b', fontSize: '13px', marginBottom: '4px' }}>Total Due</div>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#0f172a' }}>
+                  {stats.find(s => s.label === "Admin Pickup Fees")?.value || "NPR 0"}
+                </div>
+                {stats.find(s => s.label === "Admin Pickup Fees")?.clickable && (
+                  <button
+                    onClick={handleMarkAsPaid}
+                    disabled={actionLoading}
+                    style={{
+                      marginTop: '12px',
+                      background: '#16a34a',
+                      color: 'white',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      width: '100%'
+                    }}
+                  >
+                    {actionLoading ? 'Processing...' : 'Mark as Paid'}
+                  </button>
+                )}
+                {!stats.find(s => s.label === "Admin Pickup Fees")?.clickable && (
+                  <div style={{ marginTop: '8px', fontSize: '12px', color: '#16a34a' }}>No pending request</div>
+                )}
+              </div>
+            </div>
+
+            <h3 style={{ marginTop: '32px', marginBottom: '16px', fontSize: '16px' }}>Fee History & Details</h3>
+            <div className="response-table-wrapper">
+              <table className="response-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #e2e8f0', textAlign: 'left' }}>
+                    <th style={{ padding: '12px', color: '#64748b', fontSize: '13px' }}>Donation ID</th>
+                    <th style={{ padding: '12px', color: '#64748b', fontSize: '13px' }}>Date</th>
+                    <th style={{ padding: '12px', color: '#64748b', fontSize: '13px' }}>Donor</th>
+                    <th style={{ padding: '12px', color: '#64748b', fontSize: '13px' }}>Fee Amount</th>
+                    <th style={{ padding: '12px', color: '#64748b', fontSize: '13px' }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {donations.filter(d => d.pickupFee > 0 || String(d.status).toLowerCase() === 'assigned_to_admin').length > 0 ? (
+                    donations.filter(d => d.pickupFee > 0 || String(d.status).toLowerCase() === 'assigned_to_admin')
+                      .map(d => (
+                        <tr key={d.donationId} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                          <td style={{ padding: '12px', color: '#334155' }}>#{d.donationId}</td>
+                          <td style={{ padding: '12px', color: '#64748b' }}>{formatDate(d.createdAt)}</td>
+                          <td style={{ padding: '12px', color: '#334155' }}>{d.fullName}</td>
+                          <td style={{ padding: '12px', fontWeight: '500' }}>NPR {d.pickupFee || 150}</td>
+                          <td style={{ padding: '12px' }}>
+                            <span className={`status-pill ${String(d.pickupPaymentStatus || 'UNPAID').toLowerCase()}`}>
+                              {d.pickupPaymentStatus || 'UNPAID'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" style={{ padding: '24px', textAlign: 'center', color: '#94a3b8' }}>
+                        No fee-related donations found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </main>
   );
 };

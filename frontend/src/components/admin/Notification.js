@@ -24,21 +24,38 @@ const Notification = () => {
       // Transform backend data to match component expectations
       const formattedData = Array.isArray(data) ? data.map(n => ({
         ...n,
-        // Ensure keys match what the UI expects
-        message: n.message || n.title, // Fallback if message is empty
+        title: n.title || "Notification",
+        message: n.message || "",
         time: n.createdAt ? new Date(n.createdAt).toLocaleString() : 'Just now',
-        read: n.status === 'READ',
+        read: n.status?.toUpperCase() === 'READ',
         type: n.type ? n.type.toLowerCase() : 'info'
       })) : [];
 
       setNotifications(formattedData);
       console.log("notifications:", formattedData)
     } catch (e) {
-      // fallback mock data
       console.error("Error fetching notifications:", e);
-      // Keep existing mock data as fallback if needed, or set empty
     }
   }, [userId]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const readCount = notifications.filter(n => n.read).length;
+
+  const tabsWithCounts = [
+    { key: 'all', label: 'All notifications', count: notifications.length },
+    { key: 'unread', label: 'Unread', count: unreadCount },
+    { key: 'read', label: 'Read', count: readCount },
+  ];
+
+  const markAsRead = async (id) => {
+    try {
+      if (!userId) return;
+      await notificationService.markAsRead(id, userId);
+      fetchNotifications();
+    } catch (error) {
+      console.error("Error marking as read:", error);
+    }
+  };
 
   React.useEffect(() => {
     fetchNotifications();
@@ -78,13 +95,14 @@ const Notification = () => {
       <div className="notification-header">
         <h2 className="notification-title">Notifications</h2>
         <div className="notification-tabs">
-          {tabList.map(t => (
+          {tabsWithCounts.map(t => (
             <button
               key={t.key}
               className={`notification-tab${tab === t.key ? ' active' : ''}`}
               onClick={() => setTab(t.key)}
             >
               {t.label}
+              {t.count > 0 && <span className="notification-tab-badge">{t.count}</span>}
             </button>
           ))}
           <div style={{ flex: 1 }} />
@@ -94,21 +112,23 @@ const Notification = () => {
           </div>
         </div>
       </div>
-      <div style={{ padding: '0 36px 36px 36px' }}>
-        <div className="notification-card">
-          <div className="notification-card-header">
-            <div className="notification-card-title">Your Notification</div>
-            <div className="notification-card-desc">Stay updated with important notice</div>
-          </div>
+      <div className="notification-list-wrapper">
+        <div className="notification-card-container">
+          <h2 className="notification-card-title-main">Your Notifications</h2>
           <div className="notification-list">
             {filtered.length === 0 && (
               <div className="notification-empty">No notifications</div>
             )}
             {filtered.map(n => (
-              <div key={n.id} className="notification-item">
-                <span className={`notification-dot${n.read ? ' read' : ' unread'}`}></span>
-                <div>
-                  <div className="notification-message">{n.message}</div>
+              <div
+                key={n.id}
+                className={`notification-item ${n.read ? 'read' : 'unread'}`}
+                onClick={() => !n.read && markAsRead(n.id)}
+                style={{ cursor: !n.read ? 'pointer' : 'default' }}
+              >
+                <div className="notification-content">
+                  <div className="notification-message-title">{n.title}</div>
+                  <div className="notification-message-body">{n.message}</div>
                   <div className="notification-time">{n.time}</div>
                 </div>
               </div>

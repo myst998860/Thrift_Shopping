@@ -965,8 +965,41 @@ const donationAPI = {
       return response.data;
     } catch (error) {
       console.error("Fetching donation counts failed:", error);
-      return { pending: 0, confirmed: 0 };
+      return { pending: 0, confirmed: 0, assigned: 0 };
     }
+  },
+
+  // --- Pickup Fee Payment System ---
+  getAdminFeeSummary: async () => {
+    const token = sessionStorage.getItem("jwtToken");
+    const response = await api.get("/donations/pickup-fees/admin/summary", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
+  requestPayment: async (partnerId) => {
+    const token = sessionStorage.getItem("jwtToken");
+    const response = await api.post(`/donations/pickup-fees/admin/request/${partnerId}`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
+  markAsPaid: async () => {
+    const token = sessionStorage.getItem("jwtToken");
+    const response = await api.post("/donations/pickup-fees/partner/pay", {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
+  settlePayment: async (partnerId, action) => {
+    const token = sessionStorage.getItem("jwtToken");
+    const response = await api.post(`/donations/pickup-fees/admin/settle/${partnerId}/${action}`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
   },
 };
 

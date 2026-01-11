@@ -25,5 +25,12 @@ public interface DonationRepo extends JpaRepository<Donation, Long> {
     @Query("SELECT COUNT(d) FROM Donation d WHERE d.program.partner.user_id = :userId AND LOWER(d.status) = LOWER(:status)")
     long countByPartnerAndStatus(@Param("userId") Long userId, @Param("status") String status);
 
+    @Query("SELECT d FROM Donation d WHERE d.program.partner.user_id = :userId")
+    List<Donation> findByProgramPartnerUserUserId(@Param("userId") Long userId);
+
+    @Query("SELECT d FROM Donation d WHERE d.program.partner.user_id = :userId AND ((d.pickupPaymentStatus IS NULL AND :paymentStatus = 'UNPAID') OR d.pickupPaymentStatus = :paymentStatus)")
+    List<Donation> findByProgramPartnerUserUserIdAndPickupPaymentStatus(@Param("userId") Long userId,
+            @Param("paymentStatus") String paymentStatus);
+
     long countByStatusIgnoreCase(String status);
 }

@@ -39,8 +39,8 @@ export default function PartnerSignupPage() {
     companyName: "",
     panCard: null,
     businessTranscripts: null,
-    role:"partner",
-    status:"Pending"
+    role: "partner",
+    status: "Pending"
   });
 
   const [errors, setErrors] = useState({
@@ -53,8 +53,8 @@ export default function PartnerSignupPage() {
     companyName: "",
     panCard: "",
     businessTranscripts: "",
-     role:"partner",
-     status:"Pending"
+    role: "partner",
+    status: "Pending"
   });
 
   const [touched, setTouched] = useState({
@@ -67,7 +67,7 @@ export default function PartnerSignupPage() {
     companyName: false,
     panCard: false,
     businessTranscripts: false,
-    status:"Pending"
+    status: "Pending"
   });
 
   const [passwordStrength, setPasswordStrength] = useState({
@@ -170,7 +170,7 @@ export default function PartnerSignupPage() {
     if (!formData.panCard || "") {
       newErrors.panCard = "Pan card is required";
       isValid = false;
-    }  else {
+    } else {
       newErrors.panCard = "";
     }
 
@@ -189,7 +189,7 @@ export default function PartnerSignupPage() {
   // Validate form on input change
   useEffect(() => {
     validateForm();
-    
+
   }, [validateForm]);
 
   const isValidEmail = (email) => {
@@ -241,25 +241,25 @@ export default function PartnerSignupPage() {
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    
-    if(name ==='businessTranscripts'){
+
+    if (name === 'businessTranscripts') {
       setFormData((prev) => ({
         ...prev,
         [name]: e.target.files[0],
       }));
     }
 
-    else if(name ==='panCard'){
+    else if (name === 'panCard') {
       setFormData((prev) => ({
         ...prev,
         [name]: e.target.files[0],
       }));
     }
 
-   else {
+    else {
       setFormData({ ...formData, [name]: value });
     }
-   
+
 
     if (name === "password") {
       checkPasswordStrength(value);
@@ -279,62 +279,62 @@ export default function PartnerSignupPage() {
     });
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  // Mark all fields as touched to show validation errors
-  const allTouched = {};
-  Object.keys(formData).forEach((key) => (allTouched[key] = true));
-  setTouched(allTouched);
+    // Mark all fields as touched to show validation errors
+    const allTouched = {};
+    Object.keys(formData).forEach((key) => (allTouched[key] = true));
+    setTouched(allTouched);
 
-  if (!validateForm()) return;
+    if (!validateForm()) return;
 
-  setIsSubmitting(true);
-  setApiError("");
+    setIsSubmitting(true);
+    setApiError("");
 
-  try {
-    // Prepare FormData for API
-    const partnerData = new FormData();
-    partnerData.append("fullname", formData.firstName + " " + formData.lastName);
-    partnerData.append("email", formData.email);
-    partnerData.append("phoneNumber", formData.mobile);
-    partnerData.append("password", formData.password);
-    partnerData.append("company", formData.companyName);
-    partnerData.append("role", "partner");
-    partnerData.append("status", "Pending");
+    try {
+      // Prepare FormData for API
+      const partnerData = new FormData();
+      partnerData.append("fullname", formData.firstName + " " + formData.lastName);
+      partnerData.append("email", formData.email);
+      partnerData.append("phoneNumber", formData.mobile);
+      partnerData.append("password", formData.password);
+      partnerData.append("company", formData.companyName);
+      partnerData.append("role", "partner");
+      partnerData.append("status", "Pending");
 
-    // Attach files
-    if (formData.panCard) partnerData.append("panCardImage", formData.panCard);
-    if (formData.businessTranscripts)
-      partnerData.append("businessTranscriptsImage", formData.businessTranscripts);
+      // Attach files
+      if (formData.panCard) partnerData.append("panCardImage", formData.panCard);
+      if (formData.businessTranscripts)
+        partnerData.append("businessTranscriptsImage", formData.businessTranscripts);
 
-    // Send FormData to API
-    const response = await authService.signupPartner(partnerData); // <-- use partnerData
+      // Send FormData to API
+      const response = await authService.signupPartner(partnerData); // <-- use partnerData
 
-    console.log("Partner signup successful:", response);
+      console.log("Partner signup successful:", response);
 
-    alert(
-      "Partner signup request submitted successfully! Our team will review your application and contact you shortly."
-    );
-    navigate("/login");
-  } catch (error) {
-    console.error("Partner signup failed:", error);
+      alert(
+        "Partner signup request submitted successfully! Our team will review your application and contact you shortly."
+      );
+      navigate("/login");
+    } catch (error) {
+      console.error("Partner signup failed:", error);
 
-    if (error.response) {
-      if (error.response.status === 409) {
-        setApiError("An account with this email already exists.");
-      } else if (error.response.data?.message) {
-        setApiError(error.response.data.message);
+      if (error.response) {
+        if (error.response.status === 409) {
+          setApiError("An account with this email already exists.");
+        } else if (error.response.data?.message) {
+          setApiError(error.response.data.message);
+        } else {
+          setApiError("Partner signup failed. Please try again later.");
+        }
       } else {
-        setApiError("Partner signup failed. Please try again later.");
+        setApiError("Unable to connect to the server. Please try again later.");
       }
-    } else {
-      setApiError("Unable to connect to the server. Please try again later.");
+    } finally {
+      setIsSubmitting(false);
     }
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
 
   const navigateToLogin = (e) => {
@@ -348,7 +348,7 @@ const handleSubmit = async (e) => {
   return (
     <AuthCard
       title="Sign up into your account"
-      imageSrc="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/signupimage-ZPayTxwvHf6BWuFSJ3lMSTG9VLxG00.png"
+      imageSrc="/images/partner-signup-kids.jpg"
       imageAlt="Beach wedding setup with white aisle and pink chairs"
       imagePosition="right"
       fullHeight={true}
@@ -386,9 +386,8 @@ const handleSubmit = async (e) => {
               First Name <span className="required">*</span>
             </label>
             <div
-              className={`input-container ${
-                touched.firstName && errors.firstName ? "input-error" : ""
-              }`}
+              className={`input-container ${touched.firstName && errors.firstName ? "input-error" : ""
+                }`}
             >
               <motion.input
                 whileFocus={{ scale: 1.01 }}
@@ -442,9 +441,8 @@ const handleSubmit = async (e) => {
               Last Name <span className="required">*</span>
             </label>
             <div
-              className={`input-container ${
-                touched.lastName && errors.lastName ? "input-error" : ""
-              }`}
+              className={`input-container ${touched.lastName && errors.lastName ? "input-error" : ""
+                }`}
             >
               <motion.input
                 whileFocus={{ scale: 1.01 }}
@@ -504,9 +502,8 @@ const handleSubmit = async (e) => {
               Email Id <span className="required">*</span>
             </label>
             <div
-              className={`input-container ${
-                touched.email && errors.email ? "input-error" : ""
-              }`}
+              className={`input-container ${touched.email && errors.email ? "input-error" : ""
+                }`}
             >
               <motion.input
                 whileFocus={{ scale: 1.01 }}
@@ -556,9 +553,8 @@ const handleSubmit = async (e) => {
               Mobile No. <span className="required">*</span>
             </label>
             <div
-              className={`input-container ${
-                touched.mobile && errors.mobile ? "input-error" : ""
-              }`}
+              className={`input-container ${touched.mobile && errors.mobile ? "input-error" : ""
+                }`}
             >
               <motion.input
 
@@ -621,9 +617,8 @@ const handleSubmit = async (e) => {
               Password <span className="required">*</span>
             </label>
             <div
-              className={`input-container ${
-                touched.password && errors.password ? "input-error" : ""
-              }`}
+              className={`input-container ${touched.password && errors.password ? "input-error" : ""
+                }`}
             >
               <motion.input
                 whileFocus={{ scale: 1.01 }}
@@ -632,8 +627,8 @@ const handleSubmit = async (e) => {
                 id="password"
                 name="password"
                 placeholder="xxxxxxxxx"
-                  autoComplete="new-password"
-    value={formData.password || ""}
+                autoComplete="new-password"
+                value={formData.password || ""}
                 // value={formData.password}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -718,11 +713,10 @@ const handleSubmit = async (e) => {
               Confirm Password <span className="required">*</span>
             </label>
             <div
-              className={`input-container ${
-                touched.confirmPassword && errors.confirmPassword
+              className={`input-container ${touched.confirmPassword && errors.confirmPassword
                   ? "input-error"
                   : ""
-              }`}
+                }`}
             >
               <motion.input
                 whileFocus={{ scale: 1.01 }}
@@ -793,9 +787,8 @@ const handleSubmit = async (e) => {
             Company Name <span className="required">*</span>
           </label>
           <div
-            className={`input-container2 ${
-              touched.companyName && errors.companyName ? "input-error" : ""
-            }`}
+            className={`input-container2 ${touched.companyName && errors.companyName ? "input-error" : ""
+              }`}
           >
             <motion.input
               whileFocus={{ scale: 1.01 }}
@@ -853,9 +846,8 @@ const handleSubmit = async (e) => {
             Pan Card <span className="required">*</span>
           </label>
           <div
-            className={`input-container2 ${
-              touched.panCard && errors.panCard ? "input-error" : ""
-            }`}
+            className={`input-container2 ${touched.panCard && errors.panCard ? "input-error" : ""
+              }`}
           >
             <motion.input
               whileFocus={{ scale: 1.01 }}
@@ -863,8 +855,8 @@ const handleSubmit = async (e) => {
               type="file"
               id="panCard"
               name="panCard"
-      accept="image/*,.pdf"
-          // value={formData.panCard || ""}
+              accept="image/*,.pdf"
+              // value={formData.panCard || ""}
               onChange={handleChange}
               onBlur={handleBlur}
               className={
@@ -917,11 +909,10 @@ const handleSubmit = async (e) => {
             Your Business Transcript <span className="required">*</span>
           </label>
           <div
-            className={`input-container2 ${
-              touched.businessTranscripts && errors.businessTranscripts
+            className={`input-container2 ${touched.businessTranscripts && errors.businessTranscripts
                 ? "input-error"
                 : ""
-            }`}
+              }`}
           >
             <motion.input
               whileFocus={{ scale: 1.01 }}

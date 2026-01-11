@@ -357,6 +357,22 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
     handleNavigation("/notifications")
   }
 
+  const handleClearAll = async () => {
+    const userId = getUserId()
+    if (!userId) return
+
+    try {
+      await notificationService.clearAllNotifications(userId)
+      setNotifications([])
+      setUnreadCount(0)
+      console.log("All notifications cleared")
+    } catch (error) {
+      console.error("Error clearing notifications:", error)
+      setNotifications([]) // Optimistically clear
+      setUnreadCount(0)
+    }
+  }
+
   // Search functionality (keeping existing)
   const handleGlobalSearch = (query, type = null) => {
     console.log("Global search:", query, type ? `in ${type}` : "")
@@ -573,11 +589,16 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
           <div className={`notification-dropdown ${notificationDropdownOpen ? "active" : ""}`}>
             <div className="notification-header">
               <h3 className="notification-title">Notifications</h3>
-              {unreadCount > 0 && (
-                <button className="mark-all-read" onClick={handleMarkAllAsRead}>
-                  Mark all as read
+              <div className="notification-header-actions">
+                {unreadCount > 0 && (
+                  <button className="mark-all-read" onClick={handleMarkAllAsRead}>
+                    Mark all as read
+                  </button>
+                )}
+                <button className="clear-all-dropdown" onClick={handleClearAll}>
+                  Clear All
                 </button>
-              )}
+              </div>
             </div>
 
             <div className="notification-list">
@@ -596,7 +617,17 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
                       <div className={`notification-dot ${notification.type?.toLowerCase() || 'info'}`}></div>
                     </div>
                     <div className="notification-content">
-                      <p className="notification-text">{notification.message || notification.title || notification.content}</p>
+                      <div className="notification-content-header">
+                        <p className="notification-text">{notification.message || notification.title || notification.content}</p>
+                        {notification.status === "UNREAD" && (
+                          <div className="read-badge-simple" onClick={(e) => {
+                            e.stopPropagation();
+                            handleMarkAsRead(notification.id);
+                          }}>
+                            Read
+                          </div>
+                        )}
+                      </div>
                       <p className="notification-time">{formatNotificationTime(notification.createdAt)}</p>
                     </div>
                     <button

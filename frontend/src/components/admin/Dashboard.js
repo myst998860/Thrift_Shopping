@@ -39,7 +39,7 @@ const isProgramActive = (program) => {
 };
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState("orders");
+  const [activeTab, setActiveTab] = useState("pending"); // Default to pending partners
   const [stats, setStats] = useState([]);
   const [statsRaw, setStatsRaw] = useState(null);
   const [chartData, setChartData] = useState({
@@ -63,6 +63,8 @@ const Dashboard = () => {
     cancelled: 0
   });
   const [pickupStats, setPickupStats] = useState({ totalRevenue: 0, chartData: [] });
+  const [feeSummary, setFeeSummary] = useState([]);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -181,7 +183,50 @@ const Dashboard = () => {
     };
 
     fetchData();
+    fetchFeeSummary();
+
+    // Check for tab parameter in URL
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab && ["pending", "bookings"].includes(tab)) {
+      setActiveTab(tab);
+    }
   }, []);
+
+  const fetchFeeSummary = async () => {
+    try {
+      const summary = await donationAPI.getAdminFeeSummary();
+      setFeeSummary(summary);
+    } catch (err) {
+      console.error("Failed to fetch fee summary:", err);
+    }
+  };
+
+  const handleRequestPayment = async (partnerId) => {
+    try {
+      setActionLoading(true);
+      await donationAPI.requestPayment(partnerId);
+      alert("Payment request sent to partner!");
+      fetchFeeSummary();
+    } catch (err) {
+      alert("Failed to request payment: " + err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSettlePayment = async (partnerId, action) => {
+    try {
+      setActionLoading(true);
+      await donationAPI.settlePayment(partnerId, action);
+      alert(`Payment ${action === 'accept' ? 'accepted' : 'rejected'} successfully!`);
+      fetchFeeSummary();
+    } catch (err) {
+      alert("Failed to settle payment: " + err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   // ===== Render Chart for Specific Type =====
   const renderChartForType = (type) => {
@@ -671,7 +716,8 @@ const Dashboard = () => {
             Recent Bookings
           </button>
         </div>
-        {activeTab === "pending" ? <PartnerRequests /> : <RecentBookings />}
+        {activeTab === "pending" && <PartnerRequests />}
+        {activeTab === "bookings" && <RecentBookings />}
       </div>
     </main>
   );

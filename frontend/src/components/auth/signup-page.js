@@ -154,7 +154,7 @@ export default function SignupPage() {
 
   // ----------------------- JSX -----------------------
   return (
-    <div className="auth-container2" style={{ backgroundColor: "#e8e3c3" }}>
+    <div className="auth-container2">
       <AuthCard
         title="Sign up into your account"
         imageSrc="https://i.pinimg.com/736x/d2/ec/7e/d2ec7e71186c0c3ea0f71460f9d51946.jpg"
@@ -206,27 +206,63 @@ export default function SignupPage() {
           <motion.div className="form-row" variants={formControlVariants} initial="hidden" animate="visible" custom={3}>
             <div className="form-group">
               <label>Password *</label>
-              <input type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} onBlur={handleBlur} />
-              <button type="button" onClick={() => setShowPassword(!showPassword)}>{showPassword ? "Hide" : "Show"}</button>
+              <div className="input-container">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {touched.password && errors.password && <span className="error-message">{errors.password}</span>}
             </div>
 
             <div className="form-group">
               <label>Confirm Password *</label>
-              <input type={showConfirmPassword ? "text" : "password"} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} onBlur={handleBlur} />
-              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>{showConfirmPassword ? "Hide" : "Show"}</button>
+              <div className="input-container">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
               {touched.confirmPassword && errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
             </div>
           </motion.div>
 
           {/* Submit Button */}
-          <motion.button type="submit" disabled={isSubmitting} variants={buttonVariants} initial="idle" whileHover="hover" whileTap="tap">
+          <motion.button
+            type="submit"
+            className="auth-button primary-button"
+            disabled={isSubmitting}
+            variants={buttonVariants}
+            initial="idle"
+            whileHover="hover"
+            whileTap="tap"
+          >
             {isSubmitting ? "Signing up..." : "Sign up"}
           </motion.button>
 
           {/* Login Link */}
-          <motion.div className="login-link" variants={formControlVariants} initial="hidden" animate="visible" custom={5}>
-            <motion.button type="button" onClick={navigateToLogin}>Already have an account? Sign in</motion.button>
+          <motion.div className="login-link" style={{ textAlign: 'center' }} variants={formControlVariants} initial="hidden" animate="visible" custom={5}>
+            <motion.button type="button" className="text-link" onClick={navigateToLogin}>Already have an account? <span style={{ fontWeight: '600' }}>Sign in</span></motion.button>
           </motion.div>
         </form>
       </AuthCard>

@@ -79,6 +79,7 @@ import PartnerViewVenue from "./components/partner/ViewVenue";
 import PartnerNotification from "./components/partner/Notification";
 import PartnerProfile from "./components/partner/Profile";
 import AssignedDonations from "./components/admin/AssignedDonations";
+import AdminPickupFees from "./components/admin/AdminPickupFees";
 
 import ViewBooking from "./components/admin/ViewBookings";
 import EditBooking from "./components/admin/EditBooking";
@@ -118,6 +119,7 @@ function App() {
               <Route path="sellercontact" element={<SellerContact />} />
               <Route path="notifications" element={<Notification />} />
               <Route path="assigned-donations" element={<AssignedDonations />} />
+              <Route path="pickup-fees" element={<AdminPickupFees />} />
               <Route path="productadd" element={<ProductAdd />} />
               {/* <Route path="bookings/:orderId" element={<OrderDetail />} /> */}
               <Route path="orderdetail/:orderId" element={<OrderDetail />} />

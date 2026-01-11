@@ -35,8 +35,8 @@ const Booking = () => {
         const validStatuses = ["pending pickup", "Processed pickup", "pickuped successfully"];
         const normalizedBookings = response.map(booking => ({
           ...booking,
-          status: validStatuses.includes(booking.status) 
-            ? booking.status 
+          status: validStatuses.includes(booking.status)
+            ? booking.status
             : "pending pickup"
         }));
         setBookings(normalizedBookings);
@@ -68,18 +68,18 @@ const Booking = () => {
   }, [actionMenu]);
 
   const handleAction = (action, booking) => {
-  setActionMenu({ open: false, index: null });
+    setActionMenu({ open: false, index: null });
 
-  if (action === 'View Booking') {
-    navigate(`/bookings/${booking.bookingId}`);
-  }
+    if (action === 'View Booking') {
+      navigate(`/partner/bookings/${booking.bookingId}`);
+    }
 
-   if (action === 'Edit Booking') {
-    navigate(`/bookings/edit/${booking.bookingId}`);
-  }
+    if (action === 'Edit Booking') {
+      navigate(`/partner/bookings/edit/${booking.bookingId}`);
+    }
 
-  console.log(`${action} clicked for booking ID ${booking.bookingId}`);
-};
+    console.log(`${action} clicked for booking ID ${booking.bookingId}`);
+  };
 
   const filteredBookings = bookings.filter(
     (b) =>
@@ -151,7 +151,7 @@ const Booking = () => {
             <tr>
               <th>ID</th>
               <th>Venue Name</th>
-               <th>Customer Name</th>
+              <th>Customer Name</th>
               <th>Partner Name</th>
               <th>Date/Time</th>
               <th>Duration</th>
@@ -165,7 +165,7 @@ const Booking = () => {
               <tr key={b.bookingId}>
                 <td>{b.bookingId}</td>
                 <td>{b.venueName}</td>
-                  <td>{b.attendeeName}</td>
+                <td>{b.attendeeName}</td>
                 <td>{b.partnerName}</td>
                 <td>{new Date(b.bookedTime).toLocaleString()}</td>
                 <td>{b.duration}</td>
@@ -205,13 +205,13 @@ const Booking = () => {
                   {actionMenu.open && actionMenu.index === idx && (
                     <div className="action-menu" ref={menuRef}>
                       <div className="action-menu-title">Actions</div>
-                     <div onClick={() => handleAction("View Booking", b)}>
-                      View Booking
+                      <div onClick={() => handleAction("View Booking", b)}>
+                        View Booking
                       </div>
 
-                     <div onClick={() => handleAction("Edit Booking", b)}>
-  Edit Booking
-</div>
+                      <div onClick={() => handleAction("Edit Booking", b)}>
+                        Edit Booking
+                      </div>
                       <div onClick={() => handleAction("Approve Venue", b)}>
                         Approve Venue
                       </div>

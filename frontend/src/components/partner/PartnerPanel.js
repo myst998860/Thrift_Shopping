@@ -93,6 +93,7 @@ import {
   FiBell,
   FiUser,
   FiLogOut,
+  FiCreditCard,
 } from "react-icons/fi";
 import "../../styles/admin/AdminPanel.css";
 import { useUserSession } from "../../context/UserSessionContext"; // use context
@@ -134,8 +135,20 @@ const PartnerPanel = () => {
     { path: "/partner/bookings", icon: <FiCalendar />, label: "Pickups" },
     { path: "/partner/programs", icon: <FiMapPin />, label: "Programs" },
     { path: "/partner/donations", icon: <FiGift />, label: "Donations" },
-    { path: "/partner/notifications", icon: <FiBell />, label: "Notifications" },
+    {
+      path: "/partner/notifications",
+      icon: (
+        <div className="notification-icon-wrapper">
+          <FiBell />
+          {unreadCount > 0 && (
+            <span className="notification-badge">{unreadCount}</span>
+          )}
+        </div>
+      ),
+      label: "Notifications",
+    },
     { path: "/partner/profile", icon: <FiUser />, label: "Profile" },
+    { path: "/partner/dashboard?tab=fees", icon: <FiCreditCard />, label: "Pickup Fees" },
   ];
 
   const handleLogout = () => {
@@ -180,13 +193,6 @@ const PartnerPanel = () => {
                       {counts.confirmed}
                     </span>
                   )}
-                </div>
-              )}
-              {item.label === "Notifications" && unreadCount > 0 && (
-                <div className="badge-container">
-                  <span className="badge unread-badge" title="Unread Notifications">
-                    {unreadCount}
-                  </span>
                 </div>
               )}
             </Link>

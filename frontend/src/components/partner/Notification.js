@@ -23,9 +23,10 @@ const Notification = () => {
       // Transform backend data to match component expectations
       const formattedData = Array.isArray(data) ? data.map(n => ({
         ...n,
-        message: n.message || n.title,
+        title: n.title || "Notification",
+        message: n.message || "",
         time: n.createdAt ? new Date(n.createdAt).toLocaleString() : 'Just now',
-        read: n.status === 'READ',
+        read: n.status?.toUpperCase() === 'READ',
         type: n.type ? n.type.toLowerCase() : 'info'
       })) : [];
 
@@ -109,12 +110,9 @@ const Notification = () => {
           </div>
         </div>
       </div>
-      <div style={{ padding: '0 36px 36px 36px' }}>
-        <div className="notification-card">
-          <div className="notification-card-header">
-            <div className="notification-card-title">Your Notification</div>
-            <div className="notification-card-desc">Stay updated with important notice</div>
-          </div>
+      <div className="notification-list-wrapper">
+        <div className="notification-card-container">
+          <h2 className="notification-card-title-main">Your Notifications</h2>
           <div className="notification-list">
             {filtered.length === 0 && (
               <div className="notification-empty">No notifications</div>
@@ -126,9 +124,9 @@ const Notification = () => {
                 onClick={() => !n.read && markAsRead(n.id)}
                 style={{ cursor: !n.read ? 'pointer' : 'default' }}
               >
-                <span className={`notification-dot${n.read ? ' read' : ' unread'}`}></span>
-                <div>
-                  <div className="notification-message">{n.message}</div>
+                <div className="notification-content">
+                  <div className="notification-message-title">{n.title}</div>
+                  <div className="notification-message-body">{n.message}</div>
                   <div className="notification-time">{n.time}</div>
                 </div>
               </div>

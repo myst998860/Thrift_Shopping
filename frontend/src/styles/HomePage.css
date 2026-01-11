@@ -31,7 +31,7 @@ body {
 }
 
 .hero-content {
-  max-width: 1300px;
+  max-width: 1500px;
   padding: 0 var(--spacing-xl);
 }
 
@@ -52,8 +52,16 @@ body {
   margin-bottom: var(--spacing-md);
 }
 
-.hero-title .accent-blue { color: #153c67; } /* brand navy */
-.hero-title .accent-orange { color: #f59e0b; } /* brand orange */
+.hero-title .accent-blue {
+  color: #153c67;
+}
+
+/* brand navy */
+.hero-title .accent-orange {
+  color: #f59e0b;
+}
+
+/* brand orange */
 
 .hero-subtitle {
   color: var(--gray-600);
@@ -82,15 +90,18 @@ body {
   background: var(--primary-color);
   color: #fff;
 }
+
 .btn-primary:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
+
 .btn-secondary {
   background: #f1f5f9;
   color: #0f172a;
   border: 1px solid #e2e8f0;
 }
+
 .btn-secondary:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
@@ -200,28 +211,34 @@ body {
 .latest {
   padding: var(--spacing-xl) var(--spacing-xl);
 }
+
 .latest-inner {
   max-width: 1100px;
   margin: 0 auto;
 }
+
 .section-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
 .section-head h2 {
   color: var(--gray-900);
   margin: 0;
 }
+
 .muted {
   color: var(--gray-600);
 }
+
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: var(--spacing-md);
   margin-top: var(--spacing-md);
 }
+
 .card {
   background: #f8fffa;
   border: 1px solid #e2f7ea;
@@ -230,32 +247,39 @@ body {
   display: flex;
   flex-direction: column;
 }
+
 .card-media {
   background: #eef2f7;
   height: 180px;
 }
+
 .card-body {
   padding: 12px;
   background: #f0fff4;
 }
+
 .card-title {
   font-weight: var(--font-weight-bold);
   color: #0f172a;
 }
+
 .card-sub {
   color: #64748b;
   font-size: 13px;
 }
+
 .price-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 10px;
 }
+
 .price {
   font-weight: var(--font-weight-bold);
   color: #f59e0b;
 }
+
 .btn-small {
   padding: 8px 10px;
   border-radius: 8px;
@@ -268,6 +292,7 @@ body {
   padding: 40px var(--spacing-xl);
   margin-top: var(--spacing-xl);
 }
+
 .impact-inner {
   max-width: 1100px;
   margin: 0 auto;
@@ -276,10 +301,12 @@ body {
   gap: var(--spacing-md);
   text-align: center;
 }
+
 .impact-value {
   font-size: 28px;
   font-weight: 800;
 }
+
 .impact-label {
   opacity: 0.9;
 }
@@ -289,14 +316,17 @@ body {
   padding: 56px var(--spacing-xl);
   text-align: center;
 }
+
 .cta-inner {
   max-width: 900px;
   margin: 0 auto;
 }
+
 .cta-title {
   color: #0f172a;
   margin: 0 0 8px;
 }
+
 .cta-sub {
   color: #64748b;
   margin: 0 0 18px;
@@ -312,6 +342,7 @@ body {
     font-size: 2rem;
     padding: 0 1rem;
   }
+
   .hero {
     padding-top: 88px;
   }
@@ -361,15 +392,15 @@ body {
   background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
     url('https://i.pinimg.com/1200x/28/7a/6b/287a6bb024b75726611804bb5e974bf4.jpg') center/cover;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   color: white;
   text-align: center;
-  padding: 80px 20px;
+  padding: 80px 20px 120px;
 }
 
 .hero-nostra-content {
-  max-width: 1200px;
+  max-width: 1500px;
   z-index: 1;
 }
 
@@ -403,7 +434,7 @@ body {
 }
 
 .brands-container {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
 }
 
@@ -446,7 +477,7 @@ body {
 }
 
 .customer-experience-inner {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
   text-align: center;
 }
@@ -493,7 +524,7 @@ body {
 }
 
 .curated-picks-inner {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
 }
 
@@ -569,7 +600,7 @@ body {
 }
 
 .featured-products-inner {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
 }
 
@@ -690,7 +721,7 @@ body {
 }
 
 .programs-nostra-inner {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
 }
 
@@ -830,6 +861,7 @@ body {
   .curated-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
   .featured-grid,
   .programs-nostra-grid {
     grid-template-columns: repeat(2, 1fr);

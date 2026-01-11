@@ -364,21 +364,29 @@ const PartnerManagement = () => {
     return statusMatch && searchMatch;
   });
 
-const handleApprove = async (id) => {
-  try {
-    const updatedPartner = await partnerService.approvePartner(id);
-    setPartnersData(partnersData.map(p => p.user_id === id ? updatedPartner : p));
-  } catch (error) {
-    console.error("Failed to approve partner:", error);
-  }
-};
+  const [actionLoading, setActionLoading] = useState(null); // { id: 1, type: 'approve' | 'reject' }
+
+  const handleApprove = async (id) => {
+    try {
+      setActionLoading({ id, type: 'approve' });
+      const updatedPartner = await partnerService.approvePartner(id);
+      setPartnersData(partnersData.map(p => p.user_id === id ? updatedPartner : p));
+    } catch (error) {
+      console.error("Failed to approve partner:", error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   const handleReject = async (id) => {
     try {
+      setActionLoading({ id, type: 'reject' });
       await partnerService.deletePartner(id);
       setPartnersData(partnersData.filter(p => p.user_id !== id));
     } catch (error) {
       console.error("Failed to reject partner:", error);
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -419,11 +427,10 @@ const handleApprove = async (id) => {
   };
 
   const StatusBadge = ({ status }) => {
-    const statusClasses = `status-badge ${
-      status === 'Verified' ? 'status-verified' :
+    const statusClasses = `status-badge ${status === 'Verified' ? 'status-verified' :
       status === 'Pending' ? 'status-pending' :
-      status === 'Inactive' ? 'status-inactive' : 'status-other'
-    }`;
+        status === 'Inactive' ? 'status-inactive' : 'status-other'
+      }`;
     return <span className={statusClasses}>{status}</span>;
   };
 
@@ -480,44 +487,52 @@ const handleApprove = async (id) => {
               <div key={partner.user_id} className="pending-partner-card">
                 <h3>{partner.fullname || 'No Name'} - {partner.company || 'No Company'}</h3>
 
-          <div className="documents">
-  <div>
-    <p>PAN Card:</p>
-    {partner.panCard ? (
-      partner.panCard.endsWith('.pdf') ? (
-        <a href={partner.panCard} target="_blank" rel="noopener noreferrer">View PAN (PDF)</a>
-      ) : (
-        <img
-          src={partner.panCard}
-          alt="PAN Card"
-          className="document-image document-thumb"
-          onClick={() => setPreviewSrc(partner.panCard)}
-        />
-      )
-    ) : <p>No PAN uploaded</p>}
-  </div>
+                <div className="documents">
+                  <div>
+                    <p>PAN Card:</p>
+                    {partner.panCard ? (
+                      partner.panCard.endsWith('.pdf') ? (
+                        <a href={partner.panCard} target="_blank" rel="noopener noreferrer">View PAN (PDF)</a>
+                      ) : (
+                        <img
+                          src={partner.panCard}
+                          alt="PAN Card"
+                          className="document-image document-thumb"
+                          onClick={() => setPreviewSrc(partner.panCard)}
+                        />
+                      )
+                    ) : <p>No PAN uploaded</p>}
+                  </div>
 
-  <div>
-    <p>Business Transcripts:</p>
-    {partner.businessTranscripts ? (
-      partner.businessTranscripts.endsWith('.pdf') ? (
-        <a href={partner.businessTranscripts} target="_blank" rel="noopener noreferrer">View Transcript (PDF)</a>
-      ) : (
-        <img
-          src={partner.businessTranscripts}
-          alt="Business Transcripts"
-          className="document-image document-thumb"
-          onClick={() => setPreviewSrc(partner.businessTranscripts)}
-        />
-      )
-    ) : <p>No Business Transcript uploaded</p>}
-  </div>
-</div>
+                  <div>
+                    <p>Business Transcripts:</p>
+                    {partner.businessTranscripts ? (
+                      partner.businessTranscripts.endsWith('.pdf') ? (
+                        <a href={partner.businessTranscripts} target="_blank" rel="noopener noreferrer">View Transcript (PDF)</a>
+                      ) : (
+                        <img
+                          src={partner.businessTranscripts}
+                          alt="Business Transcripts"
+                          className="document-image document-thumb"
+                          onClick={() => setPreviewSrc(partner.businessTranscripts)}
+                        />
+                      )
+                    ) : <p>No Business Transcript uploaded</p>}
+                  </div>
+                </div>
 
 
                 <div className="actions">
-                  <button onClick={() => handleApprove(partner.user_id)}>Accept</button>
-                  <button onClick={() => handleReject(partner.user_id)}>Reject</button>
+                  {actionLoading?.id === partner.user_id ? (
+                    <span className="processing-text">
+                      {actionLoading.type === 'approve' ? 'Accepting...' : 'Rejecting...'}
+                    </span>
+                  ) : (
+                    <>
+                      <button onClick={() => handleApprove(partner.user_id)}>Accept</button>
+                      <button onClick={() => handleReject(partner.user_id)}>Reject</button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}

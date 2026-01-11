@@ -107,7 +107,7 @@
 // export default AdminPanel;
 
 import React, { useState, useEffect } from "react";
-import { notificationService, orderAPI } from "../../services/api";
+import { notificationService, orderAPI, donationAPI } from "../../services/api";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   FiHome,
@@ -120,6 +120,7 @@ import {
   FiUser,
   FiLogOut,
   FiTruck,
+  FiCreditCard,
 } from "react-icons/fi";
 import "../../styles/admin/AdminPanel.css";
 import { useUserSession } from "../../context/UserSessionContext";
@@ -129,6 +130,7 @@ const AdminPanel = () => {
   const { user: currentUser, logout } = useUserSession();
   const [unreadCount, setUnreadCount] = useState(0);
   const [activeOrderCount, setActiveOrderCount] = useState(0);
+  const [assignedDonationCount, setAssignedDonationCount] = useState(0);
   const userId = sessionStorage.getItem("userId");
   const location = useLocation();
   const navigate = useNavigate();
@@ -154,11 +156,22 @@ const AdminPanel = () => {
       }
     };
 
+    const fetchDonationCounts = async () => {
+      try {
+        const res = await donationAPI.getDonationCounts();
+        setAssignedDonationCount(res.assigned || 0);
+      } catch (e) {
+        console.error("Donation counts error", e);
+      }
+    };
+
     fetchUnread();
     fetchActiveOrdersCount();
+    fetchDonationCounts();
     const interval = setInterval(() => {
       fetchUnread();
       fetchActiveOrdersCount();
+      fetchDonationCounts();
     }, 10000);
     return () => clearInterval(interval);
   }, [userId]);
@@ -182,7 +195,23 @@ const AdminPanel = () => {
       ),
       label: "Orders",
     },
-    { path: "/admin/assigned-donations", icon: <FiTruck />, label: "Assigned Donations" },
+    {
+      path: "/admin/assigned-donations",
+      icon: (
+        <div className="notification-icon-wrapper">
+          <FiTruck />
+          {assignedDonationCount > 0 && (
+            <span className="notification-badge">{assignedDonationCount}</span>
+          )}
+        </div>
+      ),
+      label: "Assigned Donations",
+    },
+    {
+      path: "/admin/pickup-fees",
+      icon: <FiCreditCard />,
+      label: "Pickup Fees",
+    },
     // { path: "/admin/notifications", icon: <FiBell />, label: "Notifications" },
     {
       path: "/admin/notifications",

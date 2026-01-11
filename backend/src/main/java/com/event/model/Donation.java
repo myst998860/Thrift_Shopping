@@ -257,6 +257,9 @@ public class Donation {
 
     private Double pickupFee;
 
+    // UNPAID, REQUESTED, PAID, SETTLED
+    private String pickupPaymentStatus = "UNPAID";
+
     public User getAssignedAdmin() {
         return assignedAdmin;
     }
@@ -271,5 +274,13 @@ public class Donation {
 
     public void setPickupFee(Double pickupFee) {
         this.pickupFee = pickupFee;
+    }
+
+    public String getPickupPaymentStatus() {
+        return pickupPaymentStatus;
+    }
+
+    public void setPickupPaymentStatus(String pickupPaymentStatus) {
+        this.pickupPaymentStatus = pickupPaymentStatus;
     }
 }

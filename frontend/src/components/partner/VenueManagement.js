@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect,useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../../styles/admin/PartnerManagement.css';
 import { venueService, imageService } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
@@ -7,11 +7,11 @@ import { useNavigate } from 'react-router-dom';
 const VenueManagement = () => {
   const [venues, setVenues] = useState([]);
   const [menuOpenId, setMenuOpenId] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const menuRef = useRef();
   const navigate = useNavigate();
-    const [images, setImages] = useState({});
+  const [images, setImages] = useState({});
 
   // Close menu on click outside
   React.useEffect(() => {
@@ -29,17 +29,17 @@ const VenueManagement = () => {
   }, [menuOpenId]);
 
   const handleDelete = async (id) => {
-  console.log("Deleting venue id:", id);
-  try {
-    const response = await venueService.deleteVenue(id);
-    console.log("Delete response:", response);
-    setVenues(prev => prev.filter(v => v.venue_id !== id));
-    alert("Venue deleted successfully!");
-  } catch (err) {
-    console.error("Failed to delete:", err);
-    alert("Failed to delete venue. Please try again.");
-  }
-};
+    console.log("Deleting venue id:", id);
+    try {
+      const response = await venueService.deleteVenue(id);
+      console.log("Delete response:", response);
+      setVenues(prev => prev.filter(v => v.venue_id !== id));
+      alert("Venue deleted successfully!");
+    } catch (err) {
+      console.error("Failed to delete:", err);
+      alert("Failed to delete venue. Please try again.");
+    }
+  };
 
   const handleDeactivate = (id) => {
     setVenues((prev) => prev.map((venue) =>
@@ -48,44 +48,44 @@ const VenueManagement = () => {
     setMenuOpenId(null);
   };
 
-const handleAdd = (id) => {
-     navigate('/partner/venues/new');
-    setMenuOpenId(null); 
+  const handleAdd = (id) => {
+    navigate('/partner/venues/new');
+    setMenuOpenId(null);
   };
 
 
   const handleEditVenue = (venue) => {
-  if (!venue?.venue_id) {
-    console.error("Invalid venue ID:", venue?.venue_id);
-    return;
-  }
-  console.log("Navigating to edit Venue with ID:", venue.venue_id);
-  navigate(`/admin/venues/edit/${venue.venue_id}`);
-};
+    if (!venue?.venue_id) {
+      console.error("Invalid venue ID:", venue?.venue_id);
+      return;
+    }
+    console.log("Navigating to edit Venue with ID:", venue.venue_id);
+    navigate(`/partner/venues/edit/${venue.venue_id}`);
+  };
 
- const handleViewVenue = (venue) => {
-  if (!venue?.venue_id) {
-    console.error("Invalid venue ID:", venue?.venue_id);
-    return;
-  }
-  console.log("Navigating to edit Venue with ID:", venue.venue_id);
-  navigate(`/admin/venues/${venue.venue_id}`);
-};
+  const handleViewVenue = (venue) => {
+    if (!venue?.venue_id) {
+      console.error("Invalid venue ID:", venue?.venue_id);
+      return;
+    }
+    console.log("Navigating to view Venue with ID:", venue.venue_id);
+    navigate(`/partner/venues/${venue.venue_id}`);
+  };
 
 
 
-useEffect(() => {
+  useEffect(() => {
     const fetchVenues = async () => {
-    setLoading(true);
-   try {
+      setLoading(true);
+      try {
         const response = await venueService.listVenue();
         console.log("API venues response:", response);
 
 
-        
+
         // Map venues and set initial state
         const mappedVenues = response.map(v => ({
-          
+
           venue_id: v.venue_id,
           venueName: v.venueName,
           location: v.location,
@@ -98,7 +98,7 @@ useEffect(() => {
           status: v.status,
           description: v.description,
           amenities: v.amenities || [],
-         bookingCount: v.bookingCount ?? (v.bookings ? v.bookings.length : 0),
+          bookingCount: v.bookingCount ?? (v.bookings ? v.bookings.length : 0),
 
         }));
         console.log("Mapped venues with bookingCount:", mappedVenues);
@@ -117,7 +117,7 @@ useEffect(() => {
           } catch {
             return {
               venue_id: venue.venue_id,
-              imageUrl: null, 
+              imageUrl: null,
             };
           }
         });
@@ -166,130 +166,130 @@ useEffect(() => {
           <tr style={{ background: '#f7f7f7', textAlign: 'left' }}>
             <th style={{ padding: 10 }}>ID</th>
             <th>Venue Image</th>
-          <th style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>Venue Name</th>
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Location</th>
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>category</th>
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Capacity</th>
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Price/Hour</th>
-          <th style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>Booking Time</th>
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Opening Time</th>
-          <th style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>Closing Time</th>
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Bookings</th>
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Status</th>
-          <th style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>Actions</th>
+            <th style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>Venue Name</th>
+            <th style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>Location</th>
+            <th style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>category</th>
+            <th style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>Capacity</th>
+            <th style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>Price/Hour</th>
+            <th style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>Booking Time</th>
+            <th style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>Opening Time</th>
+            <th style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>Closing Time</th>
+            <th style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>Bookings</th>
+            <th style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>Status</th>
+            <th style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>Actions</th>
           </tr>
         </thead>
-    <tbody>
-  {venues.map((venue) => (
-    <tr key={venue.venue_id} style={{ borderBottom: '1px solid #eee' }}>
-      <td style={{ padding: 10 }}>{venue.venue_id}</td>
-      <td>
-         {images[venue.venue_id] ? (
-            <img
-              src={images[venue.venue_id]}
-              alt={venue.venueName}
-              style={{ width: 200, height: 'auto' }}
-            />
-          ) : (
-            <div>No image available</div>
-          )}
-      </td>
-     <td style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle' }}>{venue.venueName}</td>
-      <td style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>{venue.location}</td>
-            <td style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>{venue.category}</td>
-      <td style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>{venue.capacity}</td>
-      <td style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>{venue.price}</td>
-        <td style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>{venue.minBookingHours}</td>
-      <td style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>{venue.openingTime}</td>
-      <td style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>{venue.closingTime}</td>
-      <td style={{ padding: 10 ,textAlign: 'center', verticalAlign: 'middle' }}>{venue.bookingCount}</td>
-      <td style={{ padding: 10,textAlign: 'center', verticalAlign: 'middle'  }}>
-  <span style={{
-  background: venue.status?.toLowerCase() === 'active' ? '#e6ffe6' : '#ffe6e6',
-  color: venue.status?.toLowerCase() === 'active' ? '#22bb33' : '#d9534f',
-  borderRadius: 12,
-  padding: '4px 14px',
-  fontWeight: 500,
-  fontSize: 14,
-  textAlign: 'center',
-  verticalAlign: 'middle'
-}}>
-  {venue.status?.toLowerCase() === 'active' ? 'Active' : 'Inactive'}
-</span>
-</td>
-      <td style={{ padding: 10, position: 'relative',alignItems: 'center',justifyContent: 'center',display: 'flex' }}>
-        {/* The toggle button */}
-        <button
-          style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer',verticalAlign: 'middle' }}
-          onClick={() => setMenuOpenId(menuOpenId === venue.venue_id ? null : venue.venue_id)}
-          aria-label="Actions"
-        >
-          ⋮
-        </button>
+        <tbody>
+          {venues.map((venue) => (
+            <tr key={venue.venue_id} style={{ borderBottom: '1px solid #eee' }}>
+              <td style={{ padding: 10 }}>{venue.venue_id}</td>
+              <td>
+                {images[venue.venue_id] ? (
+                  <img
+                    src={images[venue.venue_id]}
+                    alt={venue.venueName}
+                    style={{ width: 200, height: 'auto' }}
+                  />
+                ) : (
+                  <div>No image available</div>
+                )}
+              </td>
+              <td style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>{venue.venueName}</td>
+              <td style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>{venue.location}</td>
+              <td style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>{venue.category}</td>
+              <td style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>{venue.capacity}</td>
+              <td style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>{venue.price}</td>
+              <td style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>{venue.minBookingHours}</td>
+              <td style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>{venue.openingTime}</td>
+              <td style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>{venue.closingTime}</td>
+              <td style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>{venue.bookingCount}</td>
+              <td style={{ padding: 10, textAlign: 'center', verticalAlign: 'middle' }}>
+                <span style={{
+                  background: venue.status?.toLowerCase() === 'active' ? '#e6ffe6' : '#ffe6e6',
+                  color: venue.status?.toLowerCase() === 'active' ? '#22bb33' : '#d9534f',
+                  borderRadius: 12,
+                  padding: '4px 14px',
+                  fontWeight: 500,
+                  fontSize: 14,
+                  textAlign: 'center',
+                  verticalAlign: 'middle'
+                }}>
+                  {venue.status?.toLowerCase() === 'active' ? 'Active' : 'Inactive'}
+                </span>
+              </td>
+              <td style={{ padding: 10, position: 'relative', alignItems: 'center', justifyContent: 'center', display: 'flex' }}>
+                {/* The toggle button */}
+                <button
+                  style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', verticalAlign: 'middle' }}
+                  onClick={() => setMenuOpenId(menuOpenId === venue.venue_id ? null : venue.venue_id)}
+                  aria-label="Actions"
+                >
+                  ⋮
+                </button>
 
-        {/* The dropdown menu */}
-        {menuOpenId === venue.venue_id && (
-          <div
-            ref={menuRef}
-            style={{
-              position: 'absolute',
-              top: 30,
-              right: 0,
-              background: '#fff',
-              border: '1px solid #eee',
-              borderRadius: 8,
-              boxShadow: '0 2px 8px #eee',
-              zIndex: 10,
-              minWidth: 180
-            }}
-          >
-            <div style={{ padding: '10px 16px', fontWeight: 600, color: '#888', borderBottom: '1px solid #f0f0f0',display: 'flex', justifyContent: 'center', alignItems: 'center', height: 40   }}>
-              Actions
-            </div>
-           <button
-              style={menuBtnStyle}
-              onClick={() => {
-                setMenuOpenId(null);
-                handleViewVenue(venue);
-                console.log("venue is: ",venue);
-              }}
-            >
-              View venue
-            </button>
-            <button
-              style={menuBtnStyle}
-              onClick={() => {
-                setMenuOpenId(null);
-                handleEditVenue(venue);
-                console.log("venue is: ",venue);
-              }}
-            >
-              Edit venue
-            </button>
+                {/* The dropdown menu */}
+                {menuOpenId === venue.venue_id && (
+                  <div
+                    ref={menuRef}
+                    style={{
+                      position: 'absolute',
+                      top: 30,
+                      right: 0,
+                      background: '#fff',
+                      border: '1px solid #eee',
+                      borderRadius: 8,
+                      boxShadow: '0 2px 8px #eee',
+                      zIndex: 10,
+                      minWidth: 180
+                    }}
+                  >
+                    <div style={{ padding: '10px 16px', fontWeight: 600, color: '#888', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'center', alignItems: 'center', height: 40 }}>
+                      Actions
+                    </div>
+                    <button
+                      style={menuBtnStyle}
+                      onClick={() => {
+                        setMenuOpenId(null);
+                        handleViewVenue(venue);
+                        console.log("venue is: ", venue);
+                      }}
+                    >
+                      View venue
+                    </button>
+                    <button
+                      style={menuBtnStyle}
+                      onClick={() => {
+                        setMenuOpenId(null);
+                        handleEditVenue(venue);
+                        console.log("venue is: ", venue);
+                      }}
+                    >
+                      Edit venue
+                    </button>
 
-            
-            
-            <button style={menuBtnStyle} onClick={() => { setMenuOpenId(null); alert('View bookings'); }}>
-              View bookings
-            </button>
-            <button style={menuBtnStyle} onClick={() => { setMenuOpenId(null); handleDeactivate(venue.venue_id); }}>
-              Deactivate venue
-            </button>
-            <button
-              style={{ ...menuBtnStyle, color: '#d9534f' }}
-              onClick={() => {
-                setMenuOpenId(null);
-                handleDelete(venue.venue_id);
-              }}
-            >
-              Delete venue
-            </button>
-          </div>
-        )}
-      </td>
-    </tr>
-  ))}
-</tbody>
+
+
+                    <button style={menuBtnStyle} onClick={() => { setMenuOpenId(null); alert('View bookings'); }}>
+                      View bookings
+                    </button>
+                    <button style={menuBtnStyle} onClick={() => { setMenuOpenId(null); handleDeactivate(venue.venue_id); }}>
+                      Deactivate venue
+                    </button>
+                    <button
+                      style={{ ...menuBtnStyle, color: '#d9534f' }}
+                      onClick={() => {
+                        setMenuOpenId(null);
+                        handleDelete(venue.venue_id);
+                      }}
+                    >
+                      Delete venue
+                    </button>
+                  </div>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
       </table>
     </div>
   );

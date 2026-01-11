@@ -520,4 +520,57 @@ public class NotificationService {
             System.err.println("Error creating donation status notification: " + e.getMessage());
         }
     }
+
+    public void createPaymentRequestNotification(User partner, double amount) {
+        try {
+            NotificationDTO notif = new NotificationDTO();
+            notif.setRecipientId(partner.getUser_id());
+            notif.setSenderId(partner.getUser_id()); // System/Admin sender
+            notif.setTitle("💳 Pickup Fee Payment Requested");
+            notif.setType("ORDER_STATUS"); // Reuse existing type for UI compatibility
+            notif.setMessage(String
+                    .format("Admin has requested payment of NPR %.2f for your assigned donation pickups.", amount));
+            createNotificationsForAllRoles(notif);
+        } catch (Exception e) {
+            System.err.println("Error creating payment request notification: " + e.getMessage());
+        }
+    }
+
+    public void createPaymentSentNotification(Long partnerId, double amount) {
+        try {
+            User partner = userRepository.findById(partnerId).orElse(null);
+            String partnerName = (partner != null) ? partner.getFullname() : "A partner";
+
+            List<User> admins = userRepository.findByRole("ROLE_ADMIN");
+            for (User admin : admins) {
+                NotificationDTO notif = new NotificationDTO();
+                notif.setRecipientId(admin.getUser_id());
+                notif.setSenderId(partnerId);
+                notif.setTitle("💰 Payment Received for Pickup Fees");
+                notif.setType("ORDER_STATUS");
+                notif.setMessage(
+                        String.format("%s has marked NPR %.2f as PAID for pickup fees. Please verify and settle.",
+                                partnerName, amount));
+                createNotificationsForAllRoles(notif);
+            }
+        } catch (Exception e) {
+            System.err.println("Error creating payment sent notification: " + e.getMessage());
+        }
+    }
+
+    public void createPaymentSettledNotification(Long partnerId, String status) {
+        try {
+            NotificationDTO notif = new NotificationDTO();
+            notif.setRecipientId(partnerId);
+            notif.setSenderId(partnerId);
+            notif.setTitle(status.equals("ACCEPTED") ? "✅ Payment Accepted" : "❌ Payment Rejected");
+            notif.setType("ORDER_STATUS");
+            notif.setMessage(status.equals("ACCEPTED")
+                    ? "Your pickup fee payment has been verified and settled. Total fees are now zero."
+                    : "Your pickup fee payment was rejected. Please contact Admin for details.");
+            createNotificationsForAllRoles(notif);
+        } catch (Exception e) {
+            System.err.println("Error creating payment settled notification: " + e.getMessage());
+        }
+    }
 }

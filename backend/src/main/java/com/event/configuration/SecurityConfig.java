@@ -1,6 +1,5 @@
 package com.event.configuration;
 
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,101 +30,101 @@ import org.springframework.web.filter.CorsFilter;
 @EnableMethodSecurity
 
 public class SecurityConfig {
-	
-	private final JwtRequestFilter jwtRequestFilter;
+
+    private final JwtRequestFilter jwtRequestFilter;
 
     public SecurityConfig(JwtRequestFilter jwtRequestFilter) {
         this.jwtRequestFilter = jwtRequestFilter;
-        
+
     }
-    
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .authorizeHttpRequests(auth -> auth
-                    // Allow all GET requests for these endpoints (anonymous access)
-                    .requestMatchers(HttpMethod.GET, "/venues", "/proxy/image", "/proxy/image/**","/venues/**",
-                    		"/bookings/**","/bookings","/api/stats","/auth/test-email","/notiifications","/notifications/**").permitAll()
-                    
-                    .requestMatchers(HttpMethod.POST, "/auth/forgot-password").permitAll()
-                    
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeHttpRequests(auth -> auth
+                        // Allow all GET requests for these endpoints (anonymous access)
+                        .requestMatchers(HttpMethod.GET, "/venues", "/proxy/image", "/proxy/image/**", "/venues/**",
+                                "/bookings/**", "/bookings", "/api/stats", "/auth/test-email", "/notiifications",
+                                "/notifications/**")
+                        .permitAll()
 
-                    .requestMatchers(HttpMethod.POST, "/auth/donations/new\", \"/donations\", \"/donations/filter/").permitAll()
-                    .requestMatchers("/donations/add", "/donations/edit/**", "/donations/delete/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/auth/forgot-password").permitAll()
 
-                    .requestMatchers("/auth/signup","/auth/signupPartner", "/auth/request-password-reset", "/auth/verify-otp", "/auth/reset-password").permitAll()
-                    
-                    .requestMatchers(HttpMethod.PUT, "/admin/users/update-location/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/auth/donations/new\", \"/donations\", \"/donations/filter/")
+                        .permitAll()
+                        .requestMatchers("/donations/add", "/donations/edit/**", "/donations/delete/**")
+                        .hasRole("ADMIN")
 
+                        .requestMatchers("/auth/signup", "/auth/signupPartner", "/auth/request-password-reset",
+                                "/auth/verify-otp", "/auth/reset-password")
+                        .permitAll()
 
-                    
-                    .requestMatchers(HttpMethod.POST, "/auth/donations/new", "/donations", "/donations/filter/").permitAll()
-                    .requestMatchers("/donations/add", "/donations/edit/**", "/donations/delete/**").hasRole("ADMIN")
-                    .requestMatchers("/api/contacts/new").permitAll() // Allow public access for creating contacts
-                    
-                    
-            
-                    
-                    .requestMatchers(
-                            HttpMethod.GET, 
-                            "/programs", "/programs/**",
-                            "/api/programs", "/api/programs/**"
-                    ).permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/admin/users/update-location/**").authenticated()
 
-                    // Endpoints accessible by ADMIN or PARTNER (creating new programs)
-                    .requestMatchers(
-                            HttpMethod.POST, 
-                            "/programs/add", "/auth/programs/new",
-                            "/api/programs/add", "/api/programs/new"
-                    ).hasAnyRole("ADMIN","PARTNER")
+                        .requestMatchers(HttpMethod.POST, "/auth/donations/new", "/donations", "/donations/filter/")
+                        .permitAll()
+                        .requestMatchers("/donations/add", "/donations/edit/**", "/donations/delete/**")
+                        .hasRole("ADMIN")
+                        .requestMatchers("/api/contacts/new").permitAll() // Allow public access for creating contacts
 
-                    // Admin-only endpoints (edit and delete)
-                    .requestMatchers(
-                    		 "/programs/edit/**", "/programs/delete/**",
-                    	        "/api/programs/edit/**", "/api/programs/delete/**"
-                    ).hasRole("ADMIN")
-                    
-                    .requestMatchers("/users/me").authenticated()
-                    .requestMatchers("/admin/**").hasRole("ADMIN")
-                 
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/programs", "/programs/**",
+                                "/api/programs", "/api/programs/**")
+                        .permitAll()
 
+                        // Endpoints accessible by ADMIN or PARTNER (creating new programs)
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/programs/add", "/auth/programs/new",
+                                "/api/programs/add", "/api/programs/new")
+                        .hasAnyRole("ADMIN", "PARTNER")
 
-                    
-                    // Allow OPTIONS for all (preflight)
-                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    
-                    // Allow static and images folder access
-                    .requestMatchers("/static/**", "/images/**").permitAll()
-                    
-                    // Restricted endpoints needing roles
-                    .requestMatchers(HttpMethod.GET, "/profile", "/profile/**", "/api/stats", "/api/stats/**", "/venues/**","/bookings/**","/bookings")
+                        // Admin-only endpoints (edit and delete)
+                        .requestMatchers(
+                                "/programs/edit/**", "/programs/delete/**",
+                                "/api/programs/edit/**", "/api/programs/delete/**")
+                        .hasAnyRole("ADMIN", "PARTNER")
+
+                        .requestMatchers("/users/me").authenticated()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                        // Allow OPTIONS for all (preflight)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Allow static and images folder access
+                        .requestMatchers("/static/**", "/images/**").permitAll()
+
+                        // Restricted endpoints needing roles
+                        .requestMatchers(HttpMethod.GET, "/profile", "/profile/**", "/api/stats", "/api/stats/**",
+                                "/venues/**", "/bookings/**", "/bookings")
                         .hasAnyRole("ADMIN", "ATTENDEE", "PARTNER")
-                        
+
                         .requestMatchers(HttpMethod.PUT, "/bookings/**/status/**").hasRole("ADMIN")
 
-                    
-                    .requestMatchers("/venues/new", "/venues/add")
+                        .requestMatchers("/venues/new", "/venues/add")
                         .hasAnyRole("ADMIN", "PARTNER")
-                    
-                    .requestMatchers("/user/**","/user-profile")
+
+                        .requestMatchers("/user/**", "/user-profile")
                         .hasRole("ATTENDEE")
-                    
-                    .requestMatchers("/admin/**")
+
+                        .requestMatchers("/admin/**")
                         .hasRole("ADMIN")
-                        
+
                         .requestMatchers(HttpMethod.GET, "/bookings", "/bookings/**")
-                        .hasRole("ADMIN") 
-                    
-                    // Permit auth, users, partners, bookings (if you want anonymous access)
-                    .requestMatchers("/auth/**", "/users/**", "/partners/**", "/bookings/**", "/venues/add", "/venues")
+                        .hasRole("ADMIN")
+
+                        // Permit auth, users, partners, bookings (if you want anonymous access)
+                        .requestMatchers("/auth/**", "/users/**", "/partners/**", "/bookings/**", "/venues/add",
+                                "/venues")
                         .permitAll()
-                        
+
                         .requestMatchers("/cart/**")
                         .hasRole("ATTENDEE")
                         // All other requests
-                        
+
                         // Allow public product browsing
                         .requestMatchers("/api/products", "/api/products/**").permitAll()
 
@@ -134,52 +133,44 @@ public class SecurityConfig {
 
                         // Admin actions - only ADMIN role
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        
+
                         .requestMatchers("/api/payments/esewa/**").permitAll()
 
-                      
-                        
-                        
-                   
-                    
-                    // All other requests require authentication
-                    .anyRequest().authenticated()
-            		)
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                .sessionFixation(fixation -> fixation.migrateSession())
-                .maximumSessions(1)
-                .maxSessionsPreventsLogin(false)
-                .expiredUrl("/login?expired=true")
-                .sessionRegistry(sessionRegistry())
-            )
+                        // All other requests require authentication
+                        .anyRequest().authenticated())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .sessionFixation(fixation -> fixation.migrateSession())
+                        .maximumSessions(1)
+                        .maxSessionsPreventsLogin(false)
+                        .expiredUrl("/login?expired=true")
+                        .sessionRegistry(sessionRegistry()))
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
-    
-	    @Bean
-	    public CorsConfigurationSource corsConfigurationSource() {
-	        CorsConfiguration config = new CorsConfiguration();
-	        config.setAllowCredentials(true);
-	        config.addAllowedOriginPattern("http://localhost:3000");
-	        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-	        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept"	));
 
-	        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-	        source.registerCorsConfiguration("/**", config);
-	        return source;
-	    }
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.addAllowedOriginPattern("http://localhost:3000");
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Accept"));
 
-	    
-	    @Bean
-	    public SessionRegistry sessionRegistry() {
-	        return new SessionRegistryImpl();
-	    }
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 
-	    // This bean is needed to enable session concurrency events (like session destroyed)
-	    @Bean
-	    public static ServletListenerRegistrationBean<HttpSessionEventPublisher> httpSessionEventPublisher() {
-	        return new ServletListenerRegistrationBean<>(new HttpSessionEventPublisher());
-	    }
-	}
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
 
+    // This bean is needed to enable session concurrency events (like session
+    // destroyed)
+    @Bean
+    public static ServletListenerRegistrationBean<HttpSessionEventPublisher> httpSessionEventPublisher() {
+        return new ServletListenerRegistrationBean<>(new HttpSessionEventPublisher());
+    }
+}

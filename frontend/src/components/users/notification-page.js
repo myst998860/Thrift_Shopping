@@ -14,9 +14,10 @@ dayjs.extend(relativeTime)
 const transformNotification = (notif) => {
   return {
     id: notif.id,
-    text: notif.message || notif.title || "No message",
+    title: notif.title || "Notification",
+    message: notif.message || "",
     type: notif.type ? notif.type.toLowerCase() : "info",
-    read: notif.status === "READ" || notif.readAt !== null,
+    read: notif.status?.toUpperCase() === "READ" || notif.readAt !== null,
     time: notif.createdAt ? dayjs(notif.createdAt).fromNow() : "Unknown time",
   }
 }
@@ -255,7 +256,8 @@ const NotificationsPage = () => {
                 <div className={`notification-dot ${notification.type}`} />
                 <div className="notification-content">
                   <div className="notification-text-container">
-                    <p className="notification-text">{notification.text}</p>
+                    <div className="notification-message-title">{notification.title}</div>
+                    <p className="notification-message-body">{notification.message}</p>
                     {!notification.read && <div className="unread-indicator" />}
                   </div>
                   <p className="notification-time">{notification.time}</p>

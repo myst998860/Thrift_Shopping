@@ -59,15 +59,7 @@ public class DonationController {
             Long userId = jsonNode.has("userId") ? jsonNode.get("userId").asLong() : null;
 
             if ("partner".equalsIgnoreCase(role) && userId != null) {
-                // Fetch all programs for this partner
-                List<Program> partnerPrograms = programRepo.findAll().stream()
-                        .filter(p -> p.getPartner() != null && p.getPartner().getUser_id().equals(userId))
-                        .collect(Collectors.toList());
-
-                // Fetch donations linked to these programs
-                return donationRepo.findAll().stream()
-                        .filter(d -> d.getProgram() != null && partnerPrograms.contains(d.getProgram()))
-                        .collect(Collectors.toList());
+                return donationRepo.findByProgramPartnerUserUserId(userId);
             }
 
             return donationRepo.findAll(); // Admin / public view
@@ -421,6 +413,7 @@ public class DonationController {
             } else if ("admin".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
                 counts.put("pending", donationRepo.countByStatusIgnoreCase("pending"));
                 counts.put("confirmed", donationRepo.countByStatusIgnoreCase("confirmed"));
+                counts.put("assigned", donationRepo.countByStatusIgnoreCase("assigned_to_admin"));
             }
         } catch (Exception e) {
             return ResponseEntity.ok(counts);
@@ -460,6 +453,142 @@ public class DonationController {
         }
 
         return ResponseEntity.ok(donation);
+    }
+
+    // ---------------- PICKUP FEE PAYMENT SYSTEM ----------------
+
+    @GetMapping("/pickup-fees/admin/summary")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getAdminFeeSummary() {
+        List<User> partners = userRepo.findByRole("PARTNER");
+        if (partners.isEmpty()) {
+            partners = userRepo.findByRole("partner");
+        }
+
+        List<Map<String, Object>> summary = partners.stream().map(p -> {
+            List<Donation> partnerDonations = donationRepo.findByProgramPartnerUserUserId(p.getUser_id());
+
+            double unpaid = partnerDonations.stream()
+                    .filter(d -> d.getPickupPaymentStatus() == null
+                            || "UNPAID".equalsIgnoreCase(d.getPickupPaymentStatus()))
+                    .mapToDouble(d -> d.getPickupFee() != null ? d.getPickupFee()
+                            : ("assigned_to_admin".equalsIgnoreCase(d.getStatus()) ? 150.0 : 0.0))
+                    .sum();
+
+            double requested = partnerDonations.stream()
+                    .filter(d -> "REQUESTED".equalsIgnoreCase(d.getPickupPaymentStatus()))
+                    .mapToDouble(d -> d.getPickupFee() != null ? d.getPickupFee() : 0.0)
+                    .sum();
+
+            double paid = partnerDonations.stream()
+                    .filter(d -> "PAID".equalsIgnoreCase(d.getPickupPaymentStatus()))
+                    .mapToDouble(d -> d.getPickupFee() != null ? d.getPickupFee() : 0.0)
+                    .sum();
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("partnerId", p.getUser_id());
+            map.put("partnerName", p.getFullname());
+            map.put("unpaidAmount", unpaid);
+            map.put("requestedAmount", requested);
+            map.put("paidAmount", paid);
+            map.put("totalDue", unpaid + requested + paid);
+            return map;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(summary);
+    }
+
+    @PostMapping("/pickup-fees/admin/request/{partnerId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> requestPayment(@PathVariable Long partnerId) {
+        // Fetch ALL donations for partner to ensure consistent filtering with Summary
+        // view
+        List<Donation> partnerDonations = donationRepo.findByProgramPartnerUserUserId(partnerId);
+
+        // Filter for UNPAID (or null status)
+        List<Donation> unpaid = partnerDonations.stream()
+                .filter(d -> d.getPickupPaymentStatus() == null
+                        || "UNPAID".equalsIgnoreCase(d.getPickupPaymentStatus()))
+                .collect(Collectors.toList());
+
+        if (unpaid.isEmpty())
+            return ResponseEntity.badRequest().body("No unpaid fees found for this partner");
+
+        // Update status AND set fee if missing
+        unpaid.forEach(d -> {
+            d.setPickupPaymentStatus("REQUESTED");
+            if (d.getPickupFee() == null
+                    || (d.getPickupFee() == 0.0 && "assigned_to_admin".equalsIgnoreCase(d.getStatus()))) {
+                d.setPickupFee(150.0);
+            }
+        });
+
+        donationRepo.saveAll(unpaid);
+
+        User partner = userRepo.findById(partnerId).orElse(null);
+        if (partner != null) {
+            notificationService.createPaymentRequestNotification(partner,
+                    unpaid.stream().mapToDouble(d -> d.getPickupFee() != null ? d.getPickupFee() : 0.0).sum());
+        }
+
+        return ResponseEntity.ok("Payment requested successfully");
+    }
+
+    @PostMapping("/pickup-fees/partner/pay")
+    @PreAuthorize("hasRole('PARTNER')")
+    public ResponseEntity<?> markAsPaid(@RequestHeader("Authorization") String authHeader) {
+        try {
+            Long userId = getUserIdFromToken(authHeader);
+            List<Donation> requested = donationRepo.findByProgramPartnerUserUserIdAndPickupPaymentStatus(userId,
+                    "REQUESTED");
+            if (requested.isEmpty())
+                return ResponseEntity.badRequest().body("No requested fees found");
+
+            requested.forEach(d -> d.setPickupPaymentStatus("PAID"));
+            donationRepo.saveAll(requested);
+
+            // Notify Admins
+            notificationService.createPaymentSentNotification(userId,
+                    requested.stream().mapToDouble(Donation::getPickupFee).sum());
+
+            return ResponseEntity.ok("Payment marked as paid, pending admin verification");
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+    }
+
+    @PostMapping("/pickup-fees/admin/settle/{partnerId}/{action}") // action = accept/reject
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> settlePayment(@PathVariable Long partnerId, @PathVariable String action) {
+        List<Donation> paidDonations = donationRepo.findByProgramPartnerUserUserIdAndPickupPaymentStatus(partnerId,
+                "PAID");
+        if (paidDonations.isEmpty())
+            return ResponseEntity.badRequest().body("No paid donations found for verification");
+
+        if ("accept".equalsIgnoreCase(action)) {
+            // zero out on accept
+            paidDonations.forEach(d -> {
+                d.setPickupPaymentStatus("SETTLED");
+                d.setPickupFee(0.0); // As requested: total pickup fee will be zero
+            });
+            donationRepo.saveAll(paidDonations);
+            notificationService.createPaymentSettledNotification(partnerId, "ACCEPTED");
+            return ResponseEntity.ok("Payment accepted and fees settled to zero");
+        } else {
+            paidDonations.forEach(d -> d.setPickupPaymentStatus("REQUESTED")); // Revert to requested
+            donationRepo.saveAll(paidDonations);
+            notificationService.createPaymentSettledNotification(partnerId, "REJECTED");
+            return ResponseEntity.ok("Payment rejected and reverted to requested status");
+        }
+    }
+
+    private Long getUserIdFromToken(String authHeader) throws Exception {
+        String token = authHeader.substring(7);
+        String[] parts = token.split("\\.");
+        String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode jsonNode = mapper.readTree(payload);
+        return jsonNode.get("userId").asLong();
     }
 
     private int parseQuantity(String quantity) {

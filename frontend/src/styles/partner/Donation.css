@@ -109,7 +109,8 @@
     border-radius: 0.75rem;
     box-shadow: var(--shadow-md);
     border: 1px solid var(--border-color);
-    overflow: hidden;
+    /* Changed from overflow: hidden to allow dropdown visibility */
+    overflow: visible;
 }
 
 .donation-table {
@@ -246,13 +247,13 @@
 .dropdown-menu {
     position: absolute;
     right: 0;
-    top: 100%;
+    top: calc(100% + 5px);
     background: white;
     border: 1px solid var(--border-color);
     border-radius: 0.5rem;
-    box-shadow: var(--shadow-md);
-    z-index: 50;
-    min-width: 160px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    z-index: 1000;
+    min-width: 180px;
     overflow: hidden;
 }
 
