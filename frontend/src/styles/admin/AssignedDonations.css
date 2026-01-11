@@ -1,0 +1,437 @@
+/* Assigned Donations Modern Styles (Logistics Theme) */
+.donations-modern-container {
+    padding: 2.5rem;
+    background-color: #fcfcfd;
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #1e293b;
+}
+
+/* Header */
+.donations-header-premium {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2.5rem;
+}
+
+.donations-header-premium h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 0.5rem 0;
+    letter-spacing: -0.02em;
+}
+
+.donations-header-premium p {
+    color: #64748b;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.refresh-btn-modern {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.refresh-btn-modern:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+}
+
+/* Statistics Grid */
+.donations-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.stat-card-modern {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.stat-icon-wrapper {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.stat-icon-wrapper.blue {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.stat-icon-wrapper.amber {
+    background: #fffbeb;
+    color: #d97706;
+}
+
+.stat-icon-wrapper.purple {
+    background: #faf5ff;
+    color: #7c3aed;
+}
+
+.stat-content label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+}
+
+.stat-content h3 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 0;
+    color: #0f172a;
+}
+
+/* Actions Section */
+.donations-table-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.tab-switcher-modern {
+    display: flex;
+    background: #f1f5f9;
+    padding: 0.25rem;
+    border-radius: 14px;
+}
+
+.tab-switcher-modern button {
+    padding: 0.6rem 1.25rem;
+    border: none;
+    background: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+    border-radius: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-switcher-modern button.active {
+    background: #fff;
+    color: #1e3a8a;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.table-controls-modern {
+    display: flex;
+    gap: 1rem;
+    flex: 1;
+    max-width: 450px;
+}
+
+.search-bar-modern {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-bar-modern svg {
+    position: absolute;
+    left: 1rem;
+    color: #94a3b8;
+}
+
+.search-bar-modern input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.search-bar-modern input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* Premium Table Styles */
+.premium-table-wrapper {
+    background: #fff;
+    border-radius: 20px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+.donations-modern-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.donations-modern-table th {
+    background: #f8fafc;
+    padding: 1.25rem 1.5rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.donations-modern-table td {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #f8fafc;
+    vertical-align: middle;
+}
+
+.main-row:hover {
+    background: #fafafa;
+}
+
+/* Specialized Cells Components */
+.manifest-id-chip {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.donor-info-modern {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.donor-avatar-mini {
+    width: 36px;
+    height: 36px;
+    background: #334155;
+    color: #fff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.donor-text .name {
+    display: block;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #0f172a;
+}
+
+.donor-text .phone {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.coord-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    max-width: 250px;
+}
+
+.coord-info .icon {
+    color: #ef4444;
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.coord-info .addr {
+    font-size: 0.875rem;
+    color: #475569;
+    line-height: 1.4;
+}
+
+.volume-cell .val {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #1e293b;
+}
+
+.volume-cell .unit {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-left: 4px;
+    font-weight: 600;
+}
+
+.fee-cell .currency {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #94a3b8;
+    margin-right: 0.25rem;
+}
+
+.fee-cell .value {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #1e293b;
+}
+
+/* Status Badge */
+.status-badge-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+/* Protocol Select (Select Field) */
+.modern-protocol-select {
+    padding: 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: #f8fafc;
+    cursor: pointer;
+    outline: none;
+    min-width: 140px;
+    transition: all 0.2s;
+}
+
+.modern-protocol-select:hover {
+    border-color: #cbd5e1;
+}
+
+.modern-protocol-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.modern-protocol-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Actions Cell */
+.audit-btn-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.audit-btn-circle:hover {
+    background: #1e293b;
+    color: #fff;
+    border-color: #1e293b;
+    transform: scale(1.1);
+}
+
+/* Loader Styles */
+.donation-modern-loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    gap: 1.5rem;
+}
+
+.premium-spinner {
+    width: 44px;
+    height: 44px;
+    border: 4px solid #f1f5f9;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Empty State */
+.empty-table-state {
+    text-align: center;
+    padding: 6rem !important;
+    color: #94a3b8;
+}
+
+.empty-table-state p {
+    font-weight: 600;
+    margin-top: 1.25rem;
+    font-size: 1.1rem;
+}
+
+/* Responsive Overrides */
+@media (max-width: 1024px) {
+    .donations-modern-container {
+        padding: 1.5rem;
+    }
+
+    .premium-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .donations-modern-table {
+        min-width: 1000px;
+    }
+}
+
+@media (max-width: 768px) {
+    .donations-header-premium {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+    }
+}

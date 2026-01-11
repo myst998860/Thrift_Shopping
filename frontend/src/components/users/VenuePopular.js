@@ -41,8 +41,13 @@ const VenuePopular = () => {
         }),
       )
 
+      // Filter only active venues
+      const activeVenues = venuesWithImages.filter(v =>
+        v.status?.toLowerCase() === 'active'
+      );
+
       // Sort venues by rating
-      const sortedVenues = venuesWithImages.sort((a, b) => (b.rating || 4.5) - (a.rating || 4.5))
+      const sortedVenues = activeVenues.sort((a, b) => (b.rating || 4.5) - (a.rating || 4.5))
 
       if (isMounted) {
         setVenues(sortedVenues)

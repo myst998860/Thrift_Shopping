@@ -23,60 +23,57 @@ import com.event.repository.VenueRepo;
 import com.event.service.CloudinaryService;
 import java.io.IOException;
 
-
 @RequestMapping("/venues")
 @RestController
 public class VenueController {
 
     @Autowired
     private VenueRepo venueRepo;
-    
+
     @Autowired
     private CloudinaryService cloudinaryService;
 
     @Autowired
     private PartnerRepo partnerRepo;
 
-   @GetMapping
-  public List<VenueDTO> getVenues(Authentication authentication) {
-       if (authentication != null && authentication.isAuthenticated()) {
-           String email = authentication.getName();
+    @GetMapping
+    public List<VenueDTO> getVenues(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            String email = authentication.getName();
             boolean isPartner = authentication.getAuthorities().stream()
-                  .anyMatch(auth -> auth.getAuthority().equals("ROLE_PARTNER"));
+                    .anyMatch(auth -> auth.getAuthority().equals("ROLE_PARTNER"));
 
             if (isPartner) {
-              Partner partner = partnerRepo.findByEmail(email)
-                       .orElseThrow(() -> new RuntimeException("Partner not found"));
-               return venueRepo.findByPartner(partner).stream()
-                       .map(VenueDTO::fromVenue)
+                Partner partner = partnerRepo.findByEmail(email)
+                        .orElseThrow(() -> new RuntimeException("Partner not found"));
+                return venueRepo.findByPartner(partner).stream()
+                        .map(VenueDTO::fromVenue)
                         .peek(dto -> {
-                           dto.setPartnerId(partner.getUser_id());
+                            dto.setPartnerId(partner.getUser_id());
                             dto.setCategory(partner.getVenues().stream()
-                                   .filter(v -> v.getVenue_id().equals(dto.getVenue_id()))
-                                   .map(Venue::getCategory)
-                                   .findFirst().orElse(null));
-                       })
-                      .collect(Collectors.toList());
-          }
-       }
+                                    .filter(v -> v.getVenue_id().equals(dto.getVenue_id()))
+                                    .map(Venue::getCategory)
+                                    .findFirst().orElse(null));
+                        })
+                        .collect(Collectors.toList());
+            }
+        }
 
         return venueRepo.findAll().stream()
-               .map(VenueDTO::fromVenue)
-               .peek(dto -> {
-                   Partner partner = venueRepo.findById(dto.getVenue_id())
-                           .map(Venue::getPartner)
+                .map(VenueDTO::fromVenue)
+                .peek(dto -> {
+                    Partner partner = venueRepo.findById(dto.getVenue_id())
+                            .map(Venue::getPartner)
                             .orElse(null);
                     if (partner != null) {
                         dto.setPartnerId(partner.getUser_id());
                         dto.setCategory(venueRepo.findById(dto.getVenue_id())
                                 .map(Venue::getCategory)
                                 .orElse(null));
-                   }
-               })
-               .collect(Collectors.toList());
-   }
-    
-    
+                    }
+                })
+                .collect(Collectors.toList());
+    }
 
     @PostMapping("/new")
     public Venue saveVenue(@RequestBody Venue venue, Authentication authentication) {
@@ -88,61 +85,60 @@ public class VenueController {
         return venueRepo.save(venue);
     }
 
-//    @PostMapping("/add")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public ResponseEntity<?> addVenueByAdmin(
-//            @RequestPart("venue") VenueDTO request,
-//            @RequestPart(value = "file", required = false) MultipartFile file) throws java.io.IOException {
-//
-//        try {
-//            Venue venue = new Venue();
-//            venue.setVenueName(request.getVenueName());
-//            venue.setLocation(request.getLocation());
-//            venue.setMapLocationUrl(request.getMapLocationUrl());
-//            venue.setPrice(request.getPrice());
-//            venue.setMinBookingHours(request.getMinBookingHours());
-//            venue.setBrand(request.getBrand());
-//            venue.setSize(request.getSize());
-//            venue.setQuality(request.getQuality());
-//            venue.setOpeningTime(request.getOpeningTime());
-//            venue.setClosingTime(request.getClosingTime());
-//            venue.setDescription(request.getDescription());
-//            venue.setAmenities(request.getAmenities());
-//            venue.setStatus(request.getStatus());
-//            venue.setCategory(request.getCategory());
-//
-//            // 1️⃣ Upload file to Cloudinary if present
-//            if (file != null && !file.isEmpty()) {
-//                System.out.println("Uploading file: " + file.getOriginalFilename() + ", size: " + file.getSize());
-//                String uploadedUrl = cloudinaryService.uploadFile(file, "venues"); // folder "venues"
-//                System.out.println("Uploaded URL: " + uploadedUrl);
-//                venue.setImageUrl(uploadedUrl);
-//            }
-//
-//            // 2️⃣ Save Venue
-//            Venue saved = venueRepo.save(venue);
-//
-//            // 3️⃣ Return response
-//            Map<String, Object> response = new HashMap<>();
-//            response.put("venue", saved);
-//            return ResponseEntity.ok(response);
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(Map.of("error", "Failed to upload file: " + e.getMessage()));
-//        }
-//    }
-    
-    @PostMapping(
-            value = "/add",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
+    // @PostMapping("/add")
+    // @PreAuthorize("hasRole('ADMIN')")
+    // public ResponseEntity<?> addVenueByAdmin(
+    // @RequestPart("venue") VenueDTO request,
+    // @RequestPart(value = "file", required = false) MultipartFile file) throws
+    // java.io.IOException {
+    //
+    // try {
+    // Venue venue = new Venue();
+    // venue.setVenueName(request.getVenueName());
+    // venue.setLocation(request.getLocation());
+    // venue.setMapLocationUrl(request.getMapLocationUrl());
+    // venue.setPrice(request.getPrice());
+    // venue.setMinBookingHours(request.getMinBookingHours());
+    // venue.setBrand(request.getBrand());
+    // venue.setSize(request.getSize());
+    // venue.setQuality(request.getQuality());
+    // venue.setOpeningTime(request.getOpeningTime());
+    // venue.setClosingTime(request.getClosingTime());
+    // venue.setDescription(request.getDescription());
+    // venue.setAmenities(request.getAmenities());
+    // venue.setStatus(request.getStatus());
+    // venue.setCategory(request.getCategory());
+    //
+    // // 1️⃣ Upload file to Cloudinary if present
+    // if (file != null && !file.isEmpty()) {
+    // System.out.println("Uploading file: " + file.getOriginalFilename() + ", size:
+    // " + file.getSize());
+    // String uploadedUrl = cloudinaryService.uploadFile(file, "venues"); // folder
+    // "venues"
+    // System.out.println("Uploaded URL: " + uploadedUrl);
+    // venue.setImageUrl(uploadedUrl);
+    // }
+    //
+    // // 2️⃣ Save Venue
+    // Venue saved = venueRepo.save(venue);
+    //
+    // // 3️⃣ Return response
+    // Map<String, Object> response = new HashMap<>();
+    // response.put("venue", saved);
+    // return ResponseEntity.ok(response);
+    //
+    // } catch (IOException e) {
+    // e.printStackTrace();
+    // return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+    // .body(Map.of("error", "Failed to upload file: " + e.getMessage()));
+    // }
+    // }
+
+    @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> addVenueByAdmin(
             @RequestPart("venue") VenueDTO request,
-            @RequestPart(value = "files", required = false) MultipartFile[] files
-    ) {
+            @RequestPart(value = "files", required = false) MultipartFile[] files) {
 
         try {
             Venue venue = new Venue();
@@ -188,10 +184,6 @@ public class VenueController {
         }
     }
 
-
-
-
-
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Void> deleteVenue(@PathVariable Long id) {
         venueRepo.deleteById(id);
@@ -210,11 +202,11 @@ public class VenueController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/edit/{id}")
+    @PutMapping(value = "/edit/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<VenueDTO> updateVenue(
             @PathVariable Long id,
-            @RequestBody VenueDTO payload
-    ) {
+            @RequestPart("venue") VenueDTO payload,
+            @RequestPart(value = "files", required = false) MultipartFile[] files) {
         return venueRepo.findById(id)
                 .map(existing -> {
                     existing.setVenueName(payload.getVenueName());
@@ -230,13 +222,34 @@ public class VenueController {
                     existing.setDescription(payload.getDescription());
                     existing.setAmenities(payload.getAmenities());
                     existing.setStatus(payload.getStatus());
-                    existing.setImageUrls(payload.getImageUrls());
-                    existing.setCategory(payload.getCategory()); // Set category
+                    existing.setCategory(payload.getCategory());
+                    // 1. Get the list of images the user wants to keep/manage (from payload)
+                    List<String> updatedImageUrls = new ArrayList<>();
+                    if (payload.getImageUrls() != null) {
+                        updatedImageUrls.addAll(payload.getImageUrls());
+                    }
+
+                    // 2. Handle new image uploads and add them to the list
+                    if (files != null && files.length > 0) {
+                        for (MultipartFile file : files) {
+                            if (!file.isEmpty()) {
+                                try {
+                                    String uploadedUrl = cloudinaryService.uploadFile(file, "venues");
+                                    updatedImageUrls.add(uploadedUrl);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+
+                    // 3. Update the entity
+                    existing.setImageUrls(updatedImageUrls);
 
                     Venue saved = venueRepo.save(existing);
                     VenueDTO dto = VenueDTO.fromVenue(saved);
                     dto.setPartnerId(saved.getPartner() != null ? saved.getPartner().getUser_id() : null);
-                    dto.setCategory(saved.getCategory()); // Set category
+                    dto.setCategory(saved.getCategory());
                     return ResponseEntity.ok(dto);
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -245,15 +258,14 @@ public class VenueController {
     @GetMapping("/filter")
     public List<VenueDTO> filterVenues(
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) String location
-    ) {
+            @RequestParam(required = false) String location) {
         List<Venue> venues;
 
         if (category != null && location != null) {
             venues = venueRepo.findByCategoryIgnoreCase(category);
         } else if (category != null) {
             venues = venueRepo.findByCategoryIgnoreCase(category);
-      
+
         } else {
             venues = venueRepo.findAll();
         }

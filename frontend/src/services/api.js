@@ -232,7 +232,8 @@ deleteVenue: async (id) => {
       const token = localStorage.getItem('jwtToken');
       const response = await api.put(`/venues/edit/${id}`, venueData, {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         }
       });
       return response.data;
@@ -954,6 +955,19 @@ const donationAPI = {
        throw error;
     }
   },
+  
+  // ✅ Get donation counts by status
+  getDonationCounts: async () => {
+    try {
+      const token = localStorage.getItem("jwtToken");
+      const headers = { Authorization: `Bearer ${token}` };
+      const response = await api.get("/donations/counts", { headers });
+      return response.data;
+    } catch (error) {
+      console.error("Fetching donation counts failed:", error);
+      return { pending: 0, confirmed: 0 };
+    }
+  },
 };
 
 
@@ -1247,6 +1261,22 @@ export const orderAPI = {
       return response.data;
     } catch (error) {
       console.error('Updating order status failed:', error);
+      throw error;
+    }
+  },
+
+  // Get active order count
+  getActiveOrderCount: async () => {
+    try {
+      const token = localStorage.getItem('jwtToken');
+      const headers = {};
+      if (token && token !== 'null' && token !== 'undefined') {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      const response = await api.get('/api/orders/active-count', { headers });
+      return response.data;
+    } catch (error) {
+      console.error('Fetching active order count failed:', error);
       throw error;
     }
   },

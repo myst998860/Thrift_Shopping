@@ -137,339 +137,209 @@
 }
 
 
-/* Products Table Container */
-.products-table-container {
-  overflow-x: auto;
-  border-radius: var(--radius-md);
+/* Products Grid Layout */
+.products-grid-container {
+  padding: 10px 0;
 }
 
-.products-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--font-size-sm);
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.product-card {
   background: var(--secondary-color);
-}
-
-.products-table thead {
-  background-color: var(--gray-50);
-  border-bottom: 2px solid var(--gray-200);
-}
-
-.products-table th {
-  padding: 16px;
-  text-align: left;
-  font-weight: var(--font-weight-semibold);
-  color: var(--gray-700);
-  font-size: var(--font-size-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.products-table th:nth-child(7) {
-  text-align: center;
-}
-
-.products-table td {
-  padding: 16px;
-  border-bottom: 1px solid var(--gray-200);
-  color: var(--gray-700);
-  vertical-align: middle;
-}
-
-.products-table tbody tr:hover {
-  background-color: var(--gray-50);
-}
-
-.products-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.venue-id-cell {
-  font-weight: var(--font-weight-semibold);
-  color: var(--gray-900);
-  font-family: var(--font-family-mono);
-  font-size: var(--font-size-xs);
-}
-
-.venue-image-cell {
-  padding: 12px !important;
-}
-
-.venue-image {
-  width: 120px;
-  height: 120px;
-  object-fit: cover;
-  border-radius: var(--radius-md);
   border: 1px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  transition: all var(--transition-normal);
+  display: flex;
+  flex-direction: column;
   box-shadow: var(--shadow-sm);
+  height: 100%;
 }
 
-.no-image-placeholder {
-  width: 120px;
-  height: 120px;
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-color);
+}
+
+.product-card-image-wrapper {
+  position: relative;
+  width: 100%;
+  padding-top: 75%; /* 4:3 Aspect Ratio */
+  background-color: var(--gray-100);
+  overflow: hidden;
+}
+
+.product-card-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+}
+
+.product-card:hover .product-card-image {
+  transform: scale(1.05);
+}
+
+.product-card-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: var(--gray-100);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--gray-200);
   color: var(--gray-400);
-  font-size: var(--font-size-xs);
-  gap: 4px;
+  font-size: var(--font-size-sm);
 }
 
-.no-image-placeholder span:first-child {
-  font-size: 24px;
+.product-card-placeholder span:first-child {
+  font-size: 40px;
+  margin-bottom: 8px;
 }
 
-.venue-name-cell {
-  font-weight: var(--font-weight-semibold);
-  color: var(--gray-900);
-  max-width: 200px;
-}
-
-.category-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  transition: all var(--transition-fast);
-}
-
-.price-cell {
-  font-weight: var(--font-weight-semibold);
-  color: var(--gray-900);
-  font-family: var(--font-family-mono);
-}
-
-/* Status Cell */
-.status-cell {
-  text-align: center;
-  vertical-align: middle;
-  position: relative;
-}
-
-/* Status Badge */
-.status-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  text-align: center;
-  position: static;
-  margin: 0 auto;
-}
-
-.status-badge.status-active {
-  background-color: #d1fae5;
-  color: #065f46;
-}
-
-.status-badge.status-inactive {
-  background-color: #fee2e2;
-  color: #991b1b;
-}
-
-/* Actions Cell */
-.actions-cell {
-  position: relative;
-  text-align: center;
-}
-
-.actions-toggle-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: var(--gray-600);
-  cursor: pointer;
-  padding: 8px;
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
-  width: 36px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  outline: none;
-}
-
-.actions-toggle-btn:hover {
-  background-color: var(--gray-100);
-  color: var(--gray-900);
-}
-
-.actions-toggle-btn:focus,
-.actions-toggle-btn:active {
-  outline: none;
-  box-shadow: none;
-}
-
-/* Actions Menu */
-.actions-menu {
+.product-card-status {
   position: absolute;
-  top: 40px;
-  right: 0;
-  background: var(--secondary-color);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  z-index: 100;
-  min-width: 200px;
-  overflow: hidden;
-  animation: fadeIn 0.2s ease-out;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.product-card-info {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
-.actions-menu-header {
-  padding: 12px 16px;
-  font-weight: var(--font-weight-semibold);
-  color: var(--gray-600);
-  border-bottom: 1px solid var(--gray-200);
-  background-color: var(--gray-50);
-  text-align: center;
-  font-size: var(--font-size-sm);
+.product-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 12px;
 }
 
-.action-menu-item {
-  display: block;
-  width: 100%;
-  padding: 12px 16px;
-  background: none;
-  border: none;
-  text-align: left;
-  font-size: var(--font-size-sm);
-  cursor: pointer;
-  color: var(--gray-700);
-  border-bottom: 1px solid var(--gray-100);
-  transition: all var(--transition-fast);
-  outline: none;
-}
-
-.action-menu-item:hover {
-  background-color: var(--gray-50);
+.product-card-name {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
   color: var(--gray-900);
+  margin: 0;
+  line-height: 1.4;
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.action-menu-item:last-child {
-  border-bottom: none;
-}
-
-.action-menu-item.delete-action {
-  color: var(--error-color);
-}
-
-.action-menu-item.delete-action:hover {
-  background-color: #fee2e2;
-  color: #991b1b;
-}
-
-.action-menu-item:focus,
-.action-menu-item:active {
-  outline: none;
-  box-shadow: none;
-}
-
-/* No Products Message */
-.no-products {
-  text-align: center;
-  padding: 60px 20px;
+.product-card-id {
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-xs);
   color: var(--gray-500);
+  background: var(--gray-100);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.product-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.product-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-sm);
+}
+
+.detail-label {
+  color: var(--gray-500);
+  font-weight: var(--font-weight-medium);
+  min-width: 70px;
+}
+
+.detail-value {
+  color: var(--gray-800);
+  font-weight: var(--font-weight-medium);
+}
+
+.price-text {
+  color: var(--primary-color);
+  font-weight: var(--font-weight-bold);
   font-size: var(--font-size-base);
 }
 
-/* Responsive Design */
-@media (max-width: 1200px) {
-  .venue-image {
-    width: 100px;
-    height: 100px;
-  }
-
-  .no-image-placeholder {
-    width: 100px;
-    height: 100px;
-  }
+.product-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: auto;
+  border-top: 1px solid var(--gray-100);
+  padding-top: 16px;
 }
 
-@media (max-width: 768px) {
-  .venue-management-container {
-    padding: 16px;
-  }
-
-  .venue-management-header {
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .add-product-btn {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .venue-management-content {
-    padding: 16px;
-  }
-
-  .search-section {
-    flex-direction: column;
-  }
-
-  .search-container {
-    width: 100%;
-    min-width: 0;
-  }
-
-  .products-table {
-    font-size: var(--font-size-xs);
-  }
-
-  .products-table th,
-  .products-table td {
-    padding: 12px 8px;
-  }
-
-  .venue-image {
-    width: 80px;
-    height: 80px;
-  }
-
-  .no-image-placeholder {
-    width: 80px;
-    height: 80px;
-  }
-
-  .venue-name-cell {
-    max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+.card-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
 }
 
-@media (max-width: 480px) {
-  .venue-management-title {
-    font-size: 24px;
-  }
+.view-btn {
+  background-color: var(--gray-100);
+  color: var(--gray-700);
+}
 
-  .products-table {
-    font-size: 11px;
-  }
+.view-btn:hover {
+  background-color: var(--gray-200);
+  color: var(--gray-900);
+}
 
-  .products-table th,
-  .products-table td {
-    padding: 8px 4px;
+.edit-btn {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.edit-btn:hover {
+  background-color: #bfdbfe;
+}
+
+.delete-btn {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.delete-btn:hover {
+  background-color: #fecaca;
+}
+
+/* Maintain old table styles for fallback/other pages if needed, 
+   but they are no longer used in VenueManagement.js */
+
+@media (max-width: 640px) {
+  .products-grid {
+    grid-template-columns: 1fr;
   }
 }
 

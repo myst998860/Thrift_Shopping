@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { venueService } from '../../services/api';
-import '../../styles/admin/EditVenue.css'; 
+import '../../styles/admin/EditVenue.css';
 
 const EditVenue = () => {
   const { id } = useParams();
@@ -9,17 +10,15 @@ const EditVenue = () => {
   const [formData, setFormData] = useState({
     venueName: '',
     location: '',
-    imageUrl: '',
-    capacity: '',
     price: '',
-    minBookingHours: '',
-    openingTime: '',
-    closingTime: '',
-    bookings: '',
     status: '',
     description: '',
-    amenities: '',
+    category: '',
+    brand: '',
+    imageUrls: [],
   });
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [previews, setPreviews] = useState([]);
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,17 +29,14 @@ const EditVenue = () => {
         const dto = await venueService.getVenue(id);
         setFormData({
           venueName: dto.venueName || '',
-          location: dto.location || '',
-          imageUrl: dto.imageUrl || '',
-          capacity: dto.capacity?.toString() || '',
+          location: dto.location || 'Kathmandu',
           price: dto.price?.toString() || '',
-          minBookingHours: dto.minBookingHours?.toString() || '',
-          openingTime: dto.openingTime || '',
-          closingTime: dto.closingTime || '',
-          bookings: dto.bookings?.toString() || '',
-          status: dto.status || '',
+          status: dto.status || 'active',
           description: dto.description || '',
-          amenities: dto.amenities ? dto.amenities.join(', ') : '',
+          category: dto.category || '',
+          brand: dto.brand || '',
+          imageUrls: dto.imageUrls || [],
+          amenities: dto.amenities || [],
         });
       } catch (err) {
         setApiError('Failed to load venue details.');
@@ -53,13 +49,30 @@ const EditVenue = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedFiles(prev => [...prev, ...files]);
+
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setPreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  const removeSelectedFile = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingImage = (url) => {
+    setFormData(prev => ({
+      ...prev,
+      imageUrls: prev.imageUrls.filter(u => u !== url)
+    }));
+  };
+
   const validate = () => {
     const errs = {};
     if (!formData.venueName.trim()) errs.venueName = 'Name is required';
-    if (!formData.location.trim()) errs.location = 'Location is required';
-    if (!formData.imageUrl.trim()) errs.imageUrl = 'Image URL is required';
-    if (!formData.capacity.trim() || isNaN(Number(formData.capacity)))
-      errs.capacity = 'Valid capacity required';
+    if (!formData.description.trim()) errs.description = 'Description is required';
     if (!formData.price.trim() || isNaN(Number(formData.price)))
       errs.price = 'Valid price required';
     setErrors(errs);
@@ -73,79 +86,172 @@ const EditVenue = () => {
     setIsSubmitting(true);
     setApiError('');
     try {
-      const payload = {
-        venueName: formData.venueName,
-        location: formData.location,
-        imageUrl: formData.imageUrl,
-        capacity: Number(formData.capacity),
+      const formDataToSend = new FormData();
+
+      const venuePayload = {
+        ...formData,
         price: Number(formData.price),
-        minBookingHours: Number(formData.minBookingHours),
-        openingTime: formData.openingTime,
-        closingTime: formData.closingTime,
-        bookings: Number(formData.bookings),
-        status: formData.status,
-        description: formData.description,
-        amenities: formData.amenities.split(',').map((a) => a.trim()),
       };
 
-      await venueService.editVenue(id, payload);
-      alert('Venue updated successfully!');
-      navigate('/admin/venues');
+      // Create a Blob for the JSON part to specify application/json content type
+      const jsonBlob = new Blob([JSON.stringify(venuePayload)], { type: 'application/json' });
+      formDataToSend.append('venue', jsonBlob);
+
+      selectedFiles.forEach(file => {
+        formDataToSend.append('files', file);
+      });
+
+      await venueService.editVenue(id, formDataToSend);
+      toast.success('Product updated successfully!');
+      setTimeout(() => navigate('/admin/venues'), 1500);
     } catch (err) {
       console.error(err);
-      setApiError('Failed to update venue.');
+      toast.error('Failed to update product.');
+      setApiError('Failed to update product.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const renderField = (label, name, type = 'text') => (
-    <div className="form-field">
-      <label>{label}</label>
-      <input
-        type={type}
-        name={name}
-        value={formData[name]}
-        onChange={handleChange}
-        className={errors[name] ? 'error' : ''}
-      />
-      {errors[name] && (
-        <span className="error-message">{errors[name]}</span>
-      )}
-    </div>
-  );
-
   return (
     <div className="edit-venue-container">
       <div className="edit-venue-header">
-        <h2>Edit Venue</h2>
+        <h2>Product Edit</h2>
+        <p>Refine your product information and manage visuals.</p>
       </div>
+
       {apiError && <div className="api-error">{apiError}</div>}
+
       <form onSubmit={handleSubmit} className="edit-venue-form">
-        <div className="form-grid">
-          {/* Left Section: Basic Details */}
-          <div className="form-section">
-            <h3>Basic Details</h3>
-            {renderField('Venue Name', 'venueName')}
-            {renderField('Location', 'location')}
-            {renderField('Image URL', 'imageUrl')}
-            {renderField('Description', 'description')}
-            {renderField('Status', 'status')}
+        <div className="form-main-content">
+          {/* Information Section */}
+          <div className="form-column">
+            <div className="form-section">
+              <h3><i className="fas fa-info-circle"></i> Basic Details</h3>
+
+              <div className="form-field">
+                <label>Product Name</label>
+                <input
+                  type="text"
+                  name="venueName"
+                  value={formData.venueName}
+                  onChange={handleChange}
+                  placeholder="e.g. Vintage Denim Jacket"
+                  className={errors.venueName ? 'error' : ''}
+                />
+                {errors.venueName && <span className="error-message">{errors.venueName}</span>}
+              </div>
+
+              <div className="form-row">
+                <div className="form-field">
+                  <label>Price (NPR)</label>
+                  <input
+                    type="number"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleChange}
+                    placeholder="0.00"
+                    className={errors.price ? 'error' : ''}
+                  />
+                  {errors.price && <span className="error-message">{errors.price}</span>}
+                </div>
+
+                <div className="form-field">
+                  <label>Status</label>
+                  <select name="status" value={formData.status} onChange={handleChange}>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-field">
+                  <label>Category</label>
+                  <input
+                    type="text"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    placeholder="e.g. Clothing..."
+                  />
+                </div>
+
+                <div className="form-field">
+                  <label>Brand</label>
+                  <input
+                    type="text"
+                    name="brand"
+                    value={formData.brand}
+                    onChange={handleChange}
+                    placeholder="e.g. Levi's, Nike..."
+                  />
+                </div>
+              </div>
+
+              <div className="form-field">
+                <label>Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Provide a detailed description of the product..."
+                  rows="5"
+                  className={errors.description ? 'error' : ''}
+                ></textarea>
+                {errors.description && <span className="error-message">{errors.description}</span>}
+              </div>
+            </div>
           </div>
 
-          {/* Right Section: Booking & Pricing */}
-          <div className="form-section">
-            <h3>Booking & Pricing</h3>
-            {renderField('Capacity', 'capacity', 'number')}
-            {renderField('Price per Hour', 'price', 'number')}
-            {renderField('Min Booking Hours', 'minBookingHours', 'number')}
-            {renderField('Opening Time', 'openingTime')}
-            {renderField('Closing Time', 'closingTime')}
-            {renderField('Amenities (comma separated)', 'amenities')}
+          {/* Media Section */}
+          <div className="form-column">
+            <div className="form-section image-management-section">
+              <h3><i className="fas fa-images"></i> Product Media</h3>
+
+              <div className="image-grid">
+                {/* Existing Images */}
+                {formData.imageUrls.map((url, index) => (
+                  <div key={`existing-${index}`} className="image-preview-card">
+                    <img src={url} alt={`Existing ${index}`} />
+                    <button type="button" className="remove-btn" onClick={() => removeExistingImage(url)}>
+                      &times;
+                    </button>
+                    <span className="badge">Current</span>
+                  </div>
+                ))}
+
+                {/* New Previews */}
+                {previews.map((url, index) => (
+                  <div key={`new-${index}`} className="image-preview-card new-image">
+                    <img src={url} alt={`Preview ${index}`} />
+                    <button type="button" className="remove-btn" onClick={() => removeSelectedFile(index)}>
+                      &times;
+                    </button>
+                    <span className="badge new">New</span>
+                  </div>
+                ))}
+
+                {/* Upload Button */}
+                <label className="upload-placeholder">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
+                  />
+                  <div className="upload-icon">+</div>
+                  <span>Add Image</span>
+                </label>
+              </div>
+              <p className="helper-text">Add or remove images. First image will be used as primary.</p>
+            </div>
           </div>
         </div>
 
-        {/* Buttons */}
+        {/* Action Buttons */}
         <div className="button-group">
           <button
             type="button"
@@ -154,20 +260,19 @@ const EditVenue = () => {
           >
             Cancel
           </button>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={isSubmitting}
             className="btn btn-save"
           >
             {isSubmitting ? (
               <>
                 <span className="loading-spinner"></span>
-                Saving...
+                Processing...
               </>
             ) : (
               <>
-                <span className="success-checkmark">✓</span>
-                Save
+                Save Changes
               </>
             )}
           </button>

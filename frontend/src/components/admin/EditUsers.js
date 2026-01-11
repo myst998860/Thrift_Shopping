@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { userService } from '../../services/api';
+import { FiArrowLeft, FiUser, FiMail, FiPhone, FiShield, FiBriefcase, FiFileText, FiCheckCircle, FiInfo } from 'react-icons/fi';
+import { toast } from 'react-toastify';
 import '../../styles/admin/EditUsers.css';
-const EditUser = () => {
 
+const EditUser = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
 
@@ -11,19 +13,20 @@ const EditUser = () => {
     fullname: '',
     email: '',
     role: '',
-    phoneNumber:'',
+    phoneNumber: '',
     company: '',
     panCard: '',
     businessTranscripts: ''
   });
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
+  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 1️⃣ Load user (including potential partner fields)
   useEffect(() => {
     const fetchUser = async () => {
       try {
+        setLoading(true);
         const dto = await userService.getUser(userId);
         setFormData({
           fullname: dto.fullname || '',
@@ -34,8 +37,11 @@ const EditUser = () => {
           panCard: dto.panCard || '',
           businessTranscripts: dto.businessTranscripts || ''
         });
-      } catch {
+      } catch (err) {
         setApiError('Failed to load user data');
+        toast.error('Could not load user profile');
+      } finally {
+        setLoading(false);
       }
     };
     fetchUser();
@@ -44,20 +50,22 @@ const EditUser = () => {
   const handleChange = e => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }));
+    }
   };
 
   const validate = () => {
     const errs = {};
     if (!formData.fullname.trim()) errs.fullname = 'Required';
-     if (!formData.phoneNumber.trim()) errs.phoneNumber = 'Required';
+    if (!formData.phoneNumber.trim()) errs.phoneNumber = 'Required';
     if (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
       errs.email = 'Valid email required';
     if (!formData.role.trim()) errs.role = 'Required';
+
     if (formData.role === 'PARTNER') {
       if (!formData.company.trim()) errs.company = 'Required';
       if (!formData.panCard.trim()) errs.panCard = 'Required';
-      if (!formData.businessTranscripts.trim())
-        errs.businessTranscripts = 'Required';
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -65,17 +73,17 @@ const EditUser = () => {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      toast.warning('Please fix the errors in the form');
+      return;
+    }
 
     setIsSubmitting(true);
-    setApiError('');
-
     try {
-      // Trimmed payload
       const payload = {
         fullname: formData.fullname,
         email: formData.email,
-         phoneNumber: formData.phoneNumber,
+        phoneNumber: formData.phoneNumber,
         role: formData.role,
         ...(formData.role === 'PARTNER' && {
           company: formData.company,
@@ -85,113 +93,189 @@ const EditUser = () => {
       };
 
       await userService.editUser(userId, payload);
+      toast.success('User updated successfully');
       navigate('/admin/users');
     } catch {
-      setApiError('Failed to update user');
+      toast.error('Failed to save updates');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (apiError) return <div className="edit-user-error" role="alert">{apiError}</div>;
+  if (loading) return (
+    <div className="edit-user-loading">
+      <div className="spinner"></div>
+      <p>Synchronizing profile data...</p>
+    </div>
+  );
 
   return (
-    <div className="edit-user-container">
-      <div className="edit-user-header">
-        <h2>Edit User</h2>
+    <div className="edit-user-modern-container">
+      <div className="edit-user-navigation">
+        <button className="back-link-btn" onClick={() => navigate('/admin/users')}>
+          <FiArrowLeft /> Back to Directory
+        </button>
       </div>
-      <form onSubmit={handleSubmit} className="edit-user-form" autoComplete="off" aria-label="Edit User Form">
-        <fieldset className="edit-user-fieldset">
-          {/* <legend>Edit User</legend> */}
 
-          {/* fullname, email, phoneNumber */}
-          {[{name:'fullname', label:'Full Name', type:'text', placeholder:'Enter full name'},
-            {name:'email', label:'Email', type:'email', placeholder:'Enter email address'},
-            {name:'phoneNumber', label:'Phone Number', type:'tel', placeholder:'Enter phone number'}].map(field => (
-            <div className="edit-user-form-group" key={field.name}>
-              <label htmlFor={field.name}>{field.label}</label>
-              <input
-                id={field.name}
-                name={field.name}
-                type={field.type}
-                value={formData[field.name]}
-                onChange={handleChange}
-                placeholder={field.placeholder}
-                aria-invalid={!!errors[field.name]}
-                aria-describedby={errors[field.name] ? `${field.name}-error` : undefined}
-                className={errors[field.name] ? 'input-error' : ''}
-              />
-              {errors[field.name] && <span className="edit-user-error" id={`${field.name}-error`}>{errors[field.name]}</span>}
+      <div className="edit-user-card-layout">
+        <div className="edit-user-sidebar">
+          <div className="profile-preview-card">
+            <div className="avatar-preview">
+              {formData.fullname ? formData.fullname.charAt(0).toUpperCase() : <FiUser />}
             </div>
-          ))}
-
-          <div className="edit-user-form-group">
-            <label htmlFor="role">Role</label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              aria-invalid={!!errors.role}
-              aria-describedby={errors.role ? 'role-error' : undefined}
-              className={errors.role ? 'input-error' : ''}
-            >
-              <option value="">Select role</option>
-              <option value="ADMIN">Admin</option>
-              <option value="ATTENDEE">Attendee</option>
-              <option value="PARTNER">Partner</option>
-            </select>
-            {errors.role && <span className="edit-user-error" id="role-error">{errors.role}</span>}
+            <h3>{formData.fullname || 'Anonymous User'}</h3>
+            <span className="role-chip">{formData.role || 'Attendee'}</span>
+            <div className="profile-mini-meta">
+              <span><FiMail /> {formData.email}</span>
+              <span><FiPhone /> {formData.phoneNumber || 'No phone'}</span>
+            </div>
           </div>
 
-          {/* Show partner-specific fields */}
-          {formData.role === 'PARTNER' && (
-            <>
-              {[{name:'company', label:'Company', placeholder:'Enter company name'},
-                {name:'panCard', label:'PAN Card', placeholder:'Enter PAN card number'},
-                {name:'businessTranscripts', label:'Business Transcripts', placeholder:'Enter business transcripts'}].map(field => (
-                <div className="edit-user-form-group" key={field.name}>
-                  <label htmlFor={field.name}>{field.label}</label>
+          <div className="edit-guidelines">
+            <h4><FiInfo /> Update Notice</h4>
+            <p>Modify user roles with caution. Promoting a user to ADMIN grants full system access.</p>
+          </div>
+        </div>
+
+        <div className="edit-user-main">
+          <header className="form-header">
+            <h1>Modify Account</h1>
+            <p>Update authentication and profile details for ID: #{userId}</p>
+          </header>
+
+          <form onSubmit={handleSubmit} className="modern-form">
+            <section className="form-section">
+              <div className="section-title">
+                <FiUser /> <span>Identity Details</span>
+              </div>
+              <div className="form-grid">
+                <div className="form-group-modern">
+                  <label><FiUser /> Full Name</label>
                   <input
-                    id={field.name}
-                    name={field.name}
-                    value={formData[field.name]}
+                    name="fullname"
+                    value={formData.fullname}
                     onChange={handleChange}
-                    placeholder={field.placeholder}
-                    aria-invalid={!!errors[field.name]}
-                    aria-describedby={errors[field.name] ? `${field.name}-error` : undefined}
-                    className={errors[field.name] ? 'input-error' : ''}
+                    className={errors.fullname ? 'error' : ''}
+                    placeholder="e.g. John Doe"
                   />
-                  {errors[field.name] && (
-                    <span className="edit-user-error" id={`${field.name}-error`}>
-                      {errors[field.name]}
-                    </span>
+                  {errors.fullname && <span className="error-text">{errors.fullname}</span>}
+                </div>
+
+                <div className="form-group-modern">
+                  <label><FiMail /> Email Address</label>
+                  <input
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className={errors.email ? 'error' : ''}
+                    placeholder="name@example.com"
+                  />
+                  {errors.email && <span className="error-text">{errors.email}</span>}
+                </div>
+
+                <div className="form-group-modern">
+                  <label><FiPhone /> Phone Number</label>
+                  <input
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    className={errors.phoneNumber ? 'error' : ''}
+                    placeholder="+977-XXXXXXXXXX"
+                  />
+                  {errors.phoneNumber && <span className="error-text">{errors.phoneNumber}</span>}
+                </div>
+
+                <div className="form-group-modern">
+                  <label><FiShield /> System Role</label>
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    className={errors.role ? 'error' : ''}
+                  >
+                    <option value="ATTENDEE">Attendee (User)</option>
+                    <option value="ADMIN">Administrator</option>
+                    <option value="PARTNER">Business Partner</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            {formData.role === 'PARTNER' && (
+              <section className="form-section partner-section">
+                <div className="section-title">
+                  <FiBriefcase /> <span>Partner Credentials</span>
+                </div>
+                <div className="form-grid">
+                  <div className="form-group-modern">
+                    <label><FiBriefcase /> Company Name</label>
+                    <input
+                      name="company"
+                      value={formData.company}
+                      onChange={handleChange}
+                      className={errors.company ? 'error' : ''}
+                    />
+                  </div>
+                  <div className="form-group-modern">
+                    <label><FiFileText /> PAN Card Number / ID</label>
+                    <input
+                      name="panCard"
+                      value={formData.panCard}
+                      onChange={handleChange}
+                      className={errors.panCard ? 'error' : ''}
+                    />
+                  </div>
+                </div>
+
+                <div className="document-previews">
+                  {formData.panCard && (formData.panCard.startsWith('http')) && (
+                    <div className="doc-preview-card">
+                      <label>PAN Card Image</label>
+                      <div className="image-wrapper">
+                        <img src={formData.panCard} alt="PAN Card" />
+                        <a href={formData.panCard} target="_blank" rel="noopener noreferrer" className="view-full-link">View Full</a>
+                      </div>
+                    </div>
+                  )}
+                  {formData.businessTranscripts && (formData.businessTranscripts.startsWith('http')) && (
+                    <div className="doc-preview-card">
+                      <label>Business Transcripts</label>
+                      <div className="image-wrapper">
+                        <img src={formData.businessTranscripts} alt="Business Transcripts" />
+                        <a href={formData.businessTranscripts} target="_blank" rel="noopener noreferrer" className="view-full-link">View Full</a>
+                      </div>
+                    </div>
                   )}
                 </div>
-              ))}
-            </>
-          )}
-.
-          <img src={formData.businessTranscripts} alt="User Image" width={100} height={100} style={{borderRadius: '10px'}} />
-
-          <button type="submit" className="edit-user-submit-btn" disabled={isSubmitting} aria-busy={isSubmitting}>
-            {isSubmitting ? (
-              <>
-                <span className="loading-spinner"></span>
-                Saving...
-              </>
-            ) : (
-              <>
-                <span className="success-checkmark"></span>
-                Save Updates
-              </>
+              </section>
             )}
-          </button>
-        </fieldset>
-      </form>
+
+            <div className="form-actions-modern">
+              <button
+                type="submit"
+                className="save-changes-btn"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <><div className="btn-spinner"></div> Saving...</>
+                ) : (
+                  <><FiCheckCircle /> Commit Updates</>
+                )}
+              </button>
+              <button
+                type="button"
+                className="cancel-btn"
+                onClick={() => navigate('/admin/users')}
+              >
+                Discard
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };
 
 export default EditUser;
-

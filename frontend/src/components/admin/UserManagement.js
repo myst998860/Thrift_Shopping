@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userService } from '../../services/api';
+import { FiSearch, FiPlus, FiMoreVertical, FiUser, FiMail, FiCalendar, FiShield, FiTrash2, FiEdit2, FiEye } from 'react-icons/fi';
 import '../../styles/admin/UserManagement.css';
 
 const UserManagement = () => {
-  // State declarations
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,43 +14,39 @@ const UserManagement = () => {
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
-  // Fetch users from API
   useEffect(() => {
-   const fetchUsers = async () => {
-  try {
-    setLoading(true);
-    const response = await userService.listUsers();
-    console.log('Fetched users:', response);
-    setUsers(Array.isArray(response) ? response : []);
-    setFilteredUsers(Array.isArray(response) ? response : []);
-    setError(null);
-  } catch (err) {
-    console.error('Error fetching users:', err);
-    setError('Failed to load users. Please try again.');
-    setUsers([]);
-    setFilteredUsers([]);
-  } finally {
-    setLoading(false);
-  }
-};
-
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await userService.listUsers();
+        setUsers(Array.isArray(response) ? response : []);
+        setFilteredUsers(Array.isArray(response) ? response : []);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+        setError('Failed to load users. Please try again.');
+        setUsers([]);
+        setFilteredUsers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchUsers();
   }, []);
 
-  // Filter users based on search term
   useEffect(() => {
     if (searchTerm.trim() === '') {
       setFilteredUsers(users);
     } else {
       const filtered = users.filter(user =>
         (user.fullname && user.fullname.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
+        (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (user.role && user.role.toLowerCase().includes(searchTerm.toLowerCase()))
       );
       setFilteredUsers(filtered);
     }
   }, [searchTerm, users]);
 
-  // Handle click outside action menu
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -64,213 +60,150 @@ const UserManagement = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     }
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [activeActionMenu]);
-
-  const handleActionClick = (user_id) => {
-    setActiveActionMenu(activeActionMenu === user_id ? null : user_id);
-  };
 
   const handleDeactivate = async (userId) => {
     try {
       await userService.changeUserStatus(userId, 'Inactive');
-      setUsers(prevUsers => 
-        prevUsers.map(user => 
-          user.user_id === userId ? { ...user, status: 'Inactive' } : user
-        )
-      );
+      setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, status: 'Inactive' } : u));
       setActiveActionMenu(null);
     } catch (error) {
-      console.error('Error deactivating user:', error);
       setError('Failed to deactivate user');
     }
   };
 
-
-  const handleActivate = async (user_id) => {
+  const handleActivate = async (userId) => {
     try {
-      await userService.changeUserStatus(user_id, 'Active');
-      setUsers(prevUsers =>
-        prevUsers.map(user =>
-          user.user_id === user_id? { ...user, status: 'Active' } : user
-        )
-      );
+      await userService.changeUserStatus(userId, 'Active');
+      setUsers(prev => prev.map(u => u.user_id === userId ? { ...u, status: 'Active' } : u));
       setActiveActionMenu(null);
     } catch (error) {
-      console.error('Error activating user:', error);
       setError('Failed to activate user');
     }
   };
 
- const handleDelete = async (userId) => {
-  console.log('Deleting userId:', userId);
-  if (!window.confirm('Are you sure you want to delete this user?')) return;
-  try {
-    await userService.deleteUser(userId);
-    setUsers((prevUsers) => prevUsers.filter((user) => user.user_id !== userId));
-    setActiveActionMenu(null);
-  } catch (error) {
-    console.error('Error deleting user:', error);
-    setError('Failed to delete user');
-  }
-};
-
-  const handleViewDetails = (user) => {
-    if (!user?.user_id) {
-    console.error("Invalid user ID:", user?.user_id);
-    return;
-  }
-  console.log("Navigating to view user with ID:", user.user_id);
-  navigate(`/admin/users/${user.user_id}`);
+  const handleDelete = async (userId) => {
+    if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+    try {
+      await userService.deleteUser(userId);
+      setUsers(prev => prev.filter(u => u.user_id !== userId));
+      setActiveActionMenu(null);
+    } catch (error) {
+      setError('Failed to delete user');
+    }
   };
 
- const handleEditUser = (user) => {
-  if (!user?.user_id) {
-    console.error("Invalid user ID:", user?.user_id);
-    return;
-  }
-  console.log("Navigating to edit user with ID:", user.user_id);
-  navigate(`/admin/users/edit/${user.user_id}`);
-};
+  const StatusBadge = ({ status }) => (
+    <span className={`status-badge-modern ${status === 'Active' ? 'active' : 'inactive'}`}>
+      {status}
+    </span>
+  );
 
-  const StatusBadge = ({ status }) => {
-    const statusClasses = `status-badge ${status === 'Active' ? 'status-active' : 'status-inactive'}`;
-    return <span className={statusClasses}>{status}</span>;
-  };
+  if (loading) return (
+    <div className="user-loading-state">
+      <div className="loading-spinner"></div>
+      <p>Fetching user directory...</p>
+    </div>
+  );
 
-  if (loading) {
-    return <div className="loading-message">Loading users...</div>;
-  }
-
-    return (
-    <div className="user-management-container">
-      <h1 className="title">User Management</h1>
-      <p className="subtitle">Manage all registered users</p>
-      
-      <div className="header">
-        <h2>All Users</h2>
-        <button 
-          className="add-user-btn"
-          onClick={() => navigate('/admin/users/new')}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Add New User
+  return (
+    <div className="user-management-modern">
+      <div className="um-header">
+        <div className="um-title-section">
+          <h1>User Directory</h1>
+          <p>Manage access levels and monitor platform contributors.</p>
+        </div>
+        <button className="um-add-btn" onClick={() => navigate('/admin/users/new')}>
+          <FiPlus /> New User
         </button>
       </div>
 
-      {error && <div className="error-message">{error}</div>}
-      
-      <div className="search-container">
-        <input
-          type="text"
-          placeholder="Search users by name, partner, or location..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
-        />
+      <div className="um-controls">
+        <div className="um-search">
+          <FiSearch className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search by name, email or role..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="um-stats">
+          Total Users: <strong>{filteredUsers.length}</strong>
+        </div>
       </div>
 
-      <div className="table-container">
+      {error && <div className="um-error-banner">{error}</div>}
+
+      <div className="user-cards-grid">
         {filteredUsers.length === 0 ? (
-          <div className="no-users-message">
-            {searchTerm ? 'No matching users found' : 'No users available'}
+          <div className="um-empty-state">
+            <FiUser size={48} />
+            <p>No users found matching your search.</p>
           </div>
         ) : (
-          <table className="user-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Join Date</th>
-                {/* <th>Bookings</th> */}
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((user) => (
-                <tr key={user.user_id}>
-                  <td>{user.user_id}</td>
-                  <td>{user.fullname}</td>
-                  <td>{user.email}</td>
-                   <td>{user.role}</td>
-                <td>{user.joinDate ? new Date(user.joinDate).toLocaleDateString() : 'N/A'}</td>
+          filteredUsers.map((user) => (
+            <div key={user.user_id} className="user-card-modern">
+              <div className="card-top">
+                <div className="user-avatar-circle">
+                  {user.fullname ? user.fullname.charAt(0).toUpperCase() : <FiUser />}
+                </div>
+                <div className="user-actions-container">
+                  <button
+                    className="user-more-btn"
+                    onClick={() => setActiveActionMenu(activeActionMenu === user.user_id ? null : user.user_id)}
+                  >
+                    <FiMoreVertical />
+                  </button>
+                  {activeActionMenu === user.user_id && (
+                    <div className="context-menu-modern" ref={menuRef}>
+                      <button onClick={() => navigate(`/admin/users/${user.user_id}`)}>
+                        <FiEye /> View Details
+                      </button>
+                      <button onClick={() => navigate(`/admin/users/edit/${user.user_id}`)}>
+                        <FiEdit2 /> Edit Profile
+                      </button>
+                      {user.status === 'Active' ? (
+                        <button onClick={() => handleDeactivate(user.user_id)}>
+                          <FiShield /> Deactivate
+                        </button>
+                      ) : (
+                        <button onClick={() => handleActivate(user.user_id)} className="activate-item">
+                          <FiShield /> Activate
+                        </button>
+                      )}
+                      <button onClick={() => handleDelete(user.user_id)} className="delete-item">
+                        <FiTrash2 /> Delete User
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-                
-                  {/* <td>{user.bookings || 0}</td> */}
-                  <td>
-                    <StatusBadge status={user.status} />
-                  </td>
-                  <td className="actions-cell">
-                    <button 
-                      onClick={() => handleActionClick(user.user_id)} 
-                      className="actions-btn"
-                      aria-label="User actions"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
-                    </button>
-                    {activeActionMenu === user.user_id && (
-                      <div className="actions-menu" ref={menuRef}>
-                        <div className="actions-menu-header">Actions</div>
-                        <div className="actions-menu-items">
-                          <button 
-                            onClick={() => {
-                              setActiveActionMenu(null);
-                              handleViewDetails(user);
-                              console.log("clicked:",user)
-                        
-                            }} 
-                            className="actions-menu-item"
-                          >
-                            View Details
-                          </button>
-                         <button 
-                              onClick={() => {
-                                setActiveActionMenu(null);
-                                handleEditUser(user);
-                                console.log("clicked:",user)
-                              }} 
-                              className="actions-menu-item"
-                            >
-                              Edit User
-                          </button>
-                          {user.status === 'Active' ? (
-                            <button 
-                              onClick={() => handleDeactivate(user.id)} 
-                              className="actions-menu-item"
-                            >
-                              Deactivate User
-                            </button>
-                          ) : (
-                            <button 
-                              onClick={() => handleActivate(user.id)} 
-                              className="actions-menu-item actions-menu-item-activate"
-                            >
-                              Activate User
-                            </button>
-                          )}
-                          <button 
-                            onClick={() => handleDelete(user.user_id)} 
-                            className="actions-menu-item actions-menu-item-delete"
-                          >
-                            Delete User
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              <div className="card-body">
+                <h3 className="user-full-name">{user.fullname || 'Anonymous User'}</h3>
+                <div className="user-id-badge">ID: #{user.user_id}</div>
+
+                <div className="user-meta-info">
+                  <div className="meta-line">
+                    <FiMail /> <span>{user.email}</span>
+                  </div>
+                  <div className="meta-line">
+                    <FiShield /> <span className="role-tag">{user.role || 'User'}</span>
+                  </div>
+                  <div className="meta-line">
+                    <FiCalendar />
+                    <span>Joined {user.joinDate ? new Date(user.joinDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="card-footer">
+                <StatusBadge status={user.status} />
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>

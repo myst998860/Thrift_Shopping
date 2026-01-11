@@ -21,7 +21,7 @@ const HomePage = () => {
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [categories, setCategories] = useState([]);
-  
+
   // Carousel states - track current index for each section
   const [curatedIndex, setCuratedIndex] = useState(0);
   const [featuredIndex, setFeaturedIndex] = useState(0);
@@ -38,10 +38,16 @@ const HomePage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch ALL venues (not just 8)
         const response = await venueService.listVenue();
-        const allVenues = Array.isArray(response) ? response : [];
+        const allFetchedVenues = Array.isArray(response) ? response : [];
+
+        // ✅ Filter only active venues
+        const allVenues = allFetchedVenues.filter(v =>
+          v.status?.toLowerCase() === 'active'
+        );
+
         setVenues(allVenues);
         setError(null);
 
@@ -74,19 +80,19 @@ const HomePage = () => {
         // Fetch programs
         try {
           const programsData = await programService.listPrograms();
-          const safePrograms = Array.isArray(programsData) 
+          const safePrograms = Array.isArray(programsData)
             ? programsData.map((p) => ({
-                programId: p.programId,
-                programTitle: p.programTitle || "Untitled Program",
-                name: p.name || "ThriftGood",
-                description: p.description || "No description available",
-                category: p.category || "Other",
-                programImage: p.programImage || "/default-image.png",
-                programLocation: p.programLocation || "Kathmandu",
-                targetItemsToCollect: p.targetItemsToCollect || 1,
-                estimatedBeneficiaries: p.estimatedBeneficiaries || 0,
-                createdAt: p.createdAt,
-              }))
+              programId: p.programId,
+              programTitle: p.programTitle || "Untitled Program",
+              name: p.name || "ThriftGood",
+              description: p.description || "No description available",
+              category: p.category || "Other",
+              programImage: p.programImage || "/default-image.png",
+              programLocation: p.programLocation || "Kathmandu",
+              targetItemsToCollect: p.targetItemsToCollect || 1,
+              estimatedBeneficiaries: p.estimatedBeneficiaries || 0,
+              createdAt: p.createdAt,
+            }))
             : [];
           // Sort by most recently added (by programId descending, or createdAt if available)
           const sortedPrograms = safePrograms.sort((a, b) => {
@@ -116,10 +122,10 @@ const HomePage = () => {
     return (
       <div className="homepage">
         <Navbar />
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
           height: '50vh',
           fontSize: '18px',
           color: '#666'
@@ -146,8 +152,8 @@ const HomePage = () => {
           padding: '20px'
         }}>
           <p>{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             style={{
               marginTop: '20px',
               padding: '10px 20px',
@@ -165,7 +171,7 @@ const HomePage = () => {
   }
 
   // Brand names for display
-  const brands = ["Adidas", "Nike", "Puma", "Levi's", "Zara", "H&M",   "Calvin Klein", ];
+  const brands = ["Adidas", "Nike", "Puma", "Levi's", "Zara", "H&M", "Calvin Klein",];
   // const categories = ["Vintage", "Classic", "Retro", "Brand", "EcoFriendly", "Vintage", "EcoStyle", "ReFashion", "GreenWear", "SecondLife", "UpCycle", "Retro"];
 
   // Helper function to get current items for carousel
@@ -287,7 +293,7 @@ const HomePage = () => {
                     {categoryImage && (
                       <img src={categoryImage} alt={category} className="curated-image" />
                     )}
-                    <button 
+                    <button
                       className="curated-btn"
                       onClick={() => (window.location.href = `/venues?category=${encodeURIComponent(category)}`)}
                     >
@@ -300,7 +306,7 @@ const HomePage = () => {
               // Fallback categories if none found
               ["Best Seller", "Shop Men", "Shop Women", "Shop Casual"].map((cat, idx) => (
                 <div key={idx} className="curated-card">
-                  <button 
+                  <button
                     className="curated-btn"
                     onClick={() => (window.location.href = "/shop")}
                   >
@@ -346,7 +352,7 @@ const HomePage = () => {
                         <span className="featured-price-old">NPR {venue.originalPrice}</span>
                       )}
                     </div>
-                    <button 
+                    <button
                       className="featured-cart-btn"
                       onClick={() => addItem({ venueId: venue.venue_id, quantity: 1 })}
                     >
@@ -381,20 +387,20 @@ const HomePage = () => {
               {currentPrograms.map((program) => (
                 <div key={program.programId} className="program-nostra-card">
                   {program.programImage && (
-                    <img 
-                      src={program.programImage} 
-                      alt={program.programTitle} 
+                    <img
+                      src={program.programImage}
+                      alt={program.programTitle}
                       className="program-nostra-image"
                     />
                   )}
                   <div className="program-nostra-body">
                     <h3 className="program-nostra-title">{program.programTitle}</h3>
                     <p className="program-nostra-desc">
-                      {program.description.length > 80 
-                        ? program.description.substring(0, 80) + "..." 
+                      {program.description.length > 80
+                        ? program.description.substring(0, 80) + "..."
                         : program.description}
                     </p>
-                    <button 
+                    <button
                       className="program-nostra-btn"
                       onClick={() => (window.location.href = `/programs/${program.programId}`)}
                     >
@@ -418,9 +424,9 @@ const HomePage = () => {
           <h2 className="newsletter-nostra-title">Subscribe to our newsletter to get updates to our latest collections</h2>
           <p className="newsletter-nostra-subtitle">Get 20% off on your first order just by subscribing to our newsletter</p>
           <div className="newsletter-nostra-form">
-            <input 
-              type="email" 
-              placeholder="Enter your email" 
+            <input
+              type="email"
+              placeholder="Enter your email"
               className="newsletter-nostra-input"
             />
             <button className="newsletter-nostra-btn">Subscribe</button>

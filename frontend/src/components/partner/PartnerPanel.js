@@ -96,12 +96,30 @@ import {
 } from "react-icons/fi";
 import "../../styles/admin/AdminPanel.css";
 import { useUserSession } from "../../context/UserSessionContext"; // use context
+import { donationAPI } from "../../services/api"; // Added for counts
+import { useEffect } from "react"; // Added
 
 const PartnerPanel = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useUserSession(); // get logout from context
+  const [counts, setCounts] = useState({ pending: 0, confirmed: 0 });
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const data = await donationAPI.getDonationCounts();
+        setCounts(data);
+      } catch (err) {
+        console.error("Error fetching donation counts:", err);
+      }
+    };
+    fetchCounts();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchCounts, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const navItems = [
     { path: "/partner/dashboard", icon: <FiHome />, label: "Dashboard" },
@@ -142,6 +160,20 @@ const PartnerPanel = () => {
             >
               <span className="sidebar-icon">{item.icon}</span>
               <span className="sidebar-label">{item.label}</span>
+              {item.label === "Donations" && (
+                <div className="badge-container">
+                  {counts.pending > 0 && (
+                    <span className="badge pending-badge" title="Pending Donations">
+                      {counts.pending}
+                    </span>
+                  )}
+                  {counts.confirmed > 0 && (
+                    <span className="badge confirmed-badge" title="Confirmed Donations">
+                      {counts.confirmed}
+                    </span>
+                  )}
+                </div>
+              )}
             </Link>
           ))}
         </nav>

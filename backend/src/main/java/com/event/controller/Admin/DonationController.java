@@ -2,6 +2,7 @@ package com.event.controller.Admin;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -196,6 +197,13 @@ public class DonationController {
         donation.setStatus(status.toLowerCase());
         donationRepo.save(donation);
 
+        // Notify Partner about status change
+        try {
+            notificationService.createDonationStatusNotification(donation, status);
+        } catch (Exception e) {
+            System.err.println("❌ Error sending status update notification: " + e.getMessage());
+        }
+
         // send email
         String email = donation.getEmail();
         if (email != null && !email.isBlank()) {
@@ -385,6 +393,42 @@ public class DonationController {
                 "totalDonations", totalDonations));
     }
 
+    @GetMapping("/counts")
+    public ResponseEntity<Map<String, Long>> getDonationCounts(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        Map<String, Long> counts = new HashMap<>();
+        counts.put("pending", 0L);
+        counts.put("confirmed", 0L);
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.ok(counts);
+        }
+
+        try {
+            String token = authHeader.substring(7);
+            String[] parts = token.split("\\.");
+            String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode jsonNode = mapper.readTree(payload);
+            Long userId = jsonNode.has("userId") ? jsonNode.get("userId").asLong() : null;
+            String role = jsonNode.has("role") ? jsonNode.get("role").asText() : null;
+
+            if (userId != null && "partner".equalsIgnoreCase(role)) {
+                counts.put("pending", donationRepo.countByPartnerAndStatus(userId, "pending"));
+                counts.put("confirmed",
+                        donationRepo.countByPartnerAndStatus(userId, "confirmed"));
+            } else if ("admin".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
+                counts.put("pending", donationRepo.countByStatusIgnoreCase("pending"));
+                counts.put("confirmed", donationRepo.countByStatusIgnoreCase("confirmed"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.ok(counts);
+        }
+
+        return ResponseEntity.ok(counts);
+    }
+
     // ---------------- ASSIGN DONATION TO ADMIN ----------------
     @PutMapping("/{id}/assign-admin")
     public ResponseEntity<?> assignAdmin(@PathVariable Long id) {
@@ -406,12 +450,12 @@ public class DonationController {
         donation.setStatus("assigned_to_admin");
         donationRepo.save(donation);
 
-        // 2. Notify Admin
+        // 2. Notify Admin & Partner
         if (admin != null) {
             try {
                 notificationService.createAssignedDonationNotification(donation, admin);
             } catch (Exception e) {
-                System.err.println("Error notifying admin: " + e.getMessage());
+                System.err.println("Error notifying about assignment: " + e.getMessage());
             }
         }
 

@@ -1,32 +1,42 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { orderAPI } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
+import {
+  FiSearch,
+  FiCalendar,
+  FiEye,
+  FiMoreVertical,
+  FiFilter,
+  FiChevronDown,
+  FiChevronRight,
+  FiShoppingBag,
+  FiUser,
+  FiCreditCard,
+  FiMoreHorizontal,
+  FiArrowRight,
+  FiX
+} from 'react-icons/fi';
+import { toast } from 'react-toastify';
 import '../../styles/admin/Booking.css';
 
 const statusOptions = ["Pending", "Processing", "Shipped", "Completed", "Cancelled"];
-const statusColors = {
-  Pending: "#fff7b2",
-  Processing: "#b2d1ff",
-  Shipped: "#ffd1b2",
-  Completed: "#b2ffb2",
-  Cancelled: "#ffb2b2",
-};
-const statusTextColors = {
-  Pending: "#b29a1a",
-  Processing: "#1a4da1",
-  Shipped: "#b25a1a",
-  Completed: "#1a7f1a",
-  Cancelled: "#a10000",
+
+// Premium design colors (No Green)
+const premiumStatusStyles = {
+  Pending: { bg: '#FFF9E5', text: '#B7791F', dot: '#F6AD55' }, // Amber
+  Processing: { bg: '#EBF8FF', text: '#2B6CB0', dot: '#4299E1' }, // Blue
+  Shipped: { bg: '#FAF5FF', text: '#6B46C1', dot: '#9F7AEA' }, // Purple
+  Completed: { bg: '#F0F5FF', text: '#1E3A8A', dot: '#3B82F6' }, // Deep Blue (Success instead of green)
+  Cancelled: { bg: '#FFF5F5', text: '#C53030', dot: '#F56565' }, // Red
+  Default: { bg: '#F7FAFC', text: '#4A5568', dot: '#CBD5E0' }    // Gray
 };
 
-// Status badge colors matching the image
-const statusBadgeColors = {
-  Active: { bg: "#d1fae5", text: "#065f46" },
-  Pending: { bg: "#fed7aa", text: "#9a3412" },
-  Processing: { bg: "#dbeafe", text: "#1e40af" },
-  Shipped: { bg: "#e0e7ff", text: "#3730a3" },
-  Completed: { bg: "#d1fae5", text: "#065f46" },
-  Cancelled: { bg: "#fee2e2", text: "#991b1b" },
+const statusFlow = {
+  Pending: ["Pending", "Processing", "Cancelled"],
+  Processing: ["Processing", "Shipped", "Cancelled"],
+  Shipped: ["Shipped", "Completed", "Cancelled"],
+  Completed: ["Completed"],
+  Cancelled: ["Cancelled"]
 };
 
 const Booking = () => {
@@ -36,100 +46,74 @@ const Booking = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedOrders, setSelectedOrders] = useState(new Set());
-  const [selectAll, setSelectAll] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState(new Set());
-
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true);
-      try {
-        const response = await orderAPI.listOrders();
-        // Flatten orders - show individual orders instead of grouping by user
-        const flattenedOrders = response.flatMap(order => {
-          // If order has items, create one row per order
-          return {
-            ...order,
-            // Get first item for display
-            firstItem: order.items && order.items.length > 0 ? order.items[0] : null,
-            // Get customer name from order
-            customerName: order.userName || order.customerName || order.userEmail?.split('@')[0] || `User #${order.userId}`,
-            // Format date
-            formattedDate: order.createdAt || order.orderDate ? new Date(order.createdAt || order.orderDate).toLocaleDateString('en-GB') : 'N/A'
-          };
-        });
-        // Sort by date (newest first)
-        flattenedOrders.sort((a, b) => {
-          const dateA = new Date(a.createdAt || a.orderDate || 0);
-          const dateB = new Date(b.createdAt || b.orderDate || 0);
-          return dateB - dateA;
-        });
-        setOrders(flattenedOrders);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to fetch orders.");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchOrders();
   }, []);
 
-  // Calculate order statistics
-  const orderStats = {
-    all: orders.length,
-    active: orders.filter(o => o.status === "Processing" || o.status === "Shipped" || o.status === "Completed").length,
-    pending: orders.filter(o => o.status === "Pending").length,
-    fraud: orders.filter(o => o.status === "Fraud" || false).length,
-    cancelled: orders.filter(o => o.status === "Cancelled").length,
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const response = await orderAPI.listOrders();
+      const flattenedOrders = response.flatMap(order => ({
+        ...order,
+        customerName: order.userName || order.customerName || order.userEmail?.split('@')[0] || `User #${order.userId}`,
+        formattedDate: order.createdAt || order.orderDate ? new Date(order.createdAt || order.orderDate).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        }) : 'N/A'
+      }));
+
+      flattenedOrders.sort((a, b) => {
+        const dateA = new Date(a.createdAt || a.orderDate || 0);
+        const dateB = new Date(b.createdAt || b.orderDate || 0);
+        return dateB - dateA;
+      });
+
+      setOrders(flattenedOrders);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to synchronize with server.");
+      toast.error("Failed to load orders.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Filter orders based on active tab, search, and date
   const getFilteredOrders = () => {
     let filtered = orders;
 
-    // Filter by status tab
     if (activeTab === "active") {
-      filtered = filtered.filter(o => o.status === "Processing" || o.status === "Shipped" || o.status === "Completed");
+      filtered = filtered.filter(o => ["Processing", "Shipped", "Completed"].includes(o.status));
     } else if (activeTab === "pending") {
       filtered = filtered.filter(o => o.status === "Pending");
-    } else if (activeTab === "fraud") {
-      filtered = filtered.filter(o => o.status === "Fraud");
     } else if (activeTab === "cancelled") {
       filtered = filtered.filter(o => o.status === "Cancelled");
     }
 
-    // Filter by search term
     if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(order =>
-        order.orderId?.toString().toLowerCase().includes(searchLower) ||
-        order.customerName?.toLowerCase().includes(searchLower) ||
-        order.userEmail?.toLowerCase().includes(searchLower) ||
-        order.firstItem?.venueName?.toLowerCase().includes(searchLower) ||
-        order.firstItem?.productName?.toLowerCase().includes(searchLower)
+      const s = searchTerm.toLowerCase();
+      filtered = filtered.filter(o =>
+        o.orderId?.toString().includes(s) ||
+        o.customerName?.toLowerCase().includes(s) ||
+        o.userEmail?.toLowerCase().includes(s)
       );
     }
 
-    // Filter by Date Range
     if (startDate) {
       const start = new Date(startDate);
       start.setHours(0, 0, 0, 0);
-      filtered = filtered.filter(o => {
-        const d = new Date(o.createdAt || o.orderDate);
-        return d >= start;
-      });
+      filtered = filtered.filter(o => new Date(o.createdAt || o.orderDate) >= start);
     }
     if (endDate) {
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
-      filtered = filtered.filter(o => {
-        const d = new Date(o.createdAt || o.orderDate);
-        return d <= end;
-      });
+      filtered = filtered.filter(o => new Date(o.createdAt || o.orderDate) <= end);
     }
 
     return filtered;
@@ -137,336 +121,258 @@ const Booking = () => {
 
   const filteredOrders = getFilteredOrders();
 
-  // Group orders by userId
-  const groupOrdersByUserId = (ordersList) => {
+  const groupOrders = (list) => {
     const grouped = {};
-    ordersList.forEach(order => {
-      const userId = order.userId || 'unknown';
-      if (!grouped[userId]) {
-        grouped[userId] = [];
-      }
-      grouped[userId].push(order);
+    list.forEach(o => {
+      const id = o.userId || 'guest';
+      if (!grouped[id]) grouped[id] = [];
+      grouped[id].push(o);
     });
     return grouped;
   };
 
-  const groupedOrders = groupOrdersByUserId(filteredOrders);
+  const groupedOrders = groupOrders(filteredOrders);
 
-  // Toggle expand/collapse for a user group
   const toggleGroup = (userId) => {
-    const newExpanded = new Set(expandedGroups);
-    if (newExpanded.has(userId)) {
-      newExpanded.delete(userId);
-    } else {
-      newExpanded.add(userId);
-    }
-    setExpandedGroups(newExpanded);
+    const next = new Set(expandedGroups);
+    if (next.has(userId)) next.delete(userId);
+    else next.add(userId);
+    setExpandedGroups(next);
   };
 
-  // Handle select all
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedOrders(new Set(filteredOrders.map(o => o.orderId)));
-      setSelectAll(true);
-    } else {
-      setSelectedOrders(new Set());
-      setSelectAll(false);
-    }
-  };
-
-  // Handle individual checkbox
-  const handleSelectOrder = (orderId) => {
-    const newSelected = new Set(selectedOrders);
-    if (newSelected.has(orderId)) {
-      newSelected.delete(orderId);
-    } else {
-      newSelected.add(orderId);
-    }
-    setSelectedOrders(newSelected);
-    setSelectAll(newSelected.size === filteredOrders.length);
-  };
-
-  const handleStatusChange = async (orderId, newStatus) => {
+  const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       await orderAPI.updateOrderStatus(orderId, newStatus);
-      setOrders(prevOrders =>
-        prevOrders.map(order =>
-          order.orderId === orderId ? { ...order, status: newStatus } : order
-        )
-      );
+      setOrders(prev => prev.map(o => o.orderId === orderId ? { ...o, status: newStatus } : o));
+      toast.info(`Order #${orderId} marked as ${newStatus}`);
     } catch (err) {
-      console.error("Failed to update order status:", err);
-      setError("Failed to update order status.");
+      toast.error("Status update failed.");
     }
   };
 
-  const handleViewOrder = (order) => {
-    navigate(`/admin/orderdetail/${order.orderId}`);
+  const getStatusStyle = (status) => premiumStatusStyles[status] || premiumStatusStyles.Default;
+
+  const getPaymentLabel = (method) => {
+    if (!method) return "Manual Pay";
+    const m = method.toLowerCase();
+    if (m.includes("esewa")) return "eSewa Verified";
+    if (m.includes("khalti")) return "Khalti Verified";
+    if (m.includes("card")) return "Card Payment";
+    return method;
   };
 
-  // Get service/product name from order
-  const getServiceName = (order) => {
-    if (order.firstItem?.venueName) return order.firstItem.venueName;
-    if (order.firstItem?.productName) return order.firstItem.productName;
-    return "Product";
-  };
-
-  // Format payment status
-  const getPaymentStatus = (order) => {
-    if (!order.paymentMethod) return "Unpaid";
-    const method = order.paymentMethod.toLowerCase();
-    if (method.includes("mastercard")) return "Paid By Mastercard";
-    if (method.includes("visa")) return "Paid By Visacard";
-    if (method.includes("paypal")) return "Paid By Paypal";
-    if (method.includes("esewa")) return "Paid By eSewa";
-    if (method.includes("wise")) return "Paid By Wise";
-    return `Paid By ${order.paymentMethod}`;
-  };
-
-  // Get status badge style
-  const getStatusBadgeStyle = (status) => {
-    const normalizedStatus = status === "Processing" || status === "Shipped" || status === "Completed" ? "Active" : status;
-    const colors = statusBadgeColors[normalizedStatus] || statusBadgeColors.Pending;
-    return {
-      backgroundColor: colors.bg,
-      color: colors.text,
-      padding: "4px 12px",
-      borderRadius: "12px",
-      fontSize: "12px",
-      fontWeight: "600",
-      display: "inline-block",
-    };
-  };
+  if (loading && orders.length === 0) {
+    return (
+      <div className="booking-modern-loader">
+        <div className="premium-spinner"></div>
+        <p>Orchestrating order data...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="manage-orders-container">
-      {/* ... header ... */}
-
-      {/* ... overview cards ... */}
-
-      {/* ... tabs ... */}
-
-      {/* Search and Filters */}
-      <div className="search-filters-section">
-        <div className="search-container">
-          <span className="search-icon">🔍</span>
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Search for Orders"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+    <div className="bookings-modern-container">
+      <header className="bookings-header-premium">
+        <div className="header-left">
+          <h1>Universal Orders</h1>
+          <p>Supervise and manage global order transactions</p>
         </div>
-        <div className="filter-buttons" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <div className="date-filter-group">
+        <div className="header-right">
+          <button className="refresh-btn-modern" onClick={fetchOrders}>
+            <FiMoreHorizontal /> Refresh Sync
+          </button>
+        </div>
+      </header>
+
+      <section className="bookings-stats-grid">
+        <div className="stat-card-modern">
+          <div className="stat-icon-wrapper blue"><FiShoppingBag /></div>
+          <div className="stat-content">
+            <label>Total Orders</label>
+            <h3>{orders.length}</h3>
+          </div>
+        </div>
+        <div className="stat-card-modern">
+          <div className="stat-icon-wrapper amber"><FiCalendar /></div>
+          <div className="stat-content">
+            <label>Pending Reviews</label>
+            <h3>{orders.filter(o => o.status === "Pending").length}</h3>
+          </div>
+        </div>
+        <div className="stat-card-modern">
+          <div className="stat-icon-wrapper purple"><FiCreditCard /></div>
+          <div className="stat-content">
+            <label>Net Revenue</label>
+            <h3>NPR {orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}</h3>
+          </div>
+        </div>
+      </section>
+
+      <div className="bookings-table-actions">
+        <div className="tab-switcher-modern">
+          <button className={activeTab === "all" ? "active" : ""} onClick={() => setActiveTab("all")}>All Transactions</button>
+          <button className={activeTab === "active" ? "active" : ""} onClick={() => setActiveTab("active")}>Active</button>
+          <button className={activeTab === "pending" ? "active" : ""} onClick={() => setActiveTab("pending")}>Pending</button>
+          <button className={activeTab === "cancelled" ? "active" : ""} onClick={() => setActiveTab("cancelled")}>Cancelled</button>
+        </div>
+
+        <div className="table-controls-modern">
+          <div className="search-bar-modern">
+            <FiSearch />
             <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="date-input"
-              style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}
-            />
-            <span style={{ margin: '0 5px' }}>to</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="date-input"
-              style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}
+              placeholder="Query by Order ID, Name or Email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <button className="filters-btn" onClick={() => { setStartDate(''); setEndDate(''); }}>
-            Clear Dates
+          <button className={`filter-toggle-btn ${showFilters ? 'active' : ''}`} onClick={() => setShowFilters(!showFilters)}>
+            <FiFilter /> {showFilters ? 'Hide Filters' : 'Advanced'}
           </button>
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="orders-table-container">
-        {loading && <div className="loading-message">Loading orders...</div>}
-        {error && <div className="error-message">{error}</div>}
-        {!loading && !error && (
-          <table className="orders-table">
-            <thead>
+      {showFilters && (
+        <div className="advanced-filters-panel">
+          <div className="date-range-modern">
+            <label>From Date</label>
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+          </div>
+          <div className="date-range-modern">
+            <label>To Date</label>
+            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          </div>
+          <button className="reset-filters-anchor" onClick={() => { setStartDate(''); setEndDate(''); }}>Reset Filters</button>
+        </div>
+      )}
+
+      <div className="premium-table-wrapper">
+        <table className="bookings-modern-table">
+          <thead>
+            <tr>
+              <th width="40"></th>
+              <th>Order Identity</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Transaction</th>
+              <th>Status</th>
+              <th>Fulfillment</th>
+              <th width="80">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.entries(groupedOrders).length === 0 ? (
               <tr>
-                <th>
-                  <input
-                    type="checkbox"
-                    checked={selectAll}
-                    onChange={handleSelectAll}
-                    className="table-checkbox"
-                  />
-                </th>
-                <th>Order ID</th>
-                <th>Customer Name</th>
-                <th>Service Name</th>
-                <th>Date</th>
-                <th>Amount</th>
-                <th>Payment Status</th>
-                <th>Status</th>
-                <th>Action</th>
+                <td colSpan="8" className="empty-table-state">
+                  <FiShoppingBag size={48} />
+                  <p>No transactions found matching your criteria.</p>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {Object.keys(groupedOrders).length === 0 ? (
-                <tr>
-                  <td colSpan="9" className="no-orders">
-                    No orders found
-                  </td>
-                </tr>
-              ) : (
-                Object.entries(groupedOrders).map(([userId, userOrders]) => {
-                  // Sort orders by date (newest first)
-                  const sortedOrders = [...userOrders].sort((a, b) => {
-                    const dateA = new Date(a.createdAt || a.orderDate || 0);
-                    const dateB = new Date(b.createdAt || b.orderDate || 0);
-                    return dateB - dateA;
-                  });
-                  const latestOrder = sortedOrders[0];
-                  const isExpanded = expandedGroups.has(userId);
-                  const hasMultipleOrders = sortedOrders.length > 1;
+            ) : (
+              Object.entries(groupedOrders)
+                .sort(([, a], [, b]) => new Date(b[0]?.createdAt || 0) - new Date(a[0]?.createdAt || 0))
+                .map(([userId, userOrders]) => {
+                  const sorted = [...userOrders].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                  const latest = sorted[0];
+                  const isExp = expandedGroups.has(userId);
+                  const isGroup = sorted.length > 1;
 
                   return (
                     <React.Fragment key={userId}>
-                      {/* Main Row - Shows latest order or summary */}
-                      <tr className={hasMultipleOrders ? "group-header-row" : ""}>
-                        <td>
-                          {hasMultipleOrders && (
-                            <button
-                              className="expand-toggle-btn"
-                              onClick={() => toggleGroup(userId)}
-                              aria-label={isExpanded ? "Collapse orders" : "Expand orders"}
-                            >
-                              {isExpanded ? "▼" : "▶"}
+                      <tr className={`main-row ${isExp ? 'is-expanded' : ''} ${isGroup ? 'has-group' : ''}`}>
+                        <td className="expand-cell">
+                          {isGroup && (
+                            <button onClick={() => toggleGroup(userId)} className="toggle-trigger">
+                              {isExp ? <FiChevronDown /> : <FiChevronRight />}
                             </button>
                           )}
-                          {!hasMultipleOrders && (
-                            <input
-                              type="checkbox"
-                              checked={selectedOrders.has(latestOrder.orderId)}
-                              onChange={() => handleSelectOrder(latestOrder.orderId)}
-                              className="table-checkbox"
-                            />
-                          )}
                         </td>
-                        <td className="order-id-cell">
-                          {latestOrder.orderId}
-                          {hasMultipleOrders && (
-                            <span className="order-count-badge">({sortedOrders.length})</span>
-                          )}
+                        <td className="id-cell">
+                          <span className="order-id-chip">#{latest.orderId}</span>
+                          {isGroup && <span className="group-count">+{sorted.length - 1} more</span>}
                         </td>
-                        <td>{latestOrder.customerName}</td>
-                        <td>
-                          {hasMultipleOrders ? (
-                            <span className="multiple-items-indicator">
-                              {sortedOrders.length} items
-                            </span>
-                          ) : (
-                            getServiceName(latestOrder)
-                          )}
-                        </td>
-                        <td>{latestOrder.formattedDate}</td>
-                        <td className="amount-cell">
-                          {hasMultipleOrders ? (
-                            <span className="total-amount">
-                              NPR {sortedOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0).toLocaleString()}
-                            </span>
-                          ) : (
-                            `NPR ${latestOrder.totalAmount?.toLocaleString() || 0}`
-                          )}
-                        </td>
-                        <td className="payment-status-cell">{getPaymentStatus(latestOrder)}</td>
-                        <td>
-                          <span style={getStatusBadgeStyle(latestOrder.status || "Pending")}>
-                            {latestOrder.status === "Processing" || latestOrder.status === "Shipped" || latestOrder.status === "Completed" ? "Active" : (latestOrder.status || "Pending")}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="action-buttons">
-                            <select
-                              value={latestOrder.status || "Pending"}
-                              onChange={(e) => handleStatusChange(latestOrder.orderId, e.target.value)}
-                              disabled={latestOrder.status === "Cancelled"}
-                              className="status-select"
-                              style={{
-                                backgroundColor: statusColors[latestOrder.status] || "#fff",
-                                color: statusTextColors[latestOrder.status] || "#000",
-                              }}
-                            >
-                              {statusOptions.map((status) => (
-                                <option key={status} value={status}>
-                                  {status}
-                                </option>
-                              ))}
-                            </select>
-                            <button
-                              className="view-details-btn"
-                              onClick={() => handleViewOrder(latestOrder)}
-                            >
-                              View
-                            </button>
+                        <td className="customer-cell">
+                          <div className="customer-info-modern">
+                            <div className="customer-avatar-mini">{latest.customerName[0]}</div>
+                            <div className="customer-text">
+                              <span className="name">{latest.customerName}</span>
+                              <span className="email">{latest.userEmail}</span>
+                            </div>
                           </div>
+                        </td>
+                        <td className="date-cell">{latest.formattedDate}</td>
+                        <td className="amount-cell">
+                          <span className="currency">NPR</span>
+                          <span className="value">{(isGroup ? sorted.reduce((s, o) => s + (o.totalAmount || 0), 0) : latest.totalAmount)?.toLocaleString()}</span>
+                          <span className="pm-method">{getPaymentLabel(latest.paymentMethod)}</span>
+                        </td>
+                        <td className="status-cell">
+                          <div className="status-badge-modern" style={{ backgroundColor: getStatusStyle(latest.status).bg, color: getStatusStyle(latest.status).text }}>
+                            <span className="status-dot" style={{ backgroundColor: getStatusStyle(latest.status).dot }}></span>
+                            {latest.status || 'Pending'}
+                          </div>
+                        </td>
+                        <td className="action-cell-fulfillment">
+                          <select
+                            className="modern-status-select"
+                            value={latest.status || 'Pending'}
+                            onChange={(e) => handleStatusUpdate(latest.orderId, e.target.value)}
+                            disabled={latest.status === 'Cancelled'}
+                          >
+                            {(statusFlow[latest.status || 'Pending'] || [latest.status || 'Pending']).map(opt => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="actions-cell">
+                          <button className="view-btn-circle" title="View Details" onClick={() => navigate(`/admin/orderdetail/${latest.orderId}`)}>
+                            <FiArrowRight />
+                          </button>
                         </td>
                       </tr>
 
-                      {/* Expanded Rows - Show all orders for this user */}
-                      {isExpanded && hasMultipleOrders && sortedOrders.map((order, index) => (
-                        <tr key={`${userId}-${order.orderId}`} className="expanded-order-row">
-                          <td>
-                            <input
-                              type="checkbox"
-                              checked={selectedOrders.has(order.orderId)}
-                              onChange={() => handleSelectOrder(order.orderId)}
-                              className="table-checkbox"
-                            />
+                      {isExp && sorted.map((order, idx) => (
+                        <tr key={order.orderId} className={`nested-row ${idx === sorted.length - 1 ? 'last-nested' : ''}`}>
+                          <td colSpan="1"></td>
+                          <td className="id-cell">
+                            <span className="order-id-chip sub">#{order.orderId}</span>
                           </td>
-                          <td className="order-id-cell">{order.orderId}</td>
-                          <td>{order.customerName}</td>
-                          <td>{getServiceName(order)}</td>
-                          <td>{order.formattedDate}</td>
-                          <td className="amount-cell">NPR {order.totalAmount?.toLocaleString() || 0}</td>
-                          <td className="payment-status-cell">{getPaymentStatus(order)}</td>
-                          <td>
-                            <span style={getStatusBadgeStyle(order.status || "Pending")}>
-                              {order.status === "Processing" || order.status === "Shipped" || order.status === "Completed" ? "Active" : (order.status || "Pending")}
-                            </span>
+                          <td className="customer-cell opacity-50">
+                            <span className="sub-text">Sub-order entry</span>
                           </td>
-                          <td>
-                            <div className="action-buttons">
-                              <select
-                                value={order.status || "Pending"}
-                                onChange={(e) => handleStatusChange(order.orderId, e.target.value)}
-                                disabled={order.status === "Cancelled"}
-                                className="status-select"
-                                style={{
-                                  backgroundColor: statusColors[order.status] || "#fff",
-                                  color: statusTextColors[order.status] || "#000",
-                                }}
-                              >
-                                {statusOptions.map((status) => (
-                                  <option key={status} value={status}>
-                                    {status}
-                                  </option>
-                                ))}
-                              </select>
-                              <button
-                                className="view-details-btn"
-                                onClick={() => handleViewOrder(order)}
-                              >
-                                View
-                              </button>
+                          <td className="date-cell">{order.formattedDate}</td>
+                          <td className="amount-cell">
+                            <span className="value">{order.totalAmount?.toLocaleString()}</span>
+                          </td>
+                          <td className="status-cell">
+                            <div className="status-badge-modern mini" style={{ backgroundColor: getStatusStyle(order.status).bg, color: getStatusStyle(order.status).text }}>
+                              <span className="status-dot" style={{ backgroundColor: getStatusStyle(order.status).dot }}></span>
+                              {order.status}
                             </div>
+                          </td>
+                          <td className="action-cell-fulfillment">
+                            <select
+                              className="modern-status-select mini"
+                              value={order.status || 'Pending'}
+                              onChange={(e) => handleStatusUpdate(order.orderId, e.target.value)}
+                            >
+                              {(statusFlow[order.status || 'Pending'] || [order.status || 'Pending']).map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="actions-cell">
+                            <button className="view-btn-link" onClick={() => navigate(`/admin/orderdetail/${order.orderId}`)}>
+                              <FiEye />
+                            </button>
                           </td>
                         </tr>
                       ))}
                     </React.Fragment>
                   );
                 })
-              )}
-            </tbody>
-          </table>
-        )}
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

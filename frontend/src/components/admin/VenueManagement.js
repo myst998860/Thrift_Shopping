@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { venueService,imageService } from '../../services/api';
+import { venueService, imageService } from '../../services/api';
+import { FiEdit2, FiTrash2, FiEye, FiMoreVertical } from 'react-icons/fi';
 import '../../styles/admin/VenueManagement.css';
 
 
@@ -30,17 +31,17 @@ const VenueManagement = () => {
   }, [menuOpenId]);
 
   const handleDelete = async (id) => {
-  console.log("Deleting venue id:", id);
-  try {
-    const response = await venueService.deleteVenue(id);
-    console.log("Delete response:", response);
-    setVenues(prev => prev.filter(v => v.venue_id !== id));
-    alert("Venue deleted successfully!");
-  } catch (err) {
-    console.error("Failed to delete:", err);
-    alert("Failed to delete venue. Please try again.");
-  }
-};
+    console.log("Deleting venue id:", id);
+    try {
+      const response = await venueService.deleteVenue(id);
+      console.log("Delete response:", response);
+      setVenues(prev => prev.filter(v => v.venue_id !== id));
+      alert("Venue deleted successfully!");
+    } catch (err) {
+      console.error("Failed to delete:", err);
+      alert("Failed to delete venue. Please try again.");
+    }
+  };
 
   const handleDeactivate = (id) => {
     setVenues((prev) => prev.map((venue) =>
@@ -49,41 +50,41 @@ const VenueManagement = () => {
     setMenuOpenId(null);
   };
 
-const handleAdd = (id) => {
-     navigate('/admin/venues/add');
-    setMenuOpenId(null); 
+  const handleAdd = (id) => {
+    navigate('/admin/venues/add');
+    setMenuOpenId(null);
   };
 
 
   const handleEditVenue = (venue) => {
-  if (!venue?.venue_id) {
-    console.error("Invalid venue ID:", venue?.venue_id);
-    return;
-  }
-  console.log("Navigating to edit Venue with ID:", venue.venue_id);
-  navigate(`/admin/venues/edit/${venue.venue_id}`);
-};
+    if (!venue?.venue_id) {
+      console.error("Invalid venue ID:", venue?.venue_id);
+      return;
+    }
+    console.log("Navigating to edit Venue with ID:", venue.venue_id);
+    navigate(`/admin/venues/edit/${venue.venue_id}`);
+  };
 
- const handleViewVenue = (venue) => {
-  if (!venue?.venue_id) {
-    console.error("Invalid venue ID:", venue?.venue_id);
-    return;
-  }
-  console.log("Navigating to edit Venue with ID:", venue.venue_id);
-  navigate(`/admin/venues/${venue.venue_id}`);
-};
+  const handleViewVenue = (venue) => {
+    if (!venue?.venue_id) {
+      console.error("Invalid venue ID:", venue?.venue_id);
+      return;
+    }
+    console.log("Navigating to edit Venue with ID:", venue.venue_id);
+    navigate(`/admin/venues/${venue.venue_id}`);
+  };
 
 
 
-useEffect(() => {
+  useEffect(() => {
     const fetchVenues = async () => {
-    setLoading(true);
-   try {
+      setLoading(true);
+      try {
         const response = await venueService.listVenue();
         console.log("API venues response:", response);
 
 
-        
+
         // Map venues and set initial state
         const mappedVenues = response.map(v => ({
           venue_id: v.venue_id,
@@ -118,7 +119,7 @@ useEffect(() => {
           } catch {
             return {
               venue_id: venue.venue_id,
-              imageUrl: null, 
+              imageUrl: null,
             };
           }
         });
@@ -171,9 +172,9 @@ useEffect(() => {
   // Get category color based on category name
   const getCategoryColor = (category) => {
     if (!category) return { bg: '#f3f4f6', text: '#6b7280' };
-    
+
     const categoryLower = category.toLowerCase();
-    
+
     // Define color schemes for different categories
     const colorMap = {
       // Electronics
@@ -183,7 +184,7 @@ useEffect(() => {
       'mobile': { bg: '#dbeafe', text: '#1e40af' },
       'computer': { bg: '#dbeafe', text: '#1e40af' },
       'laptop': { bg: '#dbeafe', text: '#1e40af' },
-      
+
       // Clothing
       'clothing': { bg: '#fce7f3', text: '#9f1239' },
       'clothes': { bg: '#fce7f3', text: '#9f1239' },
@@ -191,40 +192,40 @@ useEffect(() => {
       'fashion': { bg: '#fce7f3', text: '#9f1239' },
       'shirt': { bg: '#fce7f3', text: '#9f1239' },
       'dress': { bg: '#fce7f3', text: '#9f1239' },
-      
+
       // Furniture
       'furniture': { bg: '#fef3c7', text: '#92400e' },
       'furnishing': { bg: '#fef3c7', text: '#92400e' },
       'chair': { bg: '#fef3c7', text: '#92400e' },
       'table': { bg: '#fef3c7', text: '#92400e' },
       'sofa': { bg: '#fef3c7', text: '#92400e' },
-      
+
       // Books
       'book': { bg: '#e9d5ff', text: '#6b21a8' },
       'books': { bg: '#e9d5ff', text: '#6b21a8' },
       'literature': { bg: '#e9d5ff', text: '#6b21a8' },
-      
+
       // Sports
       'sports': { bg: '#d1fae5', text: '#065f46' },
       'sport': { bg: '#d1fae5', text: '#065f46' },
       'fitness': { bg: '#d1fae5', text: '#065f46' },
       'gym': { bg: '#d1fae5', text: '#065f46' },
-      
+
       // Toys
       'toy': { bg: '#fde68a', text: '#78350f' },
       'toys': { bg: '#fde68a', text: '#78350f' },
       'games': { bg: '#fde68a', text: '#78350f' },
-      
+
       // Kitchen
       'kitchen': { bg: '#fed7aa', text: '#9a3412' },
       'cooking': { bg: '#fed7aa', text: '#9a3412' },
       'utensil': { bg: '#fed7aa', text: '#9a3412' },
-      
+
       // Home & Garden
       'home': { bg: '#cffafe', text: '#164e63' },
       'garden': { bg: '#cffafe', text: '#164e63' },
       'decoration': { bg: '#cffafe', text: '#164e63' },
-      
+
       // Vehicles
       'vehicle': { bg: '#e0e7ff', text: '#3730a3' },
       'car': { bg: '#e0e7ff', text: '#3730a3' },
@@ -248,7 +249,7 @@ useEffect(() => {
     const hash = categoryLower.split('').reduce((acc, char) => {
       return acc + char.charCodeAt(0);
     }, 0);
-    
+
     const defaultColors = [
       { bg: '#dbeafe', text: '#1e40af' }, // Blue
       { bg: '#fce7f3', text: '#9f1239' }, // Pink
@@ -261,7 +262,7 @@ useEffect(() => {
       { bg: '#e0e7ff', text: '#3730a3' }, // Indigo
       { bg: '#f3e8ff', text: '#7c3aed' }, // Violet
     ];
-    
+
     return defaultColors[hash % defaultColors.length];
   };
 
@@ -309,126 +310,104 @@ useEffect(() => {
             />
           </div>
         </div>
-        <div className="products-table-container">
+
+        <div className="products-grid-container">
           {filteredVenues.length === 0 ? (
             <div className="no-products">
               {searchTerm ? 'No products found matching your search.' : 'No products available.'}
             </div>
           ) : (
-            <table className="products-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Product Image</th>
-                  <th>Product Name</th>
-                  <th>Category</th>
-                  <th>Price</th>
-                  <th>Brand</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredVenues.map((venue) => (
-                  <tr key={venue.venue_id}>
-                    <td className="venue-id-cell">{venue.venue_id}</td>
-                    <td className="venue-image-cell">
-                      {images[venue.venue_id] ? (
-                        <img
-                          src={images[venue.venue_id]}
-                          alt={venue.venueName}
-                          className="venue-image"
-                        />
-                      ) : (
-                        <div className="no-image-placeholder">
-                          <span>📷</span>
-                          <span>No image</span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="venue-name-cell">{venue.venueName || 'N/A'}</td>
-                    <td>
-                      <span 
-                        className="category-badge" 
-                        style={{
-                          backgroundColor: getCategoryColor(venue.category).bg,
-                          color: getCategoryColor(venue.category).text
-                        }}
-                      >
-                        {venue.category || 'N/A'}
-                      </span>
-                    </td>
-                    <td className="price-cell">NPR {venue.price?.toLocaleString() || '0'}</td>
-                    <td>{venue.brand || 'N/A'}</td>
-                    <td className="status-cell">
+            <div className="products-grid">
+              {filteredVenues.map((venue) => (
+                <div key={venue.venue_id} className="product-card">
+                  <div className="product-card-image-wrapper">
+                    {images[venue.venue_id] ? (
+                      <img
+                        src={images[venue.venue_id]}
+                        alt={venue.venueName}
+                        className="product-card-image"
+                      />
+                    ) : (
+                      <div className="product-card-placeholder">
+                        <span>📷</span>
+                        <span>No image</span>
+                      </div>
+                    )}
+                    <div className="product-card-status">
                       <StatusBadge status={venue.status} />
-                    </td>
-                    <td className="actions-cell">
-                      <button
-                        className="actions-toggle-btn"
-                        onClick={() => setMenuOpenId(menuOpenId === venue.venue_id ? null : venue.venue_id)}
-                        aria-label="Actions"
-                      >
-                        ⋮
-                      </button>
+                    </div>
+                  </div>
 
-                      {menuOpenId === venue.venue_id && (
-                        <div ref={menuRef} className="actions-menu">
-                          <div className="actions-menu-header">Actions</div>
-                          <button
-                            className="action-menu-item"
-                            onClick={() => {
-                              setMenuOpenId(null);
-                              handleViewVenue(venue);
-                            }}
-                          >
-                            View Product
-                          </button>
-                          <button
-                            className="action-menu-item"
-                            onClick={() => {
-                              setMenuOpenId(null);
-                              handleEditVenue(venue);
-                            }}
-                          >
-                            Edit Product
-                          </button>
-                          <button
-                            className="action-menu-item"
-                            onClick={() => {
-                              setMenuOpenId(null);
-                              alert('View bookings feature coming soon');
-                            }}
-                          >
-                            View Bookings
-                          </button>
-                          <button
-                            className="action-menu-item"
-                            onClick={() => {
-                              setMenuOpenId(null);
-                              handleDeactivate(venue.venue_id);
-                            }}
-                          >
-                            Deactivate Product
-                          </button>
-                          <button
-                            className="action-menu-item delete-action"
-                            onClick={() => {
-                              if (window.confirm('Are you sure you want to delete this product?')) {
-                                setMenuOpenId(null);
-                                handleDelete(venue.venue_id);
-                              }
-                            }}
-                          >
-                            Delete Product
-                          </button>
+                  <div className="product-card-info">
+                    <div className="product-card-header">
+                      <h3 className="product-card-name" title={venue.venueName}>
+                        {venue.venueName || 'N/A'}
+                      </h3>
+                      <div className="product-card-id">#{venue.venue_id}</div>
+                    </div>
+
+                    <div className="product-card-details">
+                      <div className="product-detail-item">
+                        <span className="detail-label">Category:</span>
+                        <span
+                          className="category-badge"
+                          style={{
+                            backgroundColor: getCategoryColor(venue.category).bg,
+                            color: getCategoryColor(venue.category).text
+                          }}
+                        >
+                          {venue.category || 'N/A'}
+                        </span>
+                      </div>
+                      <div className="product-detail-item">
+                        <span className="detail-label">Brand:</span>
+                        <span className="detail-value">{venue.brand || 'N/A'}</span>
+                      </div>
+                      <div className="product-detail-item">
+                        <span className="detail-label">Price:</span>
+                        <span className="detail-value price-text">
+                          NPR {venue.price?.toLocaleString() || '0'}
+                        </span>
+                      </div>
+                      {venue.partnerName && (
+                        <div className="product-detail-item">
+                          <span className="detail-label">Partner:</span>
+                          <span className="detail-value">{venue.partnerName}</span>
                         </div>
                       )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+
+                    <div className="product-card-actions">
+                      <button
+                        className="card-action-btn view-btn"
+                        onClick={() => handleViewVenue(venue)}
+                        title="View Details"
+                      >
+                        <FiEye /> View
+                      </button>
+                      <button
+                        className="card-action-btn edit-btn"
+                        onClick={() => handleEditVenue(venue)}
+                        title="Edit Product"
+                      >
+                        <FiEdit2 /> Edit
+                      </button>
+                      <button
+                        className="card-action-btn delete-btn"
+                        onClick={() => {
+                          if (window.confirm('Are you sure you want to delete this product?')) {
+                            handleDelete(venue.venue_id);
+                          }
+                        }}
+                        title="Delete Product"
+                      >
+                        <FiTrash2 /> Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>

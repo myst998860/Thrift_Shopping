@@ -107,7 +107,7 @@
 // export default AdminPanel;
 
 import React, { useState, useEffect } from "react";
-import { notificationService } from "../../services/api";
+import { notificationService, orderAPI } from "../../services/api";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   FiHome,
@@ -128,6 +128,7 @@ const AdminPanel = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user: currentUser, logout } = useUserSession();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [activeOrderCount, setActiveOrderCount] = useState(0);
   const userId = localStorage.getItem("userId");
   const location = useLocation();
   const navigate = useNavigate();
@@ -144,8 +145,21 @@ const AdminPanel = () => {
       }
     };
 
+    const fetchActiveOrdersCount = async () => {
+      try {
+        const res = await orderAPI.getActiveOrderCount();
+        setActiveOrderCount(res.count);
+      } catch (e) {
+        console.error("Active orders count error", e);
+      }
+    };
+
     fetchUnread();
-    const interval = setInterval(fetchUnread, 10000);
+    fetchActiveOrdersCount();
+    const interval = setInterval(() => {
+      fetchUnread();
+      fetchActiveOrdersCount();
+    }, 10000);
     return () => clearInterval(interval);
   }, [userId]);
 
@@ -156,7 +170,18 @@ const AdminPanel = () => {
     { path: "/admin/users", icon: <FiUsers />, label: "Users" },
     { path: "/admin/partners", icon: <FiBriefcase />, label: "Partners" },
     { path: "/admin/venues", icon: <FiMapPin />, label: "Products" },
-    { path: "/admin/bookings", icon: <FiCalendar />, label: "Orders" },
+    {
+      path: "/admin/bookings",
+      icon: (
+        <div className="notification-icon-wrapper">
+          <FiCalendar />
+          {activeOrderCount > 0 && (
+            <span className="notification-badge">{activeOrderCount}</span>
+          )}
+        </div>
+      ),
+      label: "Orders",
+    },
     { path: "/admin/assigned-donations", icon: <FiTruck />, label: "Assigned Donations" },
     // { path: "/admin/notifications", icon: <FiBell />, label: "Notifications" },
     {

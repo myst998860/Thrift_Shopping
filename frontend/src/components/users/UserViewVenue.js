@@ -73,10 +73,10 @@ const UserViewVenue = () => {
         setRelatedProductsLoading(true);
         const response = await venueService.listVenue();
         const allVenues = Array.isArray(response) ? response : [];
-        
-        // Filter out current venue and get up to 4 related products
+
+        // Filter out current venue, only active ones, and get up to 4 related products
         const related = allVenues
-          .filter(v => v.venue_id !== parseInt(id))
+          .filter(v => v.venue_id !== parseInt(id) && v.status?.toLowerCase() === 'active')
           .slice(0, 4);
 
         // Fetch images for related products
@@ -115,11 +115,11 @@ const UserViewVenue = () => {
 
   const handleAddToCart = async () => {
     if (!isUserLoggedIn) {
-      navigate('/login', { 
-        state: { 
+      navigate('/login', {
+        state: {
           from: `/venues/${id}`,
           message: 'Please log in to add items to cart'
-        } 
+        }
       });
       return;
     }
@@ -144,11 +144,11 @@ const UserViewVenue = () => {
 
   const handleBuyNow = async () => {
     if (!isUserLoggedIn) {
-      navigate('/login', { 
-        state: { 
+      navigate('/login', {
+        state: {
           from: `/venues/${id}`,
           message: 'Please log in to purchase this venue'
-        } 
+        }
       });
       return;
     }
@@ -220,7 +220,7 @@ const UserViewVenue = () => {
           <p className="uvv-error__message">The venue you're looking for doesn't exist or has been removed.</p>
           <button onClick={handleBackToVenues} className="uvv-button--back">← Back to Venues</button>
         </div>
-       
+
       </div>
     );
   }
@@ -268,7 +268,7 @@ const UserViewVenue = () => {
           {/* Right Side - Product Information */}
           <div className="uvv-product-info">
             <h1 className="uvv-product-title">{venue.venueName}</h1>
-            
+
             {/* Condition & Category Tags */}
             <div className="uvv-product-tags">
               <span className="uvv-tag uvv-tag--condition">{venue.quality || 'Excellent'}</span>
@@ -294,20 +294,20 @@ const UserViewVenue = () => {
 
             {/* Action Buttons */}
             <div className="uvv-product-actions">
-              <button 
-                onClick={handleAddToCart} 
+              <button
+                onClick={handleAddToCart}
                 className="uvv-button uvv-button--cart"
-                disabled={addingToCart}
+                disabled={addingToCart || venue.status?.toLowerCase() === 'inactive'}
               >
                 <span className="uvv-button-icon">🛒</span>
-                {addingToCart ? 'Adding...' : 'Add to Cart'}
+                {venue.status?.toLowerCase() === 'inactive' ? 'Sold Out' : (addingToCart ? 'Adding...' : 'Add to Cart')}
               </button>
-              <button 
-                onClick={handleBuyNow} 
+              <button
+                onClick={handleBuyNow}
                 className="uvv-button uvv-button--buy"
-                disabled={addingToCart}
+                disabled={addingToCart || venue.status?.toLowerCase() === 'inactive'}
               >
-                Buy Now
+                {venue.status?.toLowerCase() === 'inactive' ? 'Already Sold' : 'Buy Now'}
               </button>
             </div>
 
@@ -445,9 +445,9 @@ const UserViewVenue = () => {
                     <span>{venue.location}</span>
                   </div>
                   {venue.mapLocationUrl && (
-                    <a 
-                      href={venue.mapLocationUrl} 
-                      target="_blank" 
+                    <a
+                      href={venue.mapLocationUrl}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="uvv-location__link"
                     >
@@ -474,8 +474,8 @@ const UserViewVenue = () => {
                 const rating = product.rating || 4.5;
 
                 return (
-                  <div 
-                    key={product.venue_id} 
+                  <div
+                    key={product.venue_id}
                     className="uvv-related-product-card"
                     onClick={() => navigate(`/venues/${product.venue_id}`)}
                   >
@@ -513,7 +513,7 @@ const UserViewVenue = () => {
           </div>
         )}
       </div>
- 
+
     </div>
   );
 };

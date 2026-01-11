@@ -1,50 +1,55 @@
 import React, { useState, useEffect, useRef } from 'react';
-import '../../styles/admin/PartnerManagement.css';
+import '../../styles/partner/Donation.css';
 import { donationAPI } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
+import {
+  FiSearch,
+  FiMoreVertical,
+  FiEye,
+  FiEdit2,
+  FiTrash2,
+  FiUserCheck,
+  FiFilter,
+  FiRefreshCw
+} from 'react-icons/fi';
 
 const StatusBadge = ({ status }) => {
-  const color = {
-    confirmed: "#4caf50",
-    pickedup: "#2196f3",
-    delivered: "#9c27b0",
-    cancelled: "#f44336",
-    assigned_to_admin: "#ff9800",
-    pending: "#999"
-  }[status?.toLowerCase()] || "#999";
-
+  const statusClass = `status-${status?.toLowerCase().replace(/_/g, '-') || 'pending'}`;
   return (
-    <span
-      style={{
-        background: color,
-        color: "white",
-        padding: "4px 10px",
-        borderRadius: 6,
-        fontSize: 13,
-      }}
-    >
-      {(status || "Pending").toUpperCase()}
+    <span className={`status-badge ${statusClass}`}>
+      {status?.replace(/_/g, ' ') || 'Pending'}
     </span>
   );
 };
 
 const StatusDropdown = ({ donation, onChange }) => {
-  const statuses = ["pending", "confirmed", "pickedup", "delivered", "cancelled"];
+  const currentStatus = donation.status?.toLowerCase() || "pending";
+
+  // Define allowed transitions
+  const allowedTransitions = {
+    pending: ["pending", "confirmed", "cancelled"],
+    confirmed: ["confirmed", "pickedup", "cancelled"],
+    pickedup: ["pickedup", "delivered", "cancelled"],
+    delivered: ["delivered"],
+    cancelled: ["cancelled"],
+    assigned_to_admin: ["assigned_to_admin", "confirmed", "cancelled"]
+  };
+
+  const options = allowedTransitions[currentStatus] || [currentStatus];
+
+  if (options.length <= 1) {
+    return <StatusBadge status={currentStatus} />;
+  }
 
   return (
     <select
-      style={{
-        padding: 6,
-        borderRadius: 6,
-        border: "1px solid #ccc",
-        cursor: "pointer",
-      }}
-      value={donation.status?.toLowerCase() || "pending"}
+      className="status-select"
+      value={currentStatus}
       onChange={(e) => onChange(donation.donationId, e.target.value)}
     >
-      {statuses.map((status) => (
+      {options.map((status) => (
         <option key={status} value={status}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
+          {status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ')}
         </option>
       ))}
     </select>
@@ -56,6 +61,7 @@ const DonationManagement = () => {
   const [menuOpenId, setMenuOpenId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const menuRef = useRef();
   const navigate = useNavigate();
 
@@ -75,19 +81,21 @@ const DonationManagement = () => {
   }, [menuOpenId]);
 
   // Fetch donations
+  const fetchDonations = async () => {
+    setLoading(true);
+    try {
+      const response = await donationAPI.listDonations();
+      setDonations(response);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching donations:", err);
+      setError('Failed to fetch donations.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDonations = async () => {
-      setLoading(true);
-      try {
-        const response = await donationAPI.listDonations();
-        setDonations(response);
-      } catch (err) {
-        console.error("Error fetching donations:", err);
-        setError('Failed to fetch donations.');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDonations();
   }, []);
 
@@ -96,33 +104,20 @@ const DonationManagement = () => {
     try {
       await donationAPI.deleteDonation(id);
       setDonations((prev) => prev.filter((d) => d.donationId !== id));
-      alert("Donation deleted successfully!");
     } catch (err) {
       console.error("Delete failed:", err);
       alert("Failed to delete donation.");
     }
   };
 
-  const handleViewDonation = (donation) => {
-    navigate(`/admin/donations/${donation.donationId}`);
-  };
-
-  const handleEditDonation = (donation) => {
-    navigate(`/admin/donations/edit/${donation.donationId}`);
-  };
-
-  // Status Change Function
   const handleStatusChange = async (donationId, newStatus) => {
     try {
       await donationAPI.updateDonationStatus(donationId, newStatus);
-
       setDonations((prev) =>
         prev.map((d) =>
           d.donationId === donationId ? { ...d, status: newStatus } : d
         )
       );
-
-      alert("Status updated successfully!");
     } catch (err) {
       console.error("Status update failed:", err);
       alert("Failed to update status.");
@@ -134,202 +129,164 @@ const DonationManagement = () => {
     try {
       await donationAPI.assignToAdmin(id);
       setDonations(prev => prev.map(d => d.donationId === id ? { ...d, status: 'assigned_to_admin' } : d));
-      alert("Assigned to Admin successfully!");
     } catch (err) {
       console.error("Assign failed:", err);
       alert("Failed to assign.");
     }
   };
 
-  if (!donations?.length && !loading) {
-    return <p>No donations found.</p>;
-  }
+  const filteredDonations = donations.filter(d =>
+    d.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    d.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    d.city?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const stats = {
+    total: donations.length,
+    pending: donations.filter(d => d.status === 'pending').length,
+    confirmed: donations.filter(d => d.status === 'confirmed').length,
+  };
 
   return (
-    <div style={{ background: '#fff', borderRadius: 12, padding: 32, boxShadow: '0 2px 8px #eee' }}>
-      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>Donation Management</h1>
-      <p style={{ color: '#888', marginBottom: 24 }}>Manage all donations from users</p>
+    <div className="donation-management-container">
+      <header className="donation-header">
+        <div className="header-title">
+          <h1>Donation Management</h1>
+          <p>Review and manage all incoming donations for your programs</p>
+        </div>
+        <div className="donation-stats">
+          <div className="stat-item">
+            <span className="stat-label">Total</span>
+            <span className="stat-value">{stats.total}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Pending</span>
+            <span className="stat-value">{stats.pending}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Confirmed</span>
+            <span className="stat-value">{stats.confirmed}</span>
+          </div>
+        </div>
+      </header>
 
-      <input
-        type="text"
-        placeholder="Search donations..."
-        style={{
-          width: 320,
-          padding: 8,
-          borderRadius: 6,
-          border: '1px solid #ddd',
-          marginBottom: 16,
-        }}
-      />
+      <div className="donation-controls">
+        <div className="search-wrapper">
+          <FiSearch className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search by name, email or city..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <button
+          className="action-button"
+          onClick={fetchDonations}
+          title="Refresh Data"
+        >
+          <FiRefreshCw />
+        </button>
+      </div>
 
-      {loading ? (
-        <p>Loading donations...</p>
-      ) : error ? (
-        <p style={{ color: 'red' }}>{error}</p>
-      ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8 }}>
-          <thead>
-            <tr style={{ background: '#f7f7f7', textAlign: 'left' }}>
-              <th style={{ padding: 10 }}>ID</th>
-              <th style={{ padding: 10 }}>Full Name</th>
-              <th style={{ padding: 10 }}>Email</th>
-              <th style={{ padding: 10 }}>Phone</th>
-              <th style={{ padding: 10 }}>City</th>
-              <th style={{ padding: 10 }}>Condition</th>
-              <th style={{ padding: 10 }}>Quantity</th>
-              <th style={{ padding: 10 }}>Pickup Date</th>
-              <th style={{ padding: 10 }}>Clothing Items</th>
-              <th style={{ padding: 10 }}>Status</th>
-              <th style={{ padding: 10 }}>Change Status</th>
-              <th style={{ padding: 10, textAlign: 'center' }}>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {donations.map((donation) => (
-              <tr key={donation.donationId} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: 10 }}>{donation.donationId}</td>
-                <td style={{ padding: 10 }}>{donation.fullName}</td>
-                <td style={{ padding: 10 }}>{donation.email}</td>
-                <td style={{ padding: 10 }}>{donation.phoneNumber}</td>
-                <td style={{ padding: 10 }}>{donation.city}</td>
-                <td style={{ padding: 10 }}>{donation.overallCondition}</td>
-                <td style={{ padding: 10 }}>{donation.estimatedQuantity}</td>
-                <td style={{ padding: 10 }}>
-                  {donation.preferredPickupDate
-                    ? new Date(donation.preferredPickupDate).toLocaleDateString()
-                    : 'N/A'}
-                </td>
-
-                <td style={{ padding: 10 }}>
-                  {[
-                    donation.shirtsAndTops && "Shirts",
-                    donation.dressesAndSkirts && "Dresses",
-                    donation.shoes && "Shoes",
-                    donation.pantsAndJeans && "Pants",
-                    donation.jacketsAndCoats && "Jackets",
-                    donation.accessories && "Accessories",
-                    donation.childrensClothing && "Children",
-                    donation.undergarments && "Undergarments",
-                  ]
-                    .filter(Boolean)
-                    .join(', ') || '—'}
-                </td>
-
-                <td style={{ padding: 10 }}>
-                  <StatusBadge status={donation.status} />
-                </td>
-
-                <td style={{ padding: 10 }}>
-                  <StatusDropdown
-                    donation={donation}
-                    onChange={handleStatusChange}
-                  />
-                </td>
-
-                <td style={{ padding: 10, position: 'relative', textAlign: 'center' }}>
-                  <button
-                    style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}
-                    onClick={() =>
-                      setMenuOpenId(menuOpenId === donation.donationId ? null : donation.donationId)
-                    }
-                  >
-                    ⋮
-                  </button>
-
-                  {menuOpenId === donation.donationId && (
-                    <div
-                      ref={menuRef}
-                      style={{
-                        position: 'absolute',
-                        top: 30,
-                        right: 0,
-                        background: '#fff',
-                        border: '1px solid #eee',
-                        borderRadius: 8,
-                        boxShadow: '0 2px 8px #eee',
-                        zIndex: 10,
-                        minWidth: 180,
-                      }}
-                    >
-                      <div
-                        style={{
-                          padding: '10px 16px',
-                          fontWeight: 600,
-                          color: '#888',
-                          borderBottom: '1px solid #f0f0f0',
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          height: 40,
-                        }}
-                      >
-                        Actions
-                      </div>
-
-                      <button
-                        style={menuBtnStyle}
-                        onClick={() => {
-                          setMenuOpenId(null);
-                          handleViewDonation(donation);
-                        }}
-                      >
-                        View Donation
-                      </button>
-
-                      <button
-                        style={menuBtnStyle}
-                        onClick={() => {
-                          setMenuOpenId(null);
-                          handleEditDonation(donation);
-                        }}
-                      >
-                        Edit Donation
-                      </button>
-
-                      <button
-                        style={{ ...menuBtnStyle, color: '#d9534f' }}
-                        onClick={() => {
-                          setMenuOpenId(null);
-                          handleDelete(donation.donationId);
-                        }}
-                      >
-                        Delete Donation
-                      </button>
-
-                      <button
-                        style={{ ...menuBtnStyle, color: '#ff9800', borderBottom: 'none' }}
-                        onClick={() => {
-                          setMenuOpenId(null);
-                          handleAssignToAdmin(donation.donationId);
-                        }}
-                      >
-                        Assign to Admin
-                      </button>
-                    </div>
-                  )}
-                </td>
-
+      <div className="donation-table-wrapper">
+        {loading ? (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>Loading donations...</div>
+        ) : error ? (
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#ef4444' }}>{error}</div>
+        ) : filteredDonations.length === 0 ? (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>No donations found.</div>
+        ) : (
+          <table className="donation-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Donor Info</th>
+                <th>Location</th>
+                <th>Condition</th>
+                <th>Items</th>
+                <th>Pickup Date</th>
+                <th>Status</th>
+                <th>Update</th>
+                <th style={{ textAlign: 'center' }}>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+            </thead>
+            <tbody>
+              {filteredDonations.map((donation) => (
+                <tr key={donation.donationId}>
+                  <td>#{donation.donationId}</td>
+                  <td>
+                    <div className="donor-info">
+                      <span className="donor-name">{donation.fullName}</span>
+                      <span className="donor-email">{donation.email}</span>
+                      <span className="donor-phone" style={{ fontSize: '11px', color: '#888' }}>{donation.phoneNumber}</span>
+                    </div>
+                  </td>
+                  <td>{donation.city}</td>
+                  <td>{donation.overallCondition}</td>
+                  <td>
+                    <div className="clothing-details">
+                      {[
+                        donation.shirtsAndTops && "Shirts",
+                        donation.dressesAndSkirts && "Dresses",
+                        donation.shoes && "Shoes",
+                        donation.pantsAndJeans && "Pants",
+                        donation.jacketsAndCoats && "Jackets",
+                        donation.accessories && "Accessories",
+                        donation.childrensClothing && "Children",
+                        donation.undergarments && "Undergarments",
+                      ].filter(Boolean).map((tag, idx) => (
+                        <span key={idx} className="clothing-tag">{tag}</span>
+                      )) || '—'}
+                    </div>
+                  </td>
+                  <td>
+                    {donation.preferredPickupDate
+                      ? new Date(donation.preferredPickupDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+                      : 'N/A'}
+                  </td>
+                  <td>
+                    <StatusBadge status={donation.status} />
+                  </td>
+                  <td>
+                    <StatusDropdown
+                      donation={donation}
+                      onChange={handleStatusChange}
+                    />
+                  </td>
+                  <td style={{ textAlign: 'center', position: 'relative' }}>
+                    <button
+                      className="action-button"
+                      onClick={() => setMenuOpenId(menuOpenId === donation.donationId ? null : donation.donationId)}
+                    >
+                      <FiMoreVertical />
+                    </button>
+
+                    {menuOpenId === donation.donationId && (
+                      <div className="dropdown-menu" ref={menuRef}>
+                        <button className="menu-item" onClick={() => navigate(`/admin/donations/${donation.donationId}`)}>
+                          <FiEye /> View Details
+                        </button>
+                        <button className="menu-item" onClick={() => navigate(`/admin/donations/edit/${donation.donationId}`)}>
+                          <FiEdit2 /> Edit
+                        </button>
+                        <button className="menu-item" onClick={() => handleAssignToAdmin(donation.donationId)}>
+                          <FiUserCheck /> Assign to Admin
+                        </button>
+                        <button className="menu-item delete" onClick={() => handleDelete(donation.donationId)}>
+                          <FiTrash2 /> Delete
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
-};
-
-const menuBtnStyle = {
-  display: 'block',
-  width: '100%',
-  padding: '10px 16px',
-  background: 'none',
-  border: 'none',
-  textAlign: 'left',
-  fontSize: 15,
-  cursor: 'pointer',
-  color: '#222',
-  borderBottom: '1px solid #f0f0f0',
 };
 
 export default DonationManagement;

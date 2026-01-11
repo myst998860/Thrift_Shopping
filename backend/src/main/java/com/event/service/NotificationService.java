@@ -1,45 +1,3 @@
-// package com.event.service;
-
-// import com.event.dto.NotificationDTO;
-// import com.event.model.NotificationType;
-// import com.event.model.Order;
-// import com.event.model.User;
-// import com.event.repository.UserRepo;
-// import org.springframework.beans.factory.annotation.Autowired;
-// import org.springframework.stereotype.Service;
-// import org.springframework.web.client.RestTemplate;
-
-// import java.time.LocalDateTime;
-// import java.util.List;
-
-// @Service
-// public class NotificationService {
-
-//     @Autowired
-//     private RestTemplate restTemplate;
-
-//     public void sendOrderNotification(Long userId, Long orderId, String userEmail) {
-//         NotificationDTO dto = new NotificationDTO();
-//         dto.setRecipientId(userId);
-//         dto.setSenderId(userId);
-//         dto.setTitle("Order Placed");
-//         dto.setType("ORDER");
-//         dto.setMessage("Your order #" + orderId + " has been placed successfully.");
-
-//         try {
-//             restTemplate.postForEntity(
-//                 "http://localhost:8080/notifications/create",
-//                 dto,
-//                 Object.class
-//             );
-//         } catch (Exception e) {
-//             // Log error but don't throw
-//             System.err.println("Notification failed: " + e.getMessage());
-//         }
-//     }
-
-// }
-
 package com.event.service;
 
 import com.event.dto.NotificationDTO;
@@ -236,33 +194,6 @@ public class NotificationService {
         return notification;
     }
 
-    // private String buildMessageForRole(User recipient, User sender,
-    // NotificationDTO dto) {
-    // String role = recipient.getRole();
-    // String senderName = sender != null ? sender.getFullname() : "User";
-    //
-    // try {
-    // NotificationType type =
-    // NotificationType.valueOf(dto.getType().toUpperCase());
-    //
-    // if (type == NotificationType.ORDER) {
-    // if ("ATTENDEE".equalsIgnoreCase(role) || "USER".equalsIgnoreCase(role)) {
-    // return "Your order has been placed successfully.";
-    // }
-    // if ("ADMIN".equalsIgnoreCase(role) || "ROLE_ADMIN".equalsIgnoreCase(role)) {
-    // return "A new order #" + dto.getBookingId() +
-    // " has been placed by " + senderName +
-    // " | Total: NPR " + dto.getTotalAmount() +
-    // " | Venue: " + dto.getVenueName();
-    // }
-    // }
-    // } catch (IllegalArgumentException e) {
-    // System.err.println("Invalid notification type: " + dto.getType());
-    // }
-    //
-    // return "You have a new notification.";
-    // }
-
     private String buildMessageForRole(User recipient, User sender, NotificationDTO dto) {
         String role = recipient.getRole();
         String senderName = sender != null ? sender.getFullname() : "User";
@@ -292,7 +223,7 @@ public class NotificationService {
                 }
             }
 
-            // Handle ORDER_STATUS type notifications (FIXED: Moved OUTSIDE the ORDER block)
+            // Handle ORDER_STATUS type notifications
             if (type == NotificationType.ORDER_STATUS) {
                 // Get the actual message from the DTO
                 if (dto.getMessage() != null && !dto.getMessage().isEmpty()) {
@@ -332,33 +263,6 @@ public class NotificationService {
         return notification;
     }
 
-    /**
-     * Create order placement notification
-     */
-    // public void createOrderNotification(Long userId, Long orderId, BigDecimal
-    // totalAmount) {
-    // // 1. Get recipient
-    // userRepository.findById(userId)
-    // .orElseThrow(() -> new RuntimeException("Recipient not found with ID: " +
-    // userId));
-    //
-    //
-    //
-    // // 2. Create notification DTO
-    // NotificationDTO notificationDTO = new NotificationDTO();
-    // notificationDTO.setRecipientId(userId);
-    // notificationDTO.setSenderId(userId);
-    // notificationDTO.setTitle("Order Placed Successfully");
-    // notificationDTO.setType("ORDER");
-    // notificationDTO.setMessage("Your order #" + orderId + " has been placed
-    // successfully. Total: NPR " + totalAmount);
-    //
-    // // 4. Create and save notifications for all roles
-    // createNotificationsForAllRoles(notificationDTO);
-    //
-    // System.out.println("✅ Order notification created for order #" + orderId);
-    // }
-
     public void createOrderNotification(Long userId, Long orderId, BigDecimal totalAmount, Long venueId,
             String venueName) {
         try {
@@ -378,10 +282,10 @@ public class NotificationService {
             customerNotification.setType("ORDER");
             customerNotification.setMessage("Your order #" + orderId +
                     " has been placed successfully. Total: NPR " + totalAmount);
-            customerNotification.setBookingId(orderId); // ✅ Add this
-            customerNotification.setTotalAmount(totalAmount); // ✅ Add this
-            customerNotification.setVenueId(venueId); // ✅ Add this
-            customerNotification.setVenueName(venueName); // ✅ Add this
+            customerNotification.setBookingId(orderId);
+            customerNotification.setTotalAmount(totalAmount);
+            customerNotification.setVenueId(venueId);
+            customerNotification.setVenueName(venueName);
 
             // Create notification for customer
             createNotificationsForAllRoles(customerNotification);
@@ -402,10 +306,10 @@ public class NotificationService {
                     adminNotification.setSenderId(userId);
                     adminNotification.setTitle("📦 New Order Received");
                     adminNotification.setType("ORDER");
-                    adminNotification.setBookingId(orderId); // ✅ Add this
-                    adminNotification.setTotalAmount(totalAmount); // ✅ Add this
-                    adminNotification.setVenueId(venueId); // ✅ Add this
-                    adminNotification.setVenueName(venueName); // ✅ Add this
+                    adminNotification.setBookingId(orderId);
+                    adminNotification.setTotalAmount(totalAmount);
+                    adminNotification.setVenueId(venueId);
+                    adminNotification.setVenueName(venueName);
 
                     // Build the message with all details
                     String adminMessage = String.format(
@@ -452,38 +356,6 @@ public class NotificationService {
         }
     }
 
-    private String getStatusTitle(String status) {
-        switch (status.toLowerCase()) {
-            case "processing":
-                return "Order Processing";
-            case "shipped":
-                return "Order Shipped";
-            case "completed":
-                return "Order Delivered";
-            case "cancelled":
-            case "canceled":
-                return "Order Cancelled";
-            default:
-                return "Order Status Updated";
-        }
-    }
-
-    private String getStatusMessage(String status, Long orderId, String venueName) {
-        switch (status.toLowerCase()) {
-            case "processing":
-                return "Your order #" + orderId + " is now being processed for " + venueName;
-            case "shipped":
-                return "Your order #" + orderId + " for " + venueName + " has been shipped!";
-            case "completed":
-                return "Your order #" + orderId + " for " + venueName + " has been delivered successfully!";
-            case "cancelled":
-            case "canceled":
-                return "Your order #" + orderId + " for " + venueName + " has been cancelled.";
-            default:
-                return "Your order #" + orderId + " status has been updated to: " + status;
-        }
-    }
-
     public void createOrderStatusNotification(Long userId, Long orderId, String status, Long venueId,
             String venueName) {
         try {
@@ -494,7 +366,7 @@ public class NotificationService {
 
             NotificationDTO notificationDTO = new NotificationDTO();
             notificationDTO.setRecipientId(userId);
-            notificationDTO.setSenderId(userId); // Or set to admin/system user ID
+            notificationDTO.setSenderId(userId);
 
             // Set proper title and message based on status
             String title = "";
@@ -525,22 +397,15 @@ public class NotificationService {
 
             notificationDTO.setTitle(title);
             notificationDTO.setType("ORDER_STATUS");
-            notificationDTO.setMessage(message); // ✅ Make sure this is set
+            notificationDTO.setMessage(message);
             notificationDTO.setBookingId(orderId);
             notificationDTO.setVenueId(venueId);
             notificationDTO.setVenueName(venueName);
 
-            // Debug: Print what we're sending
-            System.out.println("📤 Sending notification with:");
-            System.out.println("   Title: " + title);
-            System.out.println("   Message: " + message);
-            System.out.println("   Type: " + notificationDTO.getType());
-
             // Create notification
-            List<NotificationResponseDTO> result = createNotificationsForAllRoles(notificationDTO);
+            createNotificationsForAllRoles(notificationDTO);
 
             System.out.println("✅ Status notification created for order #" + orderId);
-            System.out.println("✅ Created " + result.size() + " notifications");
         } catch (Exception e) {
             System.err.println("❌ Error creating status notification: " + e.getMessage());
             e.printStackTrace();
@@ -548,9 +413,6 @@ public class NotificationService {
         }
     }
 
-    /**
-     * Create donation notification for user and partner
-     */
     public void createDonationNotification(Donation donation, Long userId) {
         try {
             System.out.println("🚀 Creating donation notifications for donation ID: " + donation.getDonationId());
@@ -602,24 +464,60 @@ public class NotificationService {
             if (admin == null || admin.getUser_id() == null)
                 return;
 
-            NotificationDTO notif = new NotificationDTO();
-            notif.setRecipientId(admin.getUser_id());
-            // Sender? Maybe system (null) or the assigning partner?
-            // We'll leave senderId null or set to a system ID if known.
-            // For now, let's assume null sender is fine or use admin's own ID as
-            // placeholder?
-            // Actually createNotificationsForAllRoles might handle it.
-            // I'll set senderId to adminId just to populate it, or leave null.
-            notif.setSenderId(admin.getUser_id());
-            notif.setTitle("Donation Pickup Assigned");
-            notif.setType("PICKUP_ASSIGNED");
-            notif.setMessage("A donation pickup from " + donation.getFullName() +
-                    " in " + donation.getCity() +
-                    " has been assigned to you.");
+            String ngoName = "NGO";
+            if (donation.getProgram() != null && donation.getProgram().getPartner() != null) {
+                ngoName = donation.getProgram().getPartner().getFullname();
+            }
 
-            createNotificationsForAllRoles(notif);
+            // 1. Notify Admin
+            NotificationDTO adminNotif = new NotificationDTO();
+            adminNotif.setRecipientId(admin.getUser_id());
+            adminNotif.setSenderId(admin.getUser_id());
+            adminNotif.setTitle("Donation Pickup Assigned");
+            adminNotif.setType("PICKUP_ASSIGNED");
+            adminNotif.setMessage("A donation from " + donation.getFullName() +
+                    " has been assigned to you from " + ngoName + ".");
+            createNotificationsForAllRoles(adminNotif);
+
+            // 2. Notify Partner (NGO)
+            if (donation.getProgram() != null && donation.getProgram().getPartner() != null) {
+                Partner partner = donation.getProgram().getPartner();
+                if (partner.getUser_id() != null) {
+                    NotificationDTO partnerNotif = new NotificationDTO();
+                    partnerNotif.setRecipientId(partner.getUser_id());
+                    partnerNotif.setSenderId(admin.getUser_id());
+                    partnerNotif.setTitle("Donation Assigned to Admin");
+                    partnerNotif.setType("PICKUP_ASSIGNED");
+                    partnerNotif.setMessage("The donation from " + donation.getFullName() +
+                            " has been assigned to Admin for pickup.");
+                    createNotificationsForAllRoles(partnerNotif);
+                }
+            }
         } catch (Exception e) {
             System.err.println("Error creating assigned donation notification: " + e.getMessage());
+        }
+    }
+
+    public void createDonationStatusNotification(Donation donation, String newStatus) {
+        try {
+            if (donation.getProgram() != null && donation.getProgram().getPartner() != null) {
+                Partner partner = donation.getProgram().getPartner();
+                if (partner.getUser_id() != null) {
+                    NotificationDTO notif = new NotificationDTO();
+                    notif.setRecipientId(partner.getUser_id());
+                    notif.setSenderId(partner.getUser_id());
+                    notif.setTitle("Donation Status Updated");
+                    notif.setType("DONATION_STATUS");
+
+                    String displayStatus = newStatus.replace("_", " ").toUpperCase();
+                    notif.setMessage("The donation from " + donation.getFullName() +
+                            " status has been updated to: " + displayStatus);
+
+                    createNotificationsForAllRoles(notif);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error creating donation status notification: " + e.getMessage());
         }
     }
 }

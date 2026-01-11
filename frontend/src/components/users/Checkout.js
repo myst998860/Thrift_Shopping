@@ -160,7 +160,7 @@
 //           {/* Order Summary Sidebar */}
 //           <aside className="checkout-summary">
 //             <h2 className="checkout-summary-title">Order Summary</h2>
-            
+
 //             <div className="checkout-items-list">
 //               {items.map((item) => {
 //                 const venueName = item.venue?.venueName || item.venueName || "Item";
@@ -222,6 +222,7 @@ import { useState, useEffect } from "react";
 import { useCart } from "../../context/CartContext";
 import { orderAPI, userService } from "../../services/api";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import "../../styles/CartPage.css";
 
 export default function Checkout() {
@@ -257,7 +258,7 @@ export default function Checkout() {
 
   const handleCheckout = async () => {
     if (!userId || !deliveryAddress.trim() || items.length === 0) {
-      alert("Please complete all required information.");
+      toast.warning("Please complete all required information.");
       return;
     }
 
@@ -313,13 +314,13 @@ export default function Checkout() {
         document.body.appendChild(form);
         form.submit();
       } else {
-        alert("Order placed successfully! Cash on Delivery.");
+        toast.success("Order placed successfully! Cash on Delivery.");
         clearCart();
         navigate("/orders");
       }
     } catch (err) {
       console.error("Checkout error:", err);
-      alert("Checkout failed. Please try again.");
+      toast.error("Checkout failed. Please try again.");
     } finally {
       setLoading(false);
     }

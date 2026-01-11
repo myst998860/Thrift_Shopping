@@ -14,10 +14,10 @@ export default function VenuePage() {
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     category: '',
-  size: '',
-  brand: '',
-  rating: '',
-  price: ''
+    size: '',
+    brand: '',
+    rating: '',
+    price: ''
   });
   const [toastMessage, setToastMessage] = useState("");
   const [showToast, setShowToast] = useState(false);
@@ -43,7 +43,7 @@ export default function VenuePage() {
         setLoading(true);
         const response = await venueService.listVenue();
         const venueList = Array.isArray(response) ? response : [];
-        
+
         // Fetch images for venues
         const venuesWithImages = await Promise.all(
           venueList.map(async (venue, index) => {
@@ -64,8 +64,12 @@ export default function VenuePage() {
         );
 
         if (isMounted) {
-          setVenues(venuesWithImages);
-          setFilteredVenues(venuesWithImages);
+          // ✅ Filter only active venues
+          const activeVenues = venuesWithImages.filter(v =>
+            v.status?.toLowerCase() === 'active'
+          );
+          setVenues(activeVenues);
+          setFilteredVenues(activeVenues);
           setError(null);
         }
       } catch (error) {
@@ -88,57 +92,57 @@ export default function VenuePage() {
       });
     };
   }, []);
-const handleFilterChange = (filterName, value) => {
-  const newFilters = { ...filters, [filterName]: value };
-  setFilters(newFilters);
-  setCurrentPage(1);
+  const handleFilterChange = (filterName, value) => {
+    const newFilters = { ...filters, [filterName]: value };
+    setFilters(newFilters);
+    setCurrentPage(1);
 
-  let filtered = [...venues];
+    let filtered = [...venues];
 
-  // CATEGORY filter
-  if (newFilters.category) {
-    filtered = filtered.filter(
-      v => v.category?.toLowerCase() === newFilters.category.toLowerCase()
-    );
-  }
+    // CATEGORY filter
+    if (newFilters.category) {
+      filtered = filtered.filter(
+        v => v.category?.toLowerCase() === newFilters.category.toLowerCase()
+      );
+    }
 
-  // SIZE filter
-  if (newFilters.size) {
-    filtered = filtered.filter(
-      v => v.size?.toLowerCase() === newFilters.size.toLowerCase()
-    );
-  }
+    // SIZE filter
+    if (newFilters.size) {
+      filtered = filtered.filter(
+        v => v.size?.toLowerCase() === newFilters.size.toLowerCase()
+      );
+    }
 
-  // BRAND filter
-  if (newFilters.brand) {
-    filtered = filtered.filter(
-      v => v.brand?.toLowerCase().includes(newFilters.brand.toLowerCase())
-    );
-  }
+    // BRAND filter
+    if (newFilters.brand) {
+      filtered = filtered.filter(
+        v => v.brand?.toLowerCase().includes(newFilters.brand.toLowerCase())
+      );
+    }
 
-  // CONDITION / RATING filter (optional fallback)
-  if (newFilters.rating) {
-    const minRating = Number(newFilters.rating);
-    filtered = filtered.filter(
-      v => (v.rating ?? 5) >= minRating
-    );
-  }
+    // CONDITION / RATING filter (optional fallback)
+    if (newFilters.rating) {
+      const minRating = Number(newFilters.rating);
+      filtered = filtered.filter(
+        v => (v.rating ?? 5) >= minRating
+      );
+    }
 
-  // PRICE ✅
-  if (newFilters.price) {
-    filtered = filtered.filter(v => {
-      const price = Number(v.price) || 0;
+    // PRICE ✅
+    if (newFilters.price) {
+      filtered = filtered.filter(v => {
+        const price = Number(v.price) || 0;
 
-      if (newFilters.price === 'low') return price < 5000;
-      if (newFilters.price === 'medium') return price >= 5000 && price <= 10000;
-      if (newFilters.price === 'high') return price > 50000;
+        if (newFilters.price === 'low') return price < 5000;
+        if (newFilters.price === 'medium') return price >= 5000 && price <= 10000;
+        if (newFilters.price === 'high') return price > 50000;
 
-      return true;
-    });
-  }
+        return true;
+      });
+    }
 
-  setFilteredVenues(filtered);
-};
+    setFilteredVenues(filtered);
+  };
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredVenues.length / itemsPerPage);
@@ -193,12 +197,12 @@ const handleFilterChange = (filterName, value) => {
   return (
     <div className="venue-page">
       <Header />
-      
+
       {/* Banner Image Section */}
       <div className="shop-banner">
-        <img 
-          src="https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1920&q=80" 
-          alt="Shop Banner" 
+        <img
+          src="https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=1920&q=80"
+          alt="Shop Banner"
           className="shop-banner-image"
         />
         <div className="shop-banner-overlay">
@@ -253,7 +257,7 @@ const handleFilterChange = (filterName, value) => {
             <span className="filter-label">Categories</span>
             <select className="filter-select" value={filters.category} onChange={(e) => handleFilterChange('category', e.target.value)}>
               <option value="">All Categories</option>
-                   {/* <option value="Vintage">Vintage</option>
+              {/* <option value="Vintage">Vintage</option>
                 <option value="Classic">Classic</option>
                 <option value="Retro">Retro</option>
                 <option value="Brand">Brand</option> */}
@@ -267,10 +271,10 @@ const handleFilterChange = (filterName, value) => {
             <span className="filter-label">Size</span>
             <select className="filter-select" value={filters.size} onChange={(e) => handleFilterChange('size', e.target.value)}>
               <option value="">All Sizes</option>
-                  <option value="XL">XL</option>
-                <option value="L">L</option>
-                <option value="M">M</option>
-                <option value="S">S</option>
+              <option value="XL">XL</option>
+              <option value="L">L</option>
+              <option value="M">M</option>
+              <option value="S">S</option>
             </select>
           </div>
 
@@ -304,8 +308,8 @@ const handleFilterChange = (filterName, value) => {
           <div className="shop-grid">
             {currentVenues.map((venue, index) => (
               <div key={venue.venue_id || index} className="shop-product-card">
-                <div 
-                  className="shop-product-image-container" 
+                <div
+                  className="shop-product-image-container"
                   style={{ cursor: 'pointer' }}
                   onClick={() => navigate(`/venues/${venue.venue_id}`)}
                 >
@@ -359,7 +363,7 @@ const handleFilterChange = (filterName, value) => {
               } else {
                 pageNum = currentPage - 1 + i;
               }
-              
+
               return (
                 <button
                   key={pageNum}
@@ -383,26 +387,26 @@ const handleFilterChange = (filterName, value) => {
       </div>
       <Footer />
       {showToast && (
-        <div style={{ 
-          position: "fixed", 
-          right: 16, 
-          bottom: 16, 
-          background: "#16a34a", 
-          color: "white", 
-          padding: "12px 18px", 
-          borderRadius: 8, 
-          boxShadow: "0 8px 24px rgba(0,0,0,0.18)", 
+        <div style={{
+          position: "fixed",
+          right: 16,
+          bottom: 16,
+          background: "#16a34a",
+          color: "white",
+          padding: "12px 18px",
+          borderRadius: 8,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
           zIndex: 1000,
           display: 'flex',
           alignItems: 'center',
           gap: '8px'
         }}>
-          <svg 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            width="20" 
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            width="20"
             height="20"
           >
             <path d="M20 6L9 17l-5-5"></path>
