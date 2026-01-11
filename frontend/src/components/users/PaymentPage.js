@@ -167,7 +167,7 @@ const PaymentPage = (props) => {
     const bookedTime = `${bookingData.date}T${bookingData.startTime}:00`
 
     try {
-      const storedId = localStorage.getItem("userId")
+      const storedId = sessionStorage.getItem("userId")
       if (!storedId) throw new Error("User not logged in")
 
       const venueIdNum = Number(bookingData.venueId)
@@ -260,8 +260,8 @@ const handlePayment = async () => {
 
 const sendNotification = async (passedBookingId) => {
   try {
-    const recipientId = bookingData?.attendeeId || Number(localStorage.getItem("userId"));
-    const senderId = bookingData?.attendeeId || Number(localStorage.getItem("userId"));
+    const recipientId = bookingData?.attendeeId || Number(sessionStorage.getItem("userId"));
+    const senderId = bookingData?.attendeeId || Number(sessionStorage.getItem("userId"));
     const venueId = bookingData?.venueId;
 
     const finalBookingId =
@@ -483,7 +483,7 @@ For any queries, please contact our support team.
               <button
                 className="venue-success-btn-secondary"
                 onClick={() => {
-                  const userId = localStorage.getItem("userId");
+                  const userId = sessionStorage.getItem("userId");
                   navigate(`/bookings/user/${userId}`);
                 }}
               >

@@ -135,8 +135,8 @@ export default function SignupPage() {
       // Call backend signup (Pending user + send OTP)
       await authService.signup(userData);
 
-      // Save email to localStorage for OTP verification
-      localStorage.setItem("signupEmail", formData.email);
+      // Save email to sessionStorage for OTP verification
+      sessionStorage.setItem("signupEmail", formData.email);
 
       // Redirect to OTP verification page
       navigate("/verify-signup-otp");

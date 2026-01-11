@@ -27,9 +27,9 @@ const NotificationsPage = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Decode userId from JWT token stored in localStorage
+  // Decode userId from JWT token stored in sessionStorage
   const getUserIdFromToken = () => {
-    const token = localStorage.getItem("jwtToken")
+    const token = sessionStorage.getItem("jwtToken")
     if (!token) return null
     try {
       const decoded = jwtDecode(token)

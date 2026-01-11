@@ -4,7 +4,7 @@ function AddToCartButton({ venue }) {
   const { addItemBackend } = useCart();
 
   const handleAddToCart = async () => {
-    const userId = localStorage.getItem("userId");
+    const userId = sessionStorage.getItem("userId");
 
     if (!userId) {
       alert("Please login first!");

@@ -34,7 +34,7 @@ export default function UserViewBookings() {
   const [selectedBooking, setSelectedBooking] = useState(null);
 
   // ✅ Get userId from JWT
-  const token = localStorage.getItem("jwtToken");
+  const token = sessionStorage.getItem("jwtToken");
   const decoded = token ? parseJwt(token) : null;
   const userId = decoded?.userId;
 

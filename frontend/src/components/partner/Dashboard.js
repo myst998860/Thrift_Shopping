@@ -158,11 +158,11 @@ const getCurrentPartnerToken = () => {
   ];
 
   for (const key of directKeys) {
-    const token = normalizeOwnerToken(localStorage.getItem(key));
+    const token = normalizeOwnerToken(sessionStorage.getItem(key));
     if (token !== null) return token;
   }
 
-  const jwtToken = localStorage.getItem("jwtToken");
+  const jwtToken = sessionStorage.getItem("jwtToken");
   const payload = decodeJwtPayload(jwtToken);
   if (payload && typeof payload === "object") {
     const payloadKeys = [
@@ -227,7 +227,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("jwtToken");
+    const token = sessionStorage.getItem("jwtToken");
 
     if (!token) {
       setLoading(false);

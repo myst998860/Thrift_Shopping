@@ -38,8 +38,8 @@ export const UserSessionProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
-    const userDataRaw = localStorage.getItem(USER_STORAGE_KEY);
+    const token = sessionStorage.getItem(TOKEN_STORAGE_KEY);
+    const userDataRaw = sessionStorage.getItem(USER_STORAGE_KEY);
 
     if (token && isTokenValid(token) && userDataRaw) {
       try {
@@ -53,8 +53,8 @@ export const UserSessionProvider = ({ children }) => {
         console.error("Failed to parse user data", e);
       }
     }
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
-    localStorage.removeItem(USER_STORAGE_KEY);
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(USER_STORAGE_KEY);
     setUser(null);
     setLoading(false);
   }, [isTokenValid, isValidUserData]);
@@ -62,7 +62,7 @@ export const UserSessionProvider = ({ children }) => {
   // Polling logout on token expiry every 60 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+      const token = sessionStorage.getItem(TOKEN_STORAGE_KEY);
       if (token && !isTokenValid(token)) {
         logout();
       }
@@ -75,47 +75,19 @@ export const UserSessionProvider = ({ children }) => {
     if (!isValidUserData(userData)) throw new Error("Invalid user data");
     if (!isTokenValid(token)) throw new Error("Invalid or expired token");
 
-    localStorage.setItem(TOKEN_STORAGE_KEY, token);
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
+    sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+    sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
     setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
-    localStorage.removeItem(USER_STORAGE_KEY);
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(USER_STORAGE_KEY);
     setUser(null);
   };
 
-  // Synchronize logout/login across tabs
-  useEffect(() => {
-    const syncSession = (event) => {
-      if (
-        event.key === TOKEN_STORAGE_KEY ||
-        event.key === USER_STORAGE_KEY
-      ) {
-        const newToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-        const newUserDataRaw = localStorage.getItem(USER_STORAGE_KEY);
+  // Removed cross-tab synchronization as we want independent sessions per tab.
 
-        if (!newToken || !newUserDataRaw) {
-          setUser(null);
-        } else {
-          try {
-            const newUser = JSON.parse(newUserDataRaw);
-            if (isValidUserData(newUser) && isTokenValid(newToken)) {
-              setUser(newUser);
-            } else {
-              setUser(null);
-            }
-          } catch {
-            setUser(null);
-          }
-        }
-      }
-    };
-
-    window.addEventListener("storage", syncSession);
-    return () => window.removeEventListener("storage", syncSession);
-  }, [isTokenValid, isValidUserData]);
 
   const isUserLoggedIn = !!user;
 

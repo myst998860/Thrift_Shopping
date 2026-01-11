@@ -129,7 +129,7 @@ const AdminPanel = () => {
   const { user: currentUser, logout } = useUserSession();
   const [unreadCount, setUnreadCount] = useState(0);
   const [activeOrderCount, setActiveOrderCount] = useState(0);
-  const userId = localStorage.getItem("userId");
+  const userId = sessionStorage.getItem("userId");
   const location = useLocation();
   const navigate = useNavigate();
 

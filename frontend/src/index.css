@@ -12,6 +12,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Ensure font inheritance for form elements */
+input,
+button,
+select,
+textarea,
+optgroup {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
 code {
   font-family: var(--font-family-mono);
 }

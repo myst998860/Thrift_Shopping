@@ -37,7 +37,8 @@
 
 .donation-stats {
     display: flex;
-    gap: 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .stat-item {
@@ -142,6 +143,13 @@
     background-color: #f8fafc;
 }
 
+.donation-table th:nth-child(7),
+.donation-table td:nth-child(7),
+.donation-table th:nth-child(8),
+.donation-table td:nth-child(8) {
+    text-align: center;
+}
+
 .donor-info {
     display: flex;
     flex-direction: column;
@@ -157,7 +165,7 @@
     color: var(--text-muted);
 }
 
-.status-badge {
+.donation-status-badge {
     display: inline-flex;
     align-items: center;
     padding: 0.25rem 0.75rem;
@@ -167,32 +175,32 @@
     text-transform: capitalize;
 }
 
-.status-pending {
+.donation-status-pending {
     background-color: #f1f5f9;
     color: #64748b;
 }
 
-.status-confirmed {
+.donation-status-confirmed {
     background-color: #dcfce7;
     color: #15803d;
 }
 
-.status-pickedup {
+.donation-status-picked-up {
     background-color: #dbeafe;
     color: #1d4ed8;
 }
 
-.status-delivered {
+.donation-status-delivered {
     background-color: #f3e8ff;
     color: #7e22ce;
 }
 
-.status-cancelled {
+.donation-status-cancelled {
     background-color: #fee2e2;
     color: #b91c1c;
 }
 
-.status-assigned {
+.donation-status-assigned-to-admin {
     background-color: #ffedd5;
     color: #9a3412;
 }

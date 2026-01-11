@@ -155,6 +155,11 @@ body {
   color: white;
 }
 
+.unread-badge {
+  background-color: #f44336;
+  color: white;
+}
+
 .sidebar-footer {
   padding: var(--spacing-md);
   border-top: 1px solid var(--gray-200);

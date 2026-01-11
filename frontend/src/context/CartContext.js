@@ -11,7 +11,7 @@
 
 //   useEffect(() => {
 //    const fetchCart = async () => {
-//   const userId = localStorage.getItem("userId");
+//   const userId = sessionStorage.getItem("userId");
 //   if (!userId) return;
 
 //   const res = await api.get(`/cart/${userId}`);
@@ -23,7 +23,7 @@
 
 // const addItem = async ({ venueId, quantity = 1 }) => {
 //   try {
-//     const userId = localStorage.getItem("userId");
+//     const userId = sessionStorage.getItem("userId");
 //     if (!userId) throw new Error("User not logged in");
 
 //     // Call your backend API
@@ -45,7 +45,7 @@
 //   const updateItem = async (cartItemId, quantity) => {
 //     try {
 //       await cartService.updateItem(cartItemId, quantity)
-//       const userId = localStorage.getItem("userId")
+//       const userId = sessionStorage.getItem("userId")
 //       const cart = await cartService.getUserCart(userId)
 //       setItems(cart.items || [])
 //     } catch (err) {
@@ -56,7 +56,7 @@
 //   const removeItem = async (cartItemId) => {
 //     try {
 //       await cartService.removeItem(cartItemId)
-//       const userId = localStorage.getItem("userId")
+//       const userId = sessionStorage.getItem("userId")
 //       const cart = await cartService.getUserCart(userId)
 //       setItems(cart.items || [])
 //     } catch (err) {
@@ -66,7 +66,7 @@
 
 //   const clearCart = async () => {
 //     try {
-//       const userId = localStorage.getItem("userId")
+//       const userId = sessionStorage.getItem("userId")
 //       await cartService.clearCart(userId)
 //       setItems([]) // clearing items in UI
 //     } catch (err) {
@@ -101,7 +101,7 @@ export function CartProvider({ children }) {
   // Fetch cart on mount
   useEffect(() => {
     const fetchCart = async () => {
-      const userId = localStorage.getItem("userId")
+      const userId = sessionStorage.getItem("userId")
       if (!userId) {
         setLoading(false)
         return
@@ -123,7 +123,7 @@ export function CartProvider({ children }) {
   // Add item to cart
   // const addItem = async ({ venueId, quantity = 1 }) => {
   //   try {
-  //     const userId = localStorage.getItem("userId")
+  //     const userId = sessionStorage.getItem("userId")
   //     if (!userId) throw new Error("User not logged in")
 
   //     await cartService.addItem(userId, venueId, quantity)
@@ -137,7 +137,7 @@ export function CartProvider({ children }) {
   //   }
   // }
   const addItem = async ({ venueId, quantity = 1 }) => {
-  const userId = localStorage.getItem("userId")  // get fresh userId every time
+  const userId = sessionStorage.getItem("userId")  // get fresh userId every time
   if (!userId) {
     console.warn("User not logged in")
     return false
@@ -158,7 +158,7 @@ export function CartProvider({ children }) {
   const updateItem = async (cartItemId, quantity) => {
     try {
       await cartService.updateItem(cartItemId, quantity)
-      const userId = localStorage.getItem("userId")
+      const userId = sessionStorage.getItem("userId")
       const updatedCart = await cartService.getUserCart(userId)
       setItems(updatedCart?.items || [])
     } catch (err) {
@@ -170,7 +170,7 @@ export function CartProvider({ children }) {
   const removeItem = async (cartItemId) => {
     try {
       await cartService.removeItem(cartItemId)
-      const userId = localStorage.getItem("userId")
+      const userId = sessionStorage.getItem("userId")
       const updatedCart = await cartService.getUserCart(userId)
       setItems(updatedCart?.items || [])
     } catch (err) {
@@ -181,7 +181,7 @@ export function CartProvider({ children }) {
   // Clear entire cart
   const clearCart = async () => {
     try {
-      const userId = localStorage.getItem("userId")
+      const userId = sessionStorage.getItem("userId")
       await cartService.clearCart(userId)
       setItems([])
     } catch (err) {

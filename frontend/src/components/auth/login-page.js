@@ -137,12 +137,12 @@ export default function LoginPage() {
       };
 
       // ✅ Store token and user role
-      localStorage.setItem("jwtToken", data.token);
-      localStorage.setItem("userRole", payload.role);
+      sessionStorage.setItem("jwtToken", data.token);
+      sessionStorage.setItem("userRole", payload.role);
 
       // ✅ NEW: Save userId if present in token
       if (payload.userId !== undefined) {
-        localStorage.setItem("userId", payload.userId.toString());
+        sessionStorage.setItem("userId", payload.userId.toString());
         console.log("Saved userId:", payload.userId);
       } else {
         console.warn("userId not found in token");

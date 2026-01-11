@@ -21,7 +21,7 @@ const Profile = () => {
 
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('jwtToken');
+    const savedToken = sessionStorage.getItem('jwtToken');
     setToken(savedToken);
 
     async function fetchProfile() {
@@ -45,7 +45,7 @@ const Profile = () => {
   try {
     const response = await fetch('http://localhost:8080/api/stats', {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+        'Authorization': `Bearer ${sessionStorage.getItem('jwtToken')}`,
         'Content-Type': 'application/json',
       },
     });

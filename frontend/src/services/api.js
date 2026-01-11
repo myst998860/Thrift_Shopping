@@ -18,7 +18,7 @@ const getCookie = (name) => {
 // Add request interceptor to add token to headers
 api.interceptors.request.use(
   config => {
-    const token = localStorage.getItem('accessToken');  // or jwtToken based on your naming
+    const token = sessionStorage.getItem('accessToken');  // or jwtToken based on your naming
     if (token) {
       config.headers['Authorization'] = 'Bearer ' + token;
     }
@@ -57,10 +57,10 @@ const authService = {
  login: async (credentials) => {
   const response = await api.post("/auth/login", credentials);
   if (response.data.accessToken) {
-    localStorage.setItem("accessToken", response.data.accessToken);
-    localStorage.setItem("refreshToken", response.data.refreshToken);
-    localStorage.setItem("jwtToken", response.data.token);
-    localStorage.setItem('userId', response.data.id);
+    sessionStorage.setItem("accessToken", response.data.accessToken);
+    sessionStorage.setItem("refreshToken", response.data.refreshToken);
+    sessionStorage.setItem("jwtToken", response.data.token);
+    sessionStorage.setItem('userId', response.data.id);
   }
   return response.data;
 },
@@ -96,9 +96,9 @@ signupPartner: async (partnerData) => {
 
 
 logout: async () => {
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
+  sessionStorage.removeItem("accessToken");
+  sessionStorage.removeItem("refreshToken");
+    sessionStorage.removeItem("user");
 
      // 2️⃣ Clear user context if provided
   // if (setUser) setUser(null);
@@ -119,13 +119,13 @@ logout: async () => {
 },
 
  refresh: async () => {
-  const refreshToken = localStorage.getItem("refreshToken");
+  const refreshToken = sessionStorage.getItem("refreshToken");
   if (!refreshToken) return null;
 
   try {
     const response = await api.post("/auth/refresh", { refreshToken });
     if (response.data.accessToken) {
-      localStorage.setItem("accessToken", response.data.accessToken);
+      sessionStorage.setItem("accessToken", response.data.accessToken);
       return response.data.accessToken;
     }
   } catch (error) {
@@ -160,7 +160,7 @@ requestPasswordReset: async (email) => {
   return response.data;
 },
 
-  isAuthenticated: () => !!localStorage.getItem("jwtToken"),
+  isAuthenticated: () => !!sessionStorage.getItem("jwtToken"),
 };
 
 
@@ -168,7 +168,7 @@ requestPasswordReset: async (email) => {
 // Venue API services
 const venueService = {
  addVenue: async (venueData) => {
-  const token = localStorage.getItem("jwtToken");
+  const token = sessionStorage.getItem("jwtToken");
   console.log("Sending token:", token);
   const response = await api.post("/venues/new", venueData, {
     headers: {
@@ -179,7 +179,7 @@ const venueService = {
 },
 
  addVenueA: async (venueData) => {
-  const token = localStorage.getItem("jwtToken");
+  const token = sessionStorage.getItem("jwtToken");
   console.log("Sending token:", token);
   const response = await api.post("/venues/add", venueData, {
     headers: {
@@ -191,7 +191,7 @@ const venueService = {
 
   getVenue: async (id) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.get(`/venues/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -204,7 +204,7 @@ const venueService = {
   },
 
 listVenue: async () => {
-  const token = localStorage.getItem('jwtToken');
+  const token = sessionStorage.getItem('jwtToken');
   const response = await api.get("/venues", {
     headers: {
       Authorization: `Bearer ${token}`
@@ -215,7 +215,7 @@ listVenue: async () => {
 
 deleteVenue: async (id) => {
   try {
-    const token = localStorage.getItem('jwtToken');
+    const token = sessionStorage.getItem('jwtToken');
     await api.delete(`/venues/delete/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -229,7 +229,7 @@ deleteVenue: async (id) => {
 
   editVenue: async (id, venueData) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.put(`/venues/edit/${id}`, venueData, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -288,7 +288,7 @@ deleteVenue: async (id) => {
 const userService = {
  listUsers: async () => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.get("/admin/users", {
         headers: {
           Authorization: `Bearer ${token}`
@@ -303,7 +303,7 @@ const userService = {
   
   updateLocation: async (id, location) => {
     try {
-      const token = localStorage.getItem("jwtToken");
+      const token = sessionStorage.getItem("jwtToken");
        const response = await api.put(`/admin/users/update-location/${id}`, { location },
         {
           headers: {
@@ -331,7 +331,7 @@ const userService = {
 
   getCurrentUser: async () => {
   try {
-    const token = localStorage.getItem("jwtToken");
+    const token = sessionStorage.getItem("jwtToken");
     if (!token) throw new Error("No JWT token found");
 
     const response = await api.get("/users/me", {
@@ -348,7 +348,7 @@ const userService = {
   // Add new user
   addUser: async (userData) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.post("/admin/users/new", userData, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -363,7 +363,7 @@ const userService = {
 // Get user details
   getUser: async (id) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.get(`/admin/users/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -379,7 +379,7 @@ const userService = {
   // Update user
   editUser: async (id, userData) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.put(`/admin/users/edit/${id}`, userData, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -394,7 +394,7 @@ const userService = {
    // Delete user
   deleteUser: async (userId) => {
   try {
-    const token = localStorage.getItem('jwtToken');
+    const token = sessionStorage.getItem('jwtToken');
     if (!token) {
   console.error('No JWT token found — user might need to log in again');
   return;
@@ -416,7 +416,7 @@ console.log('JWT Token:', token);
   changeUserStatus: async (id, status) => {
 
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.patch(`/admin/users/status/${id}`, { status }, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -436,7 +436,7 @@ const partnerService = {
   
 listPartners: async () => {
   try {
-    const token = localStorage.getItem('jwtToken');
+    const token = sessionStorage.getItem('jwtToken');
     if (!token) {
       throw new Error('No JWT token found');
     }
@@ -457,7 +457,7 @@ listPartners: async () => {
   
   getPartner: async (id) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.get(`/admin/partners/${id}`,{
       headers: {
         Authorization: `Bearer ${token}`
@@ -471,7 +471,7 @@ listPartners: async () => {
 
     addPartner: async (partnerData) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.post("/admin/partners/new", partnerData, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -487,7 +487,7 @@ listPartners: async () => {
   editPartner: async (id, partnerData) => {
     try {
       
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.put(`/admin/partners/edit/${id}`, partnerData, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -502,7 +502,7 @@ listPartners: async () => {
 
   deletePartner: async (id) => {
     try {
-       const token = localStorage.getItem('jwtToken');
+       const token = sessionStorage.getItem('jwtToken');
       const response = await api.delete(`/admin/partners/delete/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -516,7 +516,7 @@ listPartners: async () => {
 
   approvePartner: async (id) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       if (!token) {
         throw new Error('No JWT token found');
       }
@@ -544,7 +544,7 @@ export { api, authService, venueService, userService, partnerService,profileServ
 const contactService = {
   sendMessage: async (contactData) => {
     try {
-      const token = localStorage.getItem("jwtToken");
+      const token = sessionStorage.getItem("jwtToken");
       const response = await api.post("/contacts/new", contactData, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -563,7 +563,7 @@ const notificationService = {
 
   createNotification: async (notificationData) => {
   try {
-    const token = localStorage.getItem('jwtToken');
+    const token = sessionStorage.getItem('jwtToken');
     const response = await api.post("/notifications/create", notificationData, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -578,7 +578,7 @@ const notificationService = {
 
   getUserNotifications: async (userId) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.get(`/notifications/user/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -592,7 +592,7 @@ const notificationService = {
 
   getUnreadCount: async (userId) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.get(`/notifications/user/${userId}/unread-count`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -606,7 +606,7 @@ const notificationService = {
 
   getByStatus: async (userId, status) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.get(`/notifications/user/${userId}/status/${status}`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -620,7 +620,7 @@ const notificationService = {
 
   markAsRead: async (notificationId, userId) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.put(`/notifications/${notificationId}/read?userId=${userId}`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -634,7 +634,7 @@ const notificationService = {
 
   markAllAsRead: async (userId) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.put(`/notifications/user/${userId}/mark-all-read`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -648,7 +648,7 @@ const notificationService = {
 
   deleteNotification: async (notificationId, userId) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.delete(`/notifications/${notificationId}?userId=${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -662,7 +662,7 @@ const notificationService = {
 
   clearAllNotifications: async (userId) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.delete(`/notifications/user/${userId}/clear-all`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -679,8 +679,8 @@ const notificationService = {
 const bookingService = {
 
  createBooking: async (payload) => {
-  const token = localStorage.getItem("jwtToken");
-  const userId = localStorage.getItem("userId"); // Retrieve user ID
+  const token = sessionStorage.getItem("jwtToken");
+  const userId = sessionStorage.getItem("userId"); // Retrieve user ID
 
   // Include userId in the booking payload
   const updatedPayload = {
@@ -699,7 +699,7 @@ const bookingService = {
 },
 
     listBooking: async () => {
-  const token = localStorage.getItem('jwtToken');
+  const token = sessionStorage.getItem('jwtToken');
   if (!token) {
     console.error('No JWT token found. Please log in.');
     return null; // Or handle as appropriate
@@ -723,7 +723,7 @@ const bookingService = {
 
  getUserBookings: async (userId) => {
   try {
-    const token = localStorage.getItem('jwtToken');
+    const token = sessionStorage.getItem('jwtToken');
     const response = await api.get(`/bookings/user/${userId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -737,7 +737,7 @@ const bookingService = {
 
   getBookingById: async (bookingId) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.get(`/bookings/${bookingId}`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -751,7 +751,7 @@ const bookingService = {
   
   editBooking: async (bookingId,bookingData) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const response = await api.put(`/bookings/edit/${bookingId}`, bookingData, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -765,7 +765,7 @@ const bookingService = {
 
   // updateBookingStatus: async (bookingId,status) => {
   //   try {
-  //     const token = localStorage.getItem('jwtToken');
+  //     const token = sessionStorage.getItem('jwtToken');
   //     const response = await api.put(`/bookings/${bookingId}/${status}`, {
   //       headers: {
   //         Authorization: `Bearer ${token}`
@@ -778,7 +778,7 @@ const bookingService = {
   // },
   updateBookingStatus: async (bookingId, status) => {
   try {
-    const token = localStorage.getItem("jwtToken");
+    const token = sessionStorage.getItem("jwtToken");
     const headers = {};
 
     if (token && token !== "null" && token !== "undefined") {
@@ -799,7 +799,7 @@ const bookingService = {
 
   getBookingsByVenueAndDate: async (venueId, date) => {
   try {
-    const token = localStorage.getItem('jwtToken');
+    const token = sessionStorage.getItem('jwtToken');
     const response = await api.get(`/bookings?venueId=${venueId}&date=${date}`, {
       headers: {
         Authorization: `Bearer ${token}`
@@ -812,7 +812,7 @@ const bookingService = {
   }
 },
 deleteBooking: async (bookingId) => {
-  const token = localStorage.getItem("jwtToken");
+  const token = sessionStorage.getItem("jwtToken");
   try {
     const response = await api.delete(`/bookings/delete/${bookingId}`, {
       headers: {
@@ -829,7 +829,7 @@ deleteBooking: async (bookingId) => {
 
 const profileService = {
   getProfile: async () => {
-  const token = localStorage.getItem('jwtToken');
+  const token = sessionStorage.getItem('jwtToken');
   const response = await api.get('/profile', {
     headers: { Authorization: `Bearer ${token}` }
   });
@@ -838,7 +838,7 @@ const profileService = {
 
 
   updateProfile: async (profileData) => {
-    const token = localStorage.getItem('jwtToken');
+    const token = sessionStorage.getItem('jwtToken');
     const response = await api.put('/profile', profileData, {
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -848,7 +848,7 @@ const profileService = {
 
 const imageService = {
   getImage: async (venue_id) => {
-    const token = localStorage.getItem('jwtToken');
+    const token = sessionStorage.getItem('jwtToken');
 
     try {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -870,7 +870,7 @@ const donationAPI = {
   // Add new donation
   addDonation: async (donationData) => {
     try {
-      const token = localStorage.getItem("jwtToken");
+      const token = sessionStorage.getItem("jwtToken");
       const response = await api.post("/donations/new", {...donationData, program:{programId: donationData.programId}}, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -885,7 +885,7 @@ const donationAPI = {
   // Get donation details by ID
   getDonation: async (id) => {
     try {
-      const token = localStorage.getItem("jwtToken");
+      const token = sessionStorage.getItem("jwtToken");
       const response = await api.get(`/donations/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -899,7 +899,7 @@ const donationAPI = {
    // ✅ Get all donations
    listDonations: async () => {
     try {
-      const token = localStorage.getItem("jwtToken");
+      const token = sessionStorage.getItem("jwtToken");
       const response = await api.get("/donations", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -912,7 +912,7 @@ const donationAPI = {
 
   updateDonationStatus: async (donationId, status) => {
   try {
-    const token = localStorage.getItem("jwtToken");
+    const token = sessionStorage.getItem("jwtToken");
 
     const headers = {};
 
@@ -935,7 +935,7 @@ const donationAPI = {
   // ✅ Delete donation by ID
   deleteDonation: async (id) => {
     try {
-      const token = localStorage.getItem("jwtToken");
+      const token = sessionStorage.getItem("jwtToken");
       const response = await api.delete(`/donations/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -947,7 +947,7 @@ const donationAPI = {
 
   assignToAdmin: async (donationId) => {
     try {
-      const token = localStorage.getItem("jwtToken");
+      const token = sessionStorage.getItem("jwtToken");
       const headers = { Authorization: `Bearer ${token}` };
       const response = await api.put(`/donations/${donationId}/assign-admin`, {}, { headers });
       return response.data;
@@ -959,7 +959,7 @@ const donationAPI = {
   // ✅ Get donation counts by status
   getDonationCounts: async () => {
     try {
-      const token = localStorage.getItem("jwtToken");
+      const token = sessionStorage.getItem("jwtToken");
       const headers = { Authorization: `Bearer ${token}` };
       const response = await api.get("/donations/counts", { headers });
       return response.data;
@@ -981,7 +981,7 @@ const programService = {
   // Add new program
   addProgram: async (programData) => {
     try {
-      const token = localStorage.getItem("jwtToken");
+      const token = sessionStorage.getItem("jwtToken");
       const response = await api.post("/programs/add", programData, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -996,7 +996,7 @@ const programService = {
   // Get all programs
   listPrograms: async () => {
     try {
-      const token = localStorage.getItem("jwtToken");
+      const token = sessionStorage.getItem("jwtToken");
       const response = await api.get("/programs", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1011,7 +1011,7 @@ const programService = {
   // Get program by ID
   getProgram: async (id) => {
     try {
-      const token = localStorage.getItem("jwtToken");
+      const token = sessionStorage.getItem("jwtToken");
       const response = await api.get(`/programs/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1026,7 +1026,7 @@ const programService = {
   // Update program
   updateProgram: async (id, programData) => {
     try {
-      const token = localStorage.getItem("jwtToken");
+      const token = sessionStorage.getItem("jwtToken");
       const response = await api.put(`/programs/edit/${id}`, programData, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1041,7 +1041,7 @@ const programService = {
   // Delete program
   deleteProgram: async (id) => {
     try {
-      const token = localStorage.getItem("jwtToken");
+      const token = sessionStorage.getItem("jwtToken");
       const response = await api.delete(`/programs/delete/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1074,7 +1074,7 @@ const uploadProgramImage = async (programId, file) => {
 
 export const cartService = {
   getUserCart: async (userId) => {
-    const token = localStorage.getItem("jwtToken");
+    const token = sessionStorage.getItem("jwtToken");
     const res = await fetch(`http://localhost:8080/cart/${userId}`, {
       headers: {
         "Content-Type": "application/json",
@@ -1085,7 +1085,7 @@ export const cartService = {
   },
 
   addItem: async (userId, venueId, quantity) => {
-    const token = localStorage.getItem("jwtToken");
+    const token = sessionStorage.getItem("jwtToken");
     const res = await fetch(
       `http://localhost:8080/cart/add?userId=${userId}&venueId=${venueId}&quantity=${quantity}`,
       {
@@ -1100,7 +1100,7 @@ export const cartService = {
   },
 
   updateItem: async (cartItemId, quantity) => {
-    const token = localStorage.getItem("jwtToken");
+    const token = sessionStorage.getItem("jwtToken");
     const res = await fetch(
       `http://localhost:8080/cart/update/${cartItemId}?quantity=${quantity}`,
       {
@@ -1115,7 +1115,7 @@ export const cartService = {
   },
 
   removeItem: async (cartItemId) => {
-    const token = localStorage.getItem("jwtToken");
+    const token = sessionStorage.getItem("jwtToken");
     return fetch(`http://localhost:8080/cart/remove/${cartItemId}`, {
       method: "DELETE",
       headers: {
@@ -1125,7 +1125,7 @@ export const cartService = {
   },
 
   clearCart: async (userId) => {
-    const token = localStorage.getItem("jwtToken");
+    const token = sessionStorage.getItem("jwtToken");
     return fetch(`http://localhost:8080/cart/clear/${userId}`, {
       method: "DELETE",
       headers: {
@@ -1141,7 +1141,7 @@ export const orderAPI = {
   // Checkout: create order
   // checkout: async (orderData) => {
   //   try {
-  //     const token = localStorage.getItem('jwtToken');
+  //     const token = sessionStorage.getItem('jwtToken');
   //     const headers = {};
 
   //     if (token && token !== 'null' && token !== 'undefined') {
@@ -1158,7 +1158,7 @@ export const orderAPI = {
 
    checkout: async (orderData) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const headers = {};
       if (token && token !== 'null' && token !== 'undefined') {
         headers.Authorization = `Bearer ${token}`;
@@ -1173,7 +1173,7 @@ export const orderAPI = {
 
    initiateEsewaPayment: async (orderId) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const headers = {};
       if (token && token !== 'null' && token !== 'undefined') {
         headers.Authorization = `Bearer ${token}`;
@@ -1203,7 +1203,7 @@ export const orderAPI = {
    // Get all orders of a user
   getUserOrders: async (userId) => {
     try {
-      const token = localStorage.getItem("jwtToken");
+      const token = sessionStorage.getItem("jwtToken");
       const headers = {};
       if (token && token !== "null" && token !== "undefined") {
         headers.Authorization = `Bearer ${token}`;
@@ -1220,7 +1220,7 @@ export const orderAPI = {
   // Get all orders
   listOrders: async () => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const headers = {};
       if (token && token !== 'null' && token !== 'undefined') {
         headers.Authorization = `Bearer ${token}`;
@@ -1236,7 +1236,7 @@ export const orderAPI = {
   // Get single order
   getOrder: async (orderId) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const headers = {};
       if (token && token !== 'null' && token !== 'undefined') {
         headers.Authorization = `Bearer ${token}`;
@@ -1252,7 +1252,7 @@ export const orderAPI = {
   // Update order status
   updateOrderStatus: async (orderId, status) => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const headers = {};
       if (token && token !== 'null' && token !== 'undefined') {
         headers.Authorization = `Bearer ${token}`;
@@ -1268,7 +1268,7 @@ export const orderAPI = {
   // Get active order count
   getActiveOrderCount: async () => {
     try {
-      const token = localStorage.getItem('jwtToken');
+      const token = sessionStorage.getItem('jwtToken');
       const headers = {};
       if (token && token !== 'null' && token !== 'undefined') {
         headers.Authorization = `Bearer ${token}`;
@@ -1286,7 +1286,7 @@ export const orderAPI = {
 const productService = {
   // GET all products
   listProducts: async () => {
-    const token = localStorage.getItem("jwtToken");
+    const token = sessionStorage.getItem("jwtToken");
     const response = await api.get("/products/all", {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1297,7 +1297,7 @@ const productService = {
 
   // GET product by ID
   getProduct: async (id) => {
-    const token = localStorage.getItem("jwtToken");
+    const token = sessionStorage.getItem("jwtToken");
     const response = await api.get(`/products/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1308,7 +1308,7 @@ const productService = {
 
   // CREATE product
   addProduct: async (productData) => {
-    const token = localStorage.getItem("jwtToken");
+    const token = sessionStorage.getItem("jwtToken");
     const response = await api.post("/products/new", productData, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1320,7 +1320,7 @@ const productService = {
 
   // UPDATE product
   editProduct: async (id, productData) => {
-    const token = localStorage.getItem("jwtToken");
+    const token = sessionStorage.getItem("jwtToken");
     const response = await api.put(`/products/update/${id}`, productData, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1331,7 +1331,7 @@ const productService = {
 
   // DELETE product
   deleteProduct: async (id) => {
-    const token = localStorage.getItem("jwtToken");
+    const token = sessionStorage.getItem("jwtToken");
     const response = await api.delete(`/products/delete/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1343,7 +1343,7 @@ const productService = {
   // SEARCH products
   searchProducts: async (params) => {
     // params is an object: { category, brand, tag }
-    const token = localStorage.getItem("jwtToken");
+    const token = sessionStorage.getItem("jwtToken");
     const response = await api.get("/products/filter", {
       params,
       headers: {
@@ -1363,7 +1363,7 @@ export { contactService, notificationService, bookingService };
   
 //   createUser: async (userData) => {
 //     try {
-//       const token = localStorage.getItem('jwtToken');
+//       const token = sessionStorage.getItem('jwtToken');
 //       const response = await api.post('/admin/users', userData, {
 //         headers: {
 //           Authorization: `Bearer ${token}`,
@@ -1378,7 +1378,7 @@ export { contactService, notificationService, bookingService };
 
 //   updateUserStatus: async (id, status) => {
 //     try {
-//       const token = localStorage.getItem('jwtToken');
+//       const token = sessionStorage.getItem('jwtToken');
 //       const response = await api.patch(`/admin/users/status/${id}`, { status }, {
 //         headers: {
 //           Authorization: `Bearer ${token}`

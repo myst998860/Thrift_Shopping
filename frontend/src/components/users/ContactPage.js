@@ -118,7 +118,7 @@ const ContactPage = () => {
         }
       }
 
-      const token = localStorage.getItem("jwtToken")
+      const token = sessionStorage.getItem("jwtToken")
 
       const response = await fetch(
         `${process.env.REACT_APP_API_URL || "http://localhost:8080"}/api/contacts/new`,

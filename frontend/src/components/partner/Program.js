@@ -213,7 +213,7 @@ const ProgramAdd = () => {
       data.append("status", formData.status || 'ACTIVE');
 
       // Partner info (nested object)
-      data.append("partner.user_id", localStorage.getItem("userId")); // make sure backend can parse nested field
+      data.append("partner.user_id", sessionStorage.getItem("userId")); // make sure backend can parse nested field
 
 
       if (isEditMode && id) {

@@ -12,8 +12,8 @@
 //   const [paymentMethod, setPaymentMethod] = useState("COD");
 //   const [loading, setLoading] = useState(false);
 
-//   const userId = parseInt(localStorage.getItem("userId"), 10);
-//   const userEmail = JSON.parse(localStorage.getItem("user") || "{}").email;
+//   const userId = parseInt(sessionStorage.getItem("userId"), 10);
+//   const userEmail = JSON.parse(sessionStorage.getItem("user") || "{}").email;
 
 //   // Fetch user location on component mount
 //   useEffect(() => {
@@ -233,8 +233,8 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [loading, setLoading] = useState(false);
 
-  const userId = parseInt(localStorage.getItem("userId"), 10);
-  const userEmail = JSON.parse(localStorage.getItem("user") || "{}").email;
+  const userId = parseInt(sessionStorage.getItem("userId"), 10);
+  const userEmail = JSON.parse(sessionStorage.getItem("user") || "{}").email;
 
   useEffect(() => {
     const fetchUserLocation = async () => {

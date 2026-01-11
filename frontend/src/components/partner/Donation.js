@@ -14,9 +14,10 @@ import {
 } from 'react-icons/fi';
 
 const StatusBadge = ({ status }) => {
-  const statusClass = `status-${status?.toLowerCase().replace(/_/g, '-') || 'pending'}`;
+  const statusClean = status?.toLowerCase().replace(/_/g, '-').replace(/\s+/g, '-') || 'pending';
+  const statusClass = `donation-status-${statusClean}`;
   return (
-    <span className={`status-badge ${statusClass}`}>
+    <span className={`donation-status-badge ${statusClass}`}>
       {status?.replace(/_/g, ' ') || 'Pending'}
     </span>
   );
@@ -38,7 +39,7 @@ const StatusDropdown = ({ donation, onChange }) => {
   const options = allowedTransitions[currentStatus] || [currentStatus];
 
   if (options.length <= 1) {
-    return <StatusBadge status={currentStatus} />;
+    return null;
   }
 
   return (
@@ -145,6 +146,7 @@ const DonationManagement = () => {
     total: donations.length,
     pending: donations.filter(d => d.status === 'pending').length,
     confirmed: donations.filter(d => d.status === 'confirmed').length,
+    delivered: donations.filter(d => d.status === 'delivered').length,
   };
 
   return (
@@ -161,11 +163,15 @@ const DonationManagement = () => {
           </div>
           <div className="stat-item">
             <span className="stat-label">Pending</span>
-            <span className="stat-value">{stats.pending}</span>
+            <span className="stat-value" style={{ color: '#64748b' }}>{stats.pending}</span>
           </div>
           <div className="stat-item">
             <span className="stat-label">Confirmed</span>
-            <span className="stat-value">{stats.confirmed}</span>
+            <span className="stat-value" style={{ color: '#15803d' }}>{stats.confirmed}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Delivered</span>
+            <span className="stat-value" style={{ color: '#7e22ce' }}>{stats.delivered}</span>
           </div>
         </div>
       </header>

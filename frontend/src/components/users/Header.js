@@ -166,8 +166,8 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false)
   const [searchDropdownOpen, setSearchDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-const { items } = useCart()
-const cartCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0)
+  const { items } = useCart()
+  const cartCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0)
 
   // Notification states
   const [notifications, setNotifications] = useState([])
@@ -175,9 +175,9 @@ const cartCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0)
   const [notifError, setNotifError] = useState(null)
   const [unreadCount, setUnreadCount] = useState(0)
 
-  // Helper to get userId from localStorage
+  // Helper to get userId from sessionStorage
   const getUserId = () => {
-    return localStorage.getItem("userId")
+    return sessionStorage.getItem("userId")
   }
 
   // Helper to format notification time
@@ -525,47 +525,45 @@ const cartCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0)
   }
 
   return (
-    <nav className="navbar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 16px", background: "#fff", borderBottom: "1px solid #e9ecef" }}>
+    <nav className="navbar">
       {/* Left: Brand */}
-      <div className="navbar-left" style={{ display: "flex", alignItems: "center", gap: 10 }} onClick={() => handleNavigation("/home")}>
+      <div className="navbar-brand" onClick={() => handleNavigation("/home")}>
         <BrandLogo />
-        <span style={{ color: "#1e7e34", fontWeight: 700, fontSize: 20, cursor: "pointer" }}>ThriftGood</span>
+        <span className="brand-name">ThriftGood</span>
       </div>
 
       {/* Center: Nav items */}
-      <div className="navbar-center" style={{ display: "flex", alignItems: "center", gap: 28 }}>
-        <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleNavigation("/home")}>
+      <div className="navbar-center">
+        <span className="nav-link" onClick={() => handleNavigation("/home")}>
           Home
         </span>
-        <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleNavigation("/venues")}>
+        <span className="nav-link" onClick={() => handleNavigation("/venues")}>
           Shop
         </span>
-        <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleNavigation("/programs")}>
+        <span className="nav-link" onClick={() => handleNavigation("/programs")}>
           Programs
         </span>
-        <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleNavigation("/donate")}>
+        <span className="nav-link" onClick={() => handleNavigation("/donate")}>
           Donate
         </span>
-        <span className="nav-link" style={{ cursor: "pointer" }} onClick={() => handleNavigation("/contact")}>
+        <span className="nav-link" onClick={() => handleNavigation("/contact")}>
           Contact
         </span>
       </div>
 
       {/* Right: Icons */}
-      <div className="navbar-right" style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <div className="navbar-actions">
         {/* Notifications */}
-        <div className="notification-container" style={{ position: "relative" }}>
+        <div className="notification-container">
           <button
-            className="notification-icon"
+            className="notification-trigger"
             type="button"
             onClick={() => setNotificationDropdownOpen(!notificationDropdownOpen)}
+            aria-label="Toggle notifications"
           >
             <BellIcon />
             {unreadCount > 0 && (
-              <span
-                className="notification-badge"
-                style={{ position: "absolute", top: -6, right: -6, background: "#dc3545", color: "#fff", fontSize: 10, width: 18, height: 18, borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center" }}
-              >
+              <span className="notification-badge">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             )}
@@ -594,7 +592,9 @@ const cartCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0)
                     className={`notification-item ${notification.status === "UNREAD" ? "unread" : ""}`}
                     onClick={() => notification.status === "UNREAD" && handleMarkAsRead(notification.id)}
                   >
-                    <div className={`notification-dot ${notification.status === "UNREAD" ? "blue" : "green"}`}></div>
+                    <div className="notification-icon-fixed">
+                      <div className={`notification-dot ${notification.type?.toLowerCase() || 'info'}`}></div>
+                    </div>
                     <div className="notification-content">
                       <p className="notification-text">{notification.message || notification.title || notification.content}</p>
                       <p className="notification-time">{formatNotificationTime(notification.createdAt)}</p>
@@ -623,67 +623,39 @@ const cartCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0)
           </div>
         </div>
 
-      {/* Cart */}
-<div className="cart-container" style={{ position: "relative" }}>
-  <button
-    aria-label="Cart"
-    onClick={() => handleNavigation("/cart")}
-    style={{
-      background: "transparent",
-      border: 0,
-      cursor: "pointer",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      position: "relative",
-      padding: 0
-    }}
-  >
-    {/* Cart Icon */}
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      width="24"
-      height="24"
-    >
-      <circle cx="9" cy="21" r="1"></circle>
-      <circle cx="17" cy="21" r="1"></circle>
-      <path d="M5 6h16l-1.5 9h-13z"></path>
-      <path d="M5 6l-1-3H2"></path>
-    </svg>
+        {/* Cart */}
+        <div className="cart-container-nav">
+          <button
+            className="cart-trigger"
+            aria-label="Cart"
+            onClick={() => handleNavigation("/cart")}
+          >
+            <svg
+              className="cart-icon-svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="17" cy="21" r="1"></circle>
+              <path d="M5 6h16l-1.5 9h-13z"></path>
+              <path d="M5 6l-1-3H2"></path>
+            </svg>
 
-    {/* Cart Count Badge */}
-    {cartCount > 0 && (
-      <span
-        style={{
-          position: "absolute",
-          top: "-4px",
-          right: "-4px",
-          background: "#74c044",
-          color: "#fff",
-          fontSize: "10px",
-          width: "16px",
-          height: "16px",
-          borderRadius: "50%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontWeight: 600
-        }}
-      >
-        {cartCount}
-      </span>
-    )}
-  </button>
-</div>
+            {cartCount > 0 && (
+              <span className="cart-badge">
+                {cartCount}
+              </span>
+            )}
+          </button>
+        </div>
 
 
         {/* User icon */}
         {isUserLoggedIn ? (
-          <div className="profile-container" style={{ position: "relative" }}>
-            <button className="profile-icon" type="button" onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}>
+          <div className="profile-container">
+            <button className="profile-trigger" type="button" onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}>
               <UserIcon />
             </button>
             <div className={`profile-dropdown ${profileDropdownOpen ? "active" : ""}`}>
@@ -717,18 +689,18 @@ const cartCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0)
                 My Cancellations
               </button>
               <div className="dropdown-divider"></div>
-              <button className="dropdown-item" onClick={handleLogout}>
+              <button className="dropdown-item logout" onClick={handleLogout}>
                 <LogoutMenuIcon />
                 Logout
               </button>
             </div>
           </div>
         ) : (
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button aria-label="Sign in" onClick={handleSignInClick} style={{ background: "transparent", border: 0, cursor: "pointer" }}>
+          <div className="auth-actions">
+            <button className="auth-icon-btn" aria-label="Sign in" onClick={handleSignInClick}>
               <UserIcon />
             </button>
-            <button className="sign-in-button" onClick={handleSignInClick}>
+            <button className="sign-in-nav-btn" onClick={handleSignInClick}>
               Sign In
             </button>
           </div>

@@ -53,9 +53,9 @@ export default function ResetPasswordPage() {
   const [apiError, setApiError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Load email from localStorage when component mounts
+  // Load email from sessionStorage when component mounts
   useEffect(() => {
-    const storedEmail = localStorage.getItem("resetEmail");
+    const storedEmail = sessionStorage.getItem("resetEmail");
     if (storedEmail) {
       setFormData(prev => ({ ...prev, email: storedEmail }));
     }
@@ -172,7 +172,7 @@ export default function ResetPasswordPage() {
       
       setSuccessMessage("Your password has been successfully reset! Redirecting to login...");
       
-      // Clear the form and localStorage
+      // Clear the form and sessionStorage
       setFormData({ 
         email: "", 
         otpCode: "", 
@@ -185,7 +185,7 @@ export default function ResetPasswordPage() {
         password: false, 
         confirmPassword: false 
       });
-      localStorage.removeItem("resetEmail");
+      sessionStorage.removeItem("resetEmail");
       
       // Redirect to login after 3 seconds
       setTimeout(() => {
@@ -214,12 +214,12 @@ export default function ResetPasswordPage() {
   };
 
   const handleBackToLogin = () => {
-    localStorage.removeItem("resetEmail");
+    sessionStorage.removeItem("resetEmail");
     navigate("/login");
   };
 
   const handleRequestNewReset = () => {
-    localStorage.removeItem("resetEmail");
+    sessionStorage.removeItem("resetEmail");
     navigate("/forgot-password");
   };
 

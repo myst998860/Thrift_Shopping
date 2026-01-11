@@ -96,7 +96,7 @@ import {
 } from "react-icons/fi";
 import "../../styles/admin/AdminPanel.css";
 import { useUserSession } from "../../context/UserSessionContext"; // use context
-import { donationAPI } from "../../services/api"; // Added for counts
+import { donationAPI, notificationService } from "../../services/api"; // Added for counts
 import { useEffect } from "react"; // Added
 
 const PartnerPanel = () => {
@@ -105,19 +105,27 @@ const PartnerPanel = () => {
   const navigate = useNavigate();
   const { logout } = useUserSession(); // get logout from context
   const [counts, setCounts] = useState({ pending: 0, confirmed: 0 });
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const fetchCounts = async () => {
       try {
         const data = await donationAPI.getDonationCounts();
         setCounts(data);
+
+        // Fetch unread notifications count
+        const userId = sessionStorage.getItem("userId");
+        if (userId) {
+          const unreadData = await notificationService.getUnreadCount(userId);
+          setUnreadCount(unreadData?.count ?? 0); // Robust access
+        }
       } catch (err) {
-        console.error("Error fetching donation counts:", err);
+        console.error("Error fetching counts:", err);
       }
     };
     fetchCounts();
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchCounts, 30000);
+    // Refresh every 10 seconds for more responsive UI
+    const interval = setInterval(fetchCounts, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -131,7 +139,7 @@ const PartnerPanel = () => {
   ];
 
   const handleLogout = () => {
-    logout();          // clears user and tokens from context/localStorage
+    logout();          // clears user and tokens from context/sessionStorage
     navigate("/login"); // redirect to login page
   };
 
@@ -172,6 +180,13 @@ const PartnerPanel = () => {
                       {counts.confirmed}
                     </span>
                   )}
+                </div>
+              )}
+              {item.label === "Notifications" && unreadCount > 0 && (
+                <div className="badge-container">
+                  <span className="badge unread-badge" title="Unread Notifications">
+                    {unreadCount}
+                  </span>
                 </div>
               )}
             </Link>

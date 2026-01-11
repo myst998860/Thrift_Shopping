@@ -13,9 +13,8 @@ const Notification = () => {
   const [notifications, setNotifications] = React.useState([]);
 
   // Assume userId is available here
-  const userId = localStorage.getItem("userId");  // or get it however you prefer
+  const userId = sessionStorage.getItem("userId");  // or get it however you prefer
 
-  // Fetch notifications from backend using your service
   const fetchNotifications = React.useCallback(async () => {
     try {
       if (!userId) throw new Error("User not authenticated");
@@ -24,21 +23,26 @@ const Notification = () => {
       // Transform backend data to match component expectations
       const formattedData = Array.isArray(data) ? data.map(n => ({
         ...n,
-        // Ensure keys match what the UI expects
-        message: n.message || n.title, // Fallback if message is empty
+        message: n.message || n.title,
         time: n.createdAt ? new Date(n.createdAt).toLocaleString() : 'Just now',
         read: n.status === 'READ',
         type: n.type ? n.type.toLowerCase() : 'info'
       })) : [];
 
       setNotifications(formattedData);
-      console.log("notifications:", formattedData)
     } catch (e) {
-      // fallback mock data
       console.error("Error fetching notifications:", e);
-      // Keep existing mock data as fallback if needed, or set empty
     }
   }, [userId]);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const readCount = notifications.filter(n => n.read).length;
+
+  const tabList = [
+    { key: 'all', label: 'All notifications', count: notifications.length },
+    { key: 'unread', label: 'Unread', count: unreadCount },
+    { key: 'read', label: 'Read', count: readCount },
+  ];
 
   React.useEffect(() => {
     fetchNotifications();
@@ -52,6 +56,16 @@ const Notification = () => {
     if (tab === 'read') return n.read;
     return true;
   });
+
+  const markAsRead = async (id) => {
+    try {
+      if (!userId) return;
+      await notificationService.markAsRead(id, userId);
+      fetchNotifications();
+    } catch (error) {
+      console.error("Error marking as read:", error);
+    }
+  };
 
   const markAllAsRead = async () => {
     try {
@@ -85,6 +99,7 @@ const Notification = () => {
               onClick={() => setTab(t.key)}
             >
               {t.label}
+              {t.count > 0 && <span className="notification-tab-badge">{t.count}</span>}
             </button>
           ))}
           <div style={{ flex: 1 }} />
@@ -105,7 +120,12 @@ const Notification = () => {
               <div className="notification-empty">No notifications</div>
             )}
             {filtered.map(n => (
-              <div key={n.id} className="notification-item">
+              <div
+                key={n.id}
+                className={`notification-item ${n.read ? 'read' : 'unread'}`}
+                onClick={() => !n.read && markAsRead(n.id)}
+                style={{ cursor: !n.read ? 'pointer' : 'default' }}
+              >
                 <span className={`notification-dot${n.read ? ' read' : ' unread'}`}></span>
                 <div>
                   <div className="notification-message">{n.message}</div>

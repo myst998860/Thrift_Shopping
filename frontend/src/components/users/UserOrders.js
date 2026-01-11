@@ -54,7 +54,7 @@ export default function UserOrders() {
   const [trackingOrder, setTrackingOrder] = useState(null);
   const [viewingProduct, setViewingProduct] = useState(null);
 
-  const userId = parseInt(localStorage.getItem("userId"), 10);
+  const userId = parseInt(sessionStorage.getItem("userId"), 10);
 
   const fetchOrders = async () => {
     if (!userId) return;

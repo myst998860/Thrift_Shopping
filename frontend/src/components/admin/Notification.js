@@ -13,7 +13,7 @@ const Notification = () => {
   const [notifications, setNotifications] = React.useState([]);
 
   // Assume userId is available here
-  const userId = localStorage.getItem("userId");  // or get it however you prefer
+  const userId = sessionStorage.getItem("userId");  // or get it however you prefer
 
   // Fetch notifications from backend using your service
   const fetchNotifications = React.useCallback(async () => {

@@ -30,8 +30,8 @@ export default function ForgotPasswordPage() {
         "OTP has been sent to your email. Please check your inbox."
       );
 
-      // Store email in localStorage to pass to reset password page
-      localStorage.setItem("resetEmail", email);
+      // Store email in sessionStorage to pass to reset password page
+      sessionStorage.setItem("resetEmail", email);
 
       // Redirect to reset password page after a short delay
       setTimeout(() => {

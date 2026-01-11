@@ -9,7 +9,7 @@ import { authService } from "../../services/api";
 
 export default function VerifySignupOtp() {
   const navigate = useNavigate();
-  const signupEmail = localStorage.getItem("signupEmail");
+  const signupEmail = sessionStorage.getItem("signupEmail");
 
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
@@ -37,8 +37,8 @@ export default function VerifySignupOtp() {
 
       setSuccess(response.data || "Email verified successfully");
 
-      // Clear localStorage after successful verification
-      localStorage.removeItem("signupEmail");
+      // Clear sessionStorage after successful verification
+      sessionStorage.removeItem("signupEmail");
 
       setTimeout(() => {
         navigate("/login");

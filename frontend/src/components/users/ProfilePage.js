@@ -165,7 +165,7 @@ const ProfilePage = () => {
     const fetchOrders = async () => {
       if (activeNavItem !== 'orders') return;
       
-      const userId = parseInt(localStorage.getItem("userId"), 10) || userData?.id;
+      const userId = parseInt(sessionStorage.getItem("userId"), 10) || userData?.id;
       if (!userId) return;
 
       setOrdersLoading(true);
@@ -180,7 +180,7 @@ const ProfilePage = () => {
       }
     };
 
-    if (activeNavItem === 'orders' && (userData?.id || localStorage.getItem("userId"))) {
+    if (activeNavItem === 'orders' && (userData?.id || sessionStorage.getItem("userId"))) {
       fetchOrders();
     }
   }, [activeNavItem, userData?.id]);
@@ -244,7 +244,7 @@ const ProfilePage = () => {
     try {
       await orderAPI.updateOrderStatus(orderId, "Cancelled");
       // Re-fetch orders
-      const userId = parseInt(localStorage.getItem("userId"), 10) || userData?.id;
+      const userId = parseInt(sessionStorage.getItem("userId"), 10) || userData?.id;
       if (userId) {
         const data = await orderAPI.getUserOrders(userId);
         setOrders(Array.isArray(data) ? data : []);
