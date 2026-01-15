@@ -472,7 +472,10 @@ public class DonationController {
                     .filter(d -> d.getPickupPaymentStatus() == null
                             || "UNPAID".equalsIgnoreCase(d.getPickupPaymentStatus()))
                     .mapToDouble(d -> d.getPickupFee() != null ? d.getPickupFee()
-                            : ("assigned_to_admin".equalsIgnoreCase(d.getStatus()) ? 150.0 : 0.0))
+                            : (("assigned_to_admin".equalsIgnoreCase(d.getStatus())
+                                    || "pickedup".equalsIgnoreCase(d.getStatus())
+                                    || "picked_up".equalsIgnoreCase(d.getStatus())
+                                    || "delivered".equalsIgnoreCase(d.getStatus())) ? 150.0 : 0.0))
                     .sum();
 
             double requested = partnerDonations.stream()
@@ -518,7 +521,10 @@ public class DonationController {
         unpaid.forEach(d -> {
             d.setPickupPaymentStatus("REQUESTED");
             if (d.getPickupFee() == null
-                    || (d.getPickupFee() == 0.0 && "assigned_to_admin".equalsIgnoreCase(d.getStatus()))) {
+                    || (d.getPickupFee() == 0.0 && ("assigned_to_admin".equalsIgnoreCase(d.getStatus())
+                            || "pickedup".equalsIgnoreCase(d.getStatus())
+                            || "picked_up".equalsIgnoreCase(d.getStatus())
+                            || "delivered".equalsIgnoreCase(d.getStatus())))) {
                 d.setPickupFee(150.0);
             }
         });

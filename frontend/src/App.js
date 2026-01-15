@@ -87,6 +87,8 @@ import UserViewVenue from "./components/users/UserViewVenue";
 import ProgramPage from "./components/users/ProgramPage";
 import UserViewProgram from "./components/users/UserViewProgram";
 import ViewPrograms from "./components/partner/ViewPrograms";
+import ViewDonation from "./components/partner/ViewDonation";
+import EditDonation from "./components/partner/EditDonation";
 
 
 
@@ -139,6 +141,8 @@ function App() {
               <Route path="notifications" element={<PartnerNotification />} />
               <Route path="profile" element={<PartnerProfile />} />
               <Route path="donations" element={<DonationManagement />} />
+              <Route path="donations/:id" element={<ViewDonation />} />
+              <Route path="donations/edit/:id" element={<EditDonation />} />
               <Route path="programs" element={<ViewPrograms />} />
               <Route path="program" element={<ProgramAdd />} />
               <Route path="program/edit/:id" element={<ProgramAdd />} />
