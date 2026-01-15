@@ -36,7 +36,7 @@
 }
 
 .brand-name {
-  color: #1e7e34;
+  color: #000000;
   font-weight: 700;
   font-size: 20px;
 }
@@ -410,7 +410,7 @@
 }
 
 .mobile-sign-in-button:hover {
-  background-color: #e6ac00;
+  background-color: #1f1e1b;
   transform: translateY(-2px);
 }
 

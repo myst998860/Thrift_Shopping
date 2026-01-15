@@ -732,7 +732,7 @@ export default function Header({ hasNotifications = true, isLoggedIn = false, us
               <UserIcon />
             </button>
             <button className="sign-in-nav-btn" onClick={handleSignInClick}>
-              Sign In
+              Signin
             </button>
           </div>
         )}
